@@ -4,7 +4,9 @@
 #include <fstream>
 #include <algorithm>
 #include <filesystem>
+#include <cstdlib>
 #include <curl/curl.h>
+#include <sqlite3.h>
 
 
 static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
@@ -337,6 +339,32 @@ std::string get_config_page(const std::string& url) {
     return config_page;
 }
 
+std::string auth_cookie;
+std::string session_cookie;
+
+static int sqlite_auth_callback(void* data, int argc, char** argv, char** azColName)
+{
+    if (argc < 1) {
+        std::cerr << "ERROR: sqlite could not find dropout.tv cookie" << std::endl;
+        return -1;
+    }
+    else {
+        auth_cookie = argv[0];
+        return 0;
+    }
+}
+
+static int sqlite_session_callback(void*, int argc, char** argv, char**) {
+    if (argc < 1) {
+        std::cerr << "ERROR: sqlite could not find dropout.tv cookie" << std::endl;
+        return -1;
+    }
+    else {
+        session_cookie = argv[0];
+        return 0;
+    }
+}
+
 int main(int argc, char** argv) {
 
     clear_icanon(); // Changes terminal from canonical mode to non canonical mode.
@@ -347,11 +375,98 @@ int main(int argc, char** argv) {
     std::string filename;
     std::string season;
     std::string episode;
+
+    std::string user_auth_token;
+    std::string firefox_profile;
+
     std::string config_url;
     std::string embed_url;
+    std::string episode_url;
 
-    std::string cookie("cookie: __cf_bm=0.kYAdtpkhPsBzc7110IISrk0ZK1Hz5etmUggs6Z00g-1662827485-0-AeyJKQvZu3FJU+Y8wWRFuztF1Se6UDldh+o1OG/B72x/LZF+tsXOT7xs20Xmv4//kLDU53Oa05hQKbR3/dwMW2k=");
-    std::string user_auth_token("auth-user-token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo0NzM2MDk3OSwiZXhwIjoxNjYyODQwNjcwfQ.J0Jw2g2PLlLYQziRUbkvQwxIvg9SCGqtsROJbMB1LHE");
+    std::fstream firefox_profile_file("firefox_profile");
+
+    std::fstream auth_cookie_file("auth_cookie");
+
+    std::fstream session_cookie_file("session_cookie");
+
+    std::fstream user_auth_file("token");
+
+    if (firefox_profile_file.is_open()) {
+        getline(firefox_profile_file, firefox_profile);
+
+        if (std::filesystem::is_directory(firefox_profile)) {
+
+                sqlite3 *db;
+
+            if (!std::filesystem::is_directory("tmp"))
+                std::filesystem::create_directories("tmp");
+            std::filesystem::remove("tmp/firefox_cookies.sqlite");
+            std::filesystem::copy_file(firefox_profile + "/cookies.sqlite", "tmp/firefox_cookies.sqlite");
+
+            int rc = sqlite3_open("firefox_cookies.sqlite", &db);
+            if (rc) {
+                std::cerr << "Can't open database: " << sqlite3_errmsg(db) << '\n';
+                return -1;
+            } else {
+                std::cerr << "Opened database successfully\n";
+            }
+
+            char *err_code = nullptr;
+
+            std::string sql("SELECT value FROM moz_cookies WHERE host LIKE '%dropout.tv%' AND name='__cf_bm';");
+
+            rc = sqlite3_exec(db, sql.c_str(), sqlite_auth_callback, nullptr, &err_code);
+
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "SQL error: %s\n", err_code);
+                sqlite3_free(err_code);
+                sqlite3_close(db);
+                return -2;
+            } else {
+                fprintf(stdout, "Operation done successfully\n");
+            }
+
+            sql = "SELECT value FROM moz_cookies WHERE host LIKE '%dropout.tv%' AND name='_session';";
+
+            rc = sqlite3_exec(db, sql.c_str(), sqlite_session_callback, nullptr, &err_code);
+
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "SQL error: %s\n", err_code);
+                sqlite3_free(err_code);
+                sqlite3_close(db);
+                return -3;
+            } else {
+                fprintf(stdout, "Operation done successfully\n");
+            }
+            sqlite3_close(db);
+
+            // system(("echo \"SELECT value FROM moz_cookies WHERE originAttributes LIKE '%dropout.tv%';\" | sqlite3 " + firefox_profile + "/cookies.sqlite > cookie").c_str());
+        }
+    }
+
+    if (auth_cookie.empty()) {
+        if (auth_cookie_file.is_open() && !auth_cookie_file.eof()) {
+            getline(auth_cookie_file, auth_cookie);
+            auth_cookie = "cookie: __cf_bm=" + auth_cookie;
+        }
+    }
+
+    if (auth_cookie.empty()) {
+        std::cerr << "ERROR: dropout.tv auth cookie could not be found" << std::endl;
+        return -3;
+    }
+
+    if (session_cookie.empty()) {
+        if (session_cookie_file.is_open() && !session_cookie_file.eof()) {
+            getline(session_cookie_file, session_cookie);
+            session_cookie = "cookie: _session=" + session_cookie;
+        }
+    }
+
+    if (session_cookie.empty()) {
+        std::cerr << "ERROR: dropout.tv session cookie could not be found" << std::endl;
+        return -4;
+    }
 
     CURL *curl;
     CURLcode res;
@@ -361,7 +476,8 @@ int main(int argc, char** argv) {
     std::string video_data;
 
     if (argc > 1) {
-        episode_url = argv[2];
+        std::cout << argv[1] << std::endl;
+        episode_url = argv[1];
     }
     else {
         std::cout << "Enter episode url: ";
@@ -385,6 +501,10 @@ int main(int argc, char** argv) {
         episode = get_episode_number(episode_data);
 
         series_name = get_series_name(episode_data);
+
+        getline(user_auth_file, user_auth_token);
+
+        user_auth_token = "auth-user-token=" + user_auth_token;
 
         std::replace(series_name.begin(), series_name.end(), ' ', '_');
 
