@@ -163,8 +163,6 @@ std::string get_season_number(const std::string& html_data) {
 std::string get_embed_url(const std::string& html_data) {
     std::string config("window.VHX.config");
     std::string embed_url("embed_url: ");
-    std::string dash(",");
-    std::string season_num;
     for (int i = 0; i < html_data.size(); i++) {
         if (substr_is(html_data, i, config)) {
             for (int j = i + config.size(); j < html_data.size(); j++) {
@@ -213,7 +211,69 @@ std::string get_config_url(const std::string& html_data) {
     return "";
 }
 
-std::string get_embedded_page(const std::string& url) {
+std::string get_episode_page(const std::string& url, const std::string& auth_cookie, const std::string& session_cookie) {
+    CURLcode ret;
+    CURL *hnd;
+    struct curl_slist *slist1;
+
+    std::string episode_data;
+
+    slist1 = NULL;
+    slist1 = curl_slist_append(slist1, "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0");
+    slist1 = curl_slist_append(slist1, "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
+    slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en;q=0.5");
+    slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
+    slist1 = curl_slist_append(slist1, "DNT: 1");
+    slist1 = curl_slist_append(slist1, "Connection: keep-alive");
+    slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; referrer_url=https%3A%2F%2Fwww.dropout.tv%2Fgame-changer; " + session_cookie + "; __stripe_mid=3dd96b43-2e51-411d-8614-9f052c92d8ba0506a7; _device=X11%3AFirefox%3A1u9pxwBcfaKsXubmTnNbfA; " + auth_cookie + "; tracker=%7B%22country%22%3A%22us%22%2C%22platform%22%3A%22linux%22%2C%22uid%22%3A1048462031243%2C%22site_id%22%3A%2236348%22%7D").c_str());
+    slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
+    slist1 = curl_slist_append(slist1, "Sec-Fetch-Dest: document");
+    slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");
+    slist1 = curl_slist_append(slist1, "Sec-Fetch-Site: cross-site");
+    slist1 = curl_slist_append(slist1, "Sec-GPC: 1");
+
+    hnd = curl_easy_init();
+    curl_easy_setopt(hnd, CURLOPT_BUFFERSIZE, 102400L);
+    curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
+    curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
+    curl_easy_setopt(hnd, CURLOPT_USERAGENT, "curl/7.84.0");
+    curl_easy_setopt(hnd, CURLOPT_MAXREDIRS, 50L);
+    curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
+    curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
+    curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
+
+    curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &episode_data);
+    /* Here is a list of options the curl code used that cannot get generated
+       as source easily. You may choose to either not use them or implement
+       them yourself.
+
+    CURLOPT_WRITEDATA set to a objectpointer
+    CURLOPT_INTERLEAVEDATA set to a objectpointer
+    CURLOPT_WRITEFUNCTION set to a functionpointer
+    CURLOPT_READDATA set to a objectpointer
+    CURLOPT_READFUNCTION set to a functionpointer
+    CURLOPT_SEEKDATA set to a objectpointer
+    CURLOPT_SEEKFUNCTION set to a functionpointer
+    CURLOPT_ERRORBUFFER set to a objectpointer
+    CURLOPT_STDERR set to a objectpointer
+    CURLOPT_HEADERFUNCTION set to a functionpointer
+    CURLOPT_HEADERDATA set to a objectpointer
+
+    */
+
+    ret = curl_easy_perform(hnd);
+
+    curl_easy_cleanup(hnd);
+    hnd = NULL;
+    curl_slist_free_all(slist1);
+    slist1 = NULL;
+
+    return episode_data;
+}
+
+std::string get_embedded_page(const std::string& url, const std::string& cookie) {
         CURLcode ret;
         CURL *hnd;
         struct curl_slist *slist1;
@@ -369,7 +429,6 @@ int main(int argc, char** argv) {
 
     clear_icanon(); // Changes terminal from canonical mode to non canonical mode.
 
-    std::string episode_url;
     std::string series_name;
     std::string name;
     std::string filename;
@@ -488,11 +547,7 @@ int main(int argc, char** argv) {
     curl = curl_easy_init();
     if(curl) {
 
-        curl_easy_setopt(curl, CURLOPT_URL, episode_url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &episode_data);
-        res = curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
+        episode_data = get_episode_page(episode_url, auth_cookie, session_cookie);
 
         name = get_episode_name(episode_data);
 
@@ -521,14 +576,17 @@ int main(int argc, char** argv) {
 
         replace_all(embed_url, "&amp;", "&");
 
-        embed_url.insert(embed_url.find("?api=1&") + 7, user_auth_token + "&");
-
         std::cout << std::endl << "embed url: " << embed_url << std::endl;
     }
 
     curl = curl_easy_init();
     if (curl) {
-        embedded_data = get_embedded_page(embed_url);
+        embedded_data = get_embedded_page(embed_url, auth_cookie);
+
+        if (embedded_data.find("you are not authorized") != std::string::npos) {
+            std::cerr << "ERROR: Could not access video\n";
+            return -4;
+        }
 
         config_url = get_config_url(embedded_data);
 
