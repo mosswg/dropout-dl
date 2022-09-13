@@ -80,9 +80,32 @@ void replace_all(std::string& str, const std::string& from, const std::string& t
     }
 }
 
+long current_time;
+long last_progress_timestamp;
+const double number_chars = 100;
+const char* full_character = "▓";
+const char* empty_character = "░";
+
 int progress_func(void* ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded)
 {
-    std::cout << (int)NowDownloaded << "/" << (int)TotalToDownload << std::endl;
+    current_time = time_ms();
+    if (current_time - 50 > last_progress_timestamp) {
+        putchar('\r');
+        double percent_done = (NowDownloaded / TotalToDownload) * number_chars;
+        double percent_done_clone = percent_done;
+        putchar('[');
+        while (percent_done_clone-- > 0) {
+            std::cout << full_character;
+        }
+        while (percent_done++ < number_chars) {
+            std::cout << empty_character;
+        }
+        putchar(']');
+        putchar(' ');
+        std::cout << NowDownloaded / 1048576 << "MiB / " << TotalToDownload / 1048576 << "MiB";
+        last_progress_timestamp = time_ms();
+        std::cout.flush();
+    }
     return 0;
 }
 
