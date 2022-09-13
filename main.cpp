@@ -15,6 +15,29 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
     return size * nmemb;
 }
 
+#if defined(__WIN32__)
+
+#include <windows.h>
+
+msec_t time_ms(void)
+{
+    return timeGetTime();
+}
+
+#else
+
+#include <sys/time.h>
+
+long time_ms()
+{
+    timeval tv;
+    gettimeofday(&tv, nullptr);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
+
+#endif
+
+
 int clear_icanon()
 {
     struct termios settings{};
