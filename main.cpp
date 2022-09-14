@@ -301,6 +301,7 @@ std::string get_episode_page(const std::string& url, const std::string& auth_coo
     curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
     curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
     curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
+    curl_easy_setopt(hnd, CURLOPT_VERBOSE, verbose);
 
     curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &episode_data);
@@ -332,7 +333,7 @@ std::string get_episode_page(const std::string& url, const std::string& auth_coo
     return episode_data;
 }
 
-std::string get_embedded_page(const std::string& url, const std::string& cookie) {
+std::string get_embedded_page(const std::string& url, const std::string& cookie, bool verbose = false) {
         CURLcode ret;
         CURL *hnd;
         struct curl_slist *slist1;
@@ -363,6 +364,7 @@ std::string get_embedded_page(const std::string& url, const std::string& cookie)
         curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
         curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
         curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
+        curl_easy_setopt(hnd, CURLOPT_VERBOSE, verbose);
 
 
         curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
@@ -395,7 +397,7 @@ std::string get_embedded_page(const std::string& url, const std::string& cookie)
         return embedded_page;
     }
 
-std::string get_config_page(const std::string& url) {
+std::string get_config_page(const std::string& url, bool verbose = false) {
     CURLcode ret;
     CURL *hnd;
     struct curl_slist *slist1;
@@ -426,6 +428,7 @@ std::string get_config_page(const std::string& url) {
     curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
     curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
     curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
+    curl_easy_setopt(hnd, CURLOPT_VERBOSE, verbose);
 
     curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &config_page);
@@ -495,7 +498,6 @@ int main(int argc, char** argv) {
     std::string season;
     std::string episode;
 
-    std::string user_auth_token;
     std::string firefox_profile;
 
     std::string config_url;
@@ -515,19 +517,25 @@ int main(int argc, char** argv) {
 
         if (std::filesystem::is_directory(firefox_profile)) {
 
-                sqlite3 *db;
+            sqlite3 *db;
+
+            if (verbose) {
+                std::cout << "Getting firefox cookies from firefox sqlite db\n";
+            }
 
             if (!std::filesystem::is_directory("tmp"))
                 std::filesystem::create_directories("tmp");
             std::filesystem::remove("tmp/firefox_cookies.sqlite");
             std::filesystem::copy_file(firefox_profile + "/cookies.sqlite", "tmp/firefox_cookies.sqlite");
 
-            int rc = sqlite3_open("firefox_cookies.sqlite", &db);
+            int rc = sqlite3_open("tmp/firefox_cookies.sqlite", &db);
             if (rc) {
                 std::cerr << "Can't open database: " << sqlite3_errmsg(db) << '\n';
-                return -1;
+                return 1;
             } else {
-                std::cerr << "Opened database successfully\n";
+                if (verbose) {
+                    std::cout << "Firefox database opened successfully\n";
+                }
             }
 
             char *err_code = nullptr;
@@ -540,9 +548,9 @@ int main(int argc, char** argv) {
                 fprintf(stderr, "SQL error: %s\n", err_code);
                 sqlite3_free(err_code);
                 sqlite3_close(db);
-                return -2;
-            } else {
-                fprintf(stdout, "Operation done successfully\n");
+                return 2;
+            } else if (verbose) {
+                std::cout << "Got __cf_bm cookie from firefox sqlite db\n";
             }
 
             sql = "SELECT value FROM moz_cookies WHERE host LIKE '%dropout.tv%' AND name='_session';";
@@ -553,9 +561,9 @@ int main(int argc, char** argv) {
                 fprintf(stderr, "SQL error: %s\n", err_code);
                 sqlite3_free(err_code);
                 sqlite3_close(db);
-                return -3;
-            } else {
-                fprintf(stdout, "Operation done successfully\n");
+                return 3;
+            } else if (verbose) {
+                std::cout << "Got _session cookie from firefox sqlite db\n";
             }
             sqlite3_close(db);
 
@@ -599,8 +607,10 @@ int main(int argc, char** argv) {
     std::string video_data;
 
     if (argc > 1) {
-        std::cout << argv[1] << std::endl;
         episode_url = argv[1];
+        if (verbose) {
+            std::cout << "Got episode video_url: " << episode_url << " from program arguments\n";
+        }
     }
     else {
         std::cout << "Enter episode url: ";
@@ -615,15 +625,27 @@ int main(int argc, char** argv) {
 
         name = get_episode_name(episode_data);
 
+        if (verbose) {
+            std::cout << "Got name: " << name << '\n';
+        }
+
         season = get_season_number(episode_data);
+
+        if (verbose) {
+            std::cout << "Got season: " << season << '\n';
+        }
 
         episode = get_episode_number(episode_data);
 
+        if (verbose) {
+            std::cout << "Got episode: " << episode << '\n';
+        }
+
         series_name = get_series_name(episode_data);
 
-        getline(user_auth_file, user_auth_token);
-
-        user_auth_token = "auth-user-token=" + user_auth_token;
+        if (verbose) {
+            std::cout << "Got series: " << series_name << '\n';
+        }
 
         std::replace(series_name.begin(), series_name.end(), ' ', '_');
 
@@ -635,12 +657,17 @@ int main(int argc, char** argv) {
 
         std::replace(filename.begin(), filename.end(), ',', '_');
 
+        if (verbose) {
+            std::cout << "filename: " << filename << '\n';
+        }
 
         embed_url = get_embed_url(episode_data);
 
         replace_all(embed_url, "&amp;", "&");
 
-        std::cout << std::endl << "embed url: " << embed_url << std::endl;
+        if (verbose) {
+            std::cout << "Got embedded video_url: " << embed_url << '\n';
+        }
     }
 
     curl = curl_easy_init();
@@ -648,8 +675,8 @@ int main(int argc, char** argv) {
         embedded_data = get_embedded_page(embed_url, auth_cookie);
 
         if (embedded_data.find("you are not authorized") != std::string::npos) {
-            std::cerr << "ERROR: Could not access video\n";
-            return -4;
+            std::cerr << "ERROR: Could not access video. Try refreshing cookies.\n";
+            return 6;
         }
 
         config_url = get_config_url(embedded_data);
@@ -672,6 +699,9 @@ int main(int argc, char** argv) {
     if(curl) {
         if (!std::filesystem::is_directory(series_name)) {
             std::filesystem::create_directories(series_name);
+            if (verbose) {
+                std::cout << "Creating series directory" << '\n';
+            }
         }
 
         std::fstream out(filename, std::ios_base::in|std::ios_base::out|std::ios_base::trunc);
