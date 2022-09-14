@@ -38,28 +38,6 @@ long time_ms()
 #endif
 
 
-int clear_icanon()
-{
-    struct termios settings{};
-    int result;
-    result = tcgetattr (STDIN_FILENO, &settings);
-    if (result < 0)
-    {
-        perror ("error in tcgetattr");
-        return 0;
-    }
-
-    settings.c_lflag &= ~ICANON;
-
-    result = tcsetattr (STDIN_FILENO, TCSANOW, &settings);
-    if (result < 0)
-    {
-        perror ("error in tcsetattr");
-        return 0;
-    }
-    return 1;
-}
-
 bool substr_is(const std::string& string, int start, const std::string& test_str) {
     if (test_str.size() != test_str.size())
         return false;
@@ -473,7 +451,8 @@ static int sqlite_session_callback(void*, int argc, char** argv, char**) {
 
 int main(int argc, char** argv) {
 
-    clear_icanon(); // Changes terminal from canonical mode to non canonical mode.
+    bool verbose = true;
+    std::string quality = "1080p";
 
     std::string series_name;
     std::string name;
