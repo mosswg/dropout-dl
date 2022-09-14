@@ -284,7 +284,7 @@ std::string get_episode_page(const std::string& url, const std::string& auth_coo
     slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
     slist1 = curl_slist_append(slist1, "DNT: 1");
     slist1 = curl_slist_append(slist1, "Connection: keep-alive");
-    slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; referrer_url=https%3A%2F%2Fwww.dropout.tv%2Fgame-changer; " + session_cookie + "; __stripe_mid=3dd96b43-2e51-411d-8614-9f052c92d8ba0506a7; _device=X11%3AFirefox%3A1u9pxwBcfaKsXubmTnNbfA; " + auth_cookie + "; tracker=%7B%22country%22%3A%22us%22%2C%22platform%22%3A%22linux%22%2C%22uid%22%3A1048462031243%2C%22site_id%22%3A%2236348%22%7D").c_str());
+    slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; referrer_url=https%3A%2F%2Fwww.dropout.tv%2Fgame-changer; _session=" + session_cookie + "; __stripe_mid=3dd96b43-2e51-411d-8614-9f052c92d8ba0506a7; _device=X11%3AFirefox%3A1u9pxwBcfaKsXubmTnNbfA; __cf_bm=" + auth_cookie + "; tracker=%7B%22country%22%3A%22us%22%2C%22platform%22%3A%22linux%22%2C%22uid%22%3A1048462031243%2C%22site_id%22%3A%2236348%22%7D").c_str());
     slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
     slist1 = curl_slist_append(slist1, "Sec-Fetch-Dest: document");
     slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");
@@ -566,25 +566,29 @@ int main(int argc, char** argv) {
     if (auth_cookie.empty()) {
         if (auth_cookie_file.is_open() && !auth_cookie_file.eof()) {
             getline(auth_cookie_file, auth_cookie);
-            auth_cookie = "cookie: __cf_bm=" + auth_cookie;
+            if (verbose) {
+                std::cout << "Got __cf_bm cookie from auth_cookie file db\n";
+            }
         }
     }
 
     if (auth_cookie.empty()) {
         std::cerr << "ERROR: dropout.tv auth cookie could not be found" << std::endl;
-        return -3;
+        return 4;
     }
 
     if (session_cookie.empty()) {
         if (session_cookie_file.is_open() && !session_cookie_file.eof()) {
             getline(session_cookie_file, session_cookie);
-            session_cookie = "cookie: _session=" + session_cookie;
+            if (verbose) {
+                std::cout << "Got _session cookie from session_cookie file db\n";
+            }
         }
     }
 
     if (session_cookie.empty()) {
         std::cerr << "ERROR: dropout.tv session cookie could not be found" << std::endl;
-        return -4;
+        return 5;
     }
 
     CURL *curl;
