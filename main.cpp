@@ -609,12 +609,11 @@ int main(int argc, char** argv) {
     if (argc > 1) {
         episode_url = argv[1];
         if (verbose) {
-            std::cout << "Got episode video_url: " << episode_url << " from program arguments\n";
+            std::cout << "Got episode url: " << episode_url << " from program arguments\n";
         }
     }
     else {
         std::cout << "Enter episode url: ";
-
         std::cin >> episode_url;
     }
 
@@ -666,7 +665,7 @@ int main(int argc, char** argv) {
         replace_all(embed_url, "&amp;", "&");
 
         if (verbose) {
-            std::cout << "Got embedded video_url: " << embed_url << '\n';
+            std::cout << "Got embedded url: " << embed_url << '\n';
         }
     }
 
@@ -684,7 +683,7 @@ int main(int argc, char** argv) {
         replace_all(config_url, "\\u0026", "&");
 
         if (verbose) {
-            std::cout << "Got config video_url: " << embed_url << '\n';
+            std::cout << "Got config url: " << embed_url << '\n';
         }
 
         config_data = get_config_page(config_url);
@@ -692,7 +691,7 @@ int main(int argc, char** argv) {
 
     std::string video_url = get_video_url(config_data, quality);
     if (verbose) {
-        std::cout << "Got video video_url: " << video_url << '\n';
+        std::cout << "Got video url: " << video_url << '\n';
     }
 
     curl = curl_easy_init();
