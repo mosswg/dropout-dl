@@ -238,7 +238,39 @@ std::string get_config_url(const std::string& html_data) {
     return "";
 }
 
-std::string get_episode_page(const std::string& url, const std::string& auth_cookie, const std::string& session_cookie) {
+std::string get_video_url(const std::string& config_data, const std::string& quality) {
+    int i = 0;
+    bool video_section = false;
+    for (; i < config_data.size(); i++ ) {
+        // std::cout << i << "/" << javascript_data.size() << ": " << javascript_data[i] << ": " << javascript_data.substr(i, 17) << ": " << video_section << "\n";
+        if (config_data.substr(i, 9) == "video/mp4") {
+            video_section = true;
+        }
+
+        if (video_section && config_data.substr(i, (R"("quality":")" + quality + '"').size()) == R"("quality":")" + quality + '"') {
+            break;
+        }
+    }
+    if (i == config_data.size()) {
+        std::cerr << "ERROR: quality of " << quality << " not found" << std::endl;
+        exit(7);
+    }
+
+    std::string url;
+    for (; i > 0; i--) {
+        // std::cout << i << ": " << javascript_data[i] << ": " << javascript_data.substr(i-7, 7) << "\n";
+        if (config_data.substr(i-7, 7) == R"("url":")") {
+            break;
+        }
+    }
+
+    while (config_data[i] != '"') {
+        url += config_data[i++];
+    }
+    return url;
+}
+
+std::string get_episode_page(const std::string& url, const std::string& auth_cookie, const std::string& session_cookie, bool verbose = false) {
     CURLcode ret;
     CURL *hnd;
     struct curl_slist *slist1;
@@ -620,38 +652,16 @@ int main(int argc, char** argv) {
 
         replace_all(config_url, "\\u0026", "&");
 
+        if (verbose) {
+            std::cout << "Got config video_url: " << embed_url << '\n';
+        }
+
         config_data = get_config_page(config_url);
     }
 
-    int i = 0;
-    bool video_section = false;
-    for (; i < config_data.size(); i++ ) {
-        // std::cout << i << "/" << javascript_data.size() << ": " << javascript_data[i] << ": " << javascript_data.substr(i, 17) << ": " << video_section << "\n";
-        if (config_data.substr(i, 3) == "mp4") {
-            video_section = true;
-        }
-
-        if (video_section && config_data.substr(i, 17) == R"("quality":"1080p")") {
-            std::cout << config_data.substr(i) << '\n';
-            break;
-        }
-    }
-    if (i == config_data.size() - 1) {
-        std::cout << "quality of 1080p not found" << std::endl;
-        exit(1);
-    }
-
-    std::string url;
-    for (; i > 0; i--) {
-        // std::cout << i << ": " << javascript_data[i] << ": " << javascript_data.substr(i-7, 7) << "\n";
-        if (config_data.substr(i-7, 7) == R"("url":")") {
-            std::cout << config_data.substr(i) << '\n';
-            break;
-        }
-    }
-
-    while (config_data[i] != '"') {
-        url += config_data[i++];
+    std::string video_url = get_video_url(config_data, quality);
+    if (verbose) {
+        std::cout << "Got video video_url: " << video_url << '\n';
     }
 
     curl = curl_easy_init();
@@ -662,14 +672,16 @@ int main(int argc, char** argv) {
 
         std::fstream out(filename, std::ios_base::in|std::ios_base::out|std::ios_base::trunc);
 
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_URL, video_url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &video_data);
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
         curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_func);
-        std::cout << "getting \"" << filename << " from " << url << std::endl;
+        std::cout << "Getting " << filename << '\n';
         res = curl_easy_perform(curl);
         curl_easy_cleanup(curl);
+
+        putchar('\n');
 
         out << video_data << std::endl;
     }
