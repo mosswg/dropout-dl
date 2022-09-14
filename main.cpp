@@ -64,11 +64,13 @@ const double number_chars = 100;
 const char* full_character = "▓";
 const char* empty_character = "░";
 
+
+
+
 int progress_func(void* ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded)
 {
     current_time = time_ms();
     if (current_time - 50 > last_progress_timestamp) {
-        putchar('\r');
         double percent_done = (NowDownloaded / TotalToDownload) * number_chars;
         double percent_done_clone = percent_done;
         putchar('[');
@@ -80,7 +82,8 @@ int progress_func(void* ptr, double TotalToDownload, double NowDownloaded, doubl
         }
         putchar(']');
         putchar(' ');
-        std::cout << NowDownloaded / 1048576 << "MiB / " << TotalToDownload / 1048576 << "MiB";
+        std::cout << NowDownloaded / 1048576 << "MiB / " << TotalToDownload / 1048576 << "MiB                           ";
+        putchar('\r');
         last_progress_timestamp = time_ms();
         std::cout.flush();
     }
