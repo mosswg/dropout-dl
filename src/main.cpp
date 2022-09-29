@@ -25,9 +25,9 @@ static int sqlite_write_callback(void* data, int argc, char** argv, char** azCol
 }
 
 #ifdef DROPOUT_DL_SQLITE
-std::vector<std::string> get_cookies_from_firefox(bool verbose = false) {
+std::vector<std::string> get_cookies_from_firefox(const std::filesystem::path& firefox_profile_path, bool verbose = false) {
 
-    std::fstream firefox_profile_file("firefox_profile");
+    std::fstream firefox_profile_file(firefox_profile_path);
     std::string firefox_profile;
 
     std::string auth_cookie;
@@ -98,9 +98,9 @@ std::vector<std::string> get_cookies_from_firefox(bool verbose = false) {
 }
 
 #ifdef DROPOUT_DL_GCRYPT
-std::vector<std::string> get_cookies_from_chrome(bool verbose = false) {
+std::vector<std::string> get_cookies_from_chrome(const std::filesystem::path& chrome_profile_path, bool verbose = false) {
 
-    std::fstream chrome_profile_file("chrome_profile");
+    std::fstream chrome_profile_file(chrome_profile_path);
     std::string chrome_profile;
 
     std::string auth_cookie;
@@ -238,7 +238,7 @@ std::vector<std::string> get_cookies_from_chrome(bool verbose = false) {
 #endif
 #endif
 
-std::vector<std::string> get_cookies_from_files(bool verbose = false) {
+std::vector<std::string> get_cookies_from_files(const std::filesystem::path& auth_cookie_path, const std::filesystem::path& session_cookie_path, bool verbose = false) {
     std::fstream auth_cookie_file("auth_cookie");
     std::fstream session_cookie_file("session_cookie");
 
@@ -264,45 +264,36 @@ std::vector<std::string> get_cookies_from_files(bool verbose = false) {
     return out;
 }
 
+std::vector<std::string> get_cookies(bool verbose = false) {
+
+#ifdef DROPOUT_DL_SQLITE
+    std::filesystem::path firefox_profile("firefox_profile");
 #ifdef DROPOUT_DL_GCRYPT
-std::vector<std::string> get_cookies(bool verbose = false) {
-
-    if (std::filesystem::is_regular_file("firefox_profile_")) {
-        return get_cookies_from_firefox(verbose);
-    } else if (std::filesystem::is_regular_file("chrome_profile")) {
-        return get_cookies_from_chrome(verbose);
-    }
-    else if (std::filesystem::is_regular_file("auth_cookie") && std::filesystem::is_regular_file("session_cookie")){
-        return get_cookies_from_files(verbose);
-    }
-    else {
-        std::cerr << "ERROR: dropout.tv cookies could not be found" << std::endl;
-        exit(1);
-    }
-}
-#elif defined(DROPOUT_DL_SQLITE)
-std::vector<std::string> get_cookies(bool verbose = false) {
-
-    if (std::filesystem::is_character_file("firefox_profile")) {
-        return get_cookies_from_firefox(verbose);
-    }
-    else if (std::filesystem::is_character_file("auth_cookie") && std::filesystem::is_character_file("session_cookie")){
-        return get_cookies_from_files(verbose);
-    }
-    else {
-        std::cerr << "ERROR: dropout.tv cookies could not be found" << std::endl;
-    }
-}
-#else
-std::vector<std::string> get_cookies(bool verbose = false) {
-    if (std::filesystem::is_character_file("auth_cookie") && std::filesystem::is_character_file("session_cookie")){
-        return get_cookies_from_files(verbose);
-    }
-    else {
-        std::cerr << "ERROR: dropout.tv cookies could not be found" << std::endl;
-    }
-}
+    std::filesystem::path chrome_profile("chrome_profile");
 #endif
+#endif
+    std::filesystem::path auth_cookie("auth_cookie");
+    std::filesystem::path session_cookie("session_cookie");
+
+
+    #ifdef DROPOUT_DL_SQLITE
+    if (std::filesystem::exists(firefox_profile)) {
+        return get_cookies_from_firefox(firefox_profile, verbose);
+    } else
+    #ifdef DROPOUT_DL_GCRYPT
+    if (std::filesystem::exists(chrome_profile)) {
+        return get_cookies_from_chrome(chrome_profile, verbose);
+    } else
+    #endif
+    #endif
+    if (std::filesystem::exists(auth_cookie) && std::filesystem::exists(session_cookie)){
+        return get_cookies_from_files(auth_cookie, session_cookie, verbose);
+    }
+    else {
+        std::cerr << "ERROR: dropout.tv cookies could not be found" << std::endl;
+        exit(7);
+    }
+}
 
 
 int main(int argc, char** argv) {
