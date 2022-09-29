@@ -46,6 +46,7 @@ namespace dropout_dl {
 
     long current_time;
     long last_progress_timestamp;
+    std::string curl_filename;
 
     int curl_progress_func(void* ptr, double total_to_download, double downloaded, double total_to_upload, double uploaded) {
         const double number_chars = 50;
@@ -56,16 +57,14 @@ namespace dropout_dl {
         if (current_time - 50 > last_progress_timestamp) {
             double percent_done = (downloaded / total_to_download) * number_chars;
             double percent_done_clone = percent_done;
-            putchar('[');
+            std::cout << curl_filename << " [";
             while (percent_done_clone-- > 0) {
                 std::cout << full_character;
             }
             while (percent_done++ < number_chars) {
                 std::cout << empty_character;
             }
-            putchar(']');
-            putchar(' ');
-            std::cout << downloaded / 1048576 << "MiB / " << total_to_download / 1048576 << "MiB                           ";
+            std::cout << "] " << downloaded / 1048576 << "MiB / " << total_to_download / 1048576 << "MiB                           ";
             putchar('\r');
             last_progress_timestamp = time_ms();
             std::cout.flush();
@@ -468,6 +467,8 @@ namespace dropout_dl {
         if(curl) {
             std::string out;
 
+
+
             curl_easy_setopt(curl, CURLOPT_URL, get_video_url(quality).c_str());
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::WriteCallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
@@ -487,6 +488,11 @@ namespace dropout_dl {
             filename = "S" + (this->season_number.size() < 2 ? "0" + this->season_number : this->season_number) + "E" +
                        (this->episode_number.size() < 2 ? "0" + this->episode_number : this->episode_number) + this->name +
                        ".mp4";
+
+            std::replace(filename.begin(), filename.end(), ' ', '_');
+
+            std::replace(filename.begin(), filename.end(), ',', '_');
+
         }
 
         if (quality == "all") {
@@ -500,11 +506,22 @@ namespace dropout_dl {
                 std::fstream out(series_directory + "/" + possible_quality + "/" + filename,
                                  std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
+                curl_filename = series_directory + "/" + possible_quality + "/" + filename;
+
                 out << this->get_video_data(possible_quality) << std::endl;
             }
         } else {
+            if (!std::filesystem::is_directory(series_directory)) {
+                std::filesystem::create_directories(series_directory);
+                if (this->verbose) {
+                    std::cout << "Creating quality directory" << '\n';
+                }
+            }
+
             std::fstream out(series_directory + "/" + filename,
                              std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+
+            curl_filename = series_directory + "/" + filename;
 
             out << this->get_video_data(quality) << std::endl;
         }
