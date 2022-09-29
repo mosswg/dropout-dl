@@ -58,11 +58,13 @@ this needs to be redone every time the cookies expire (~30 minutes)
 
 ### Options
 ```
---help               Display this message
---quality            Set the quality of the downloaded video. Quality can be set to 'all' which
-                        will download all qualities and place them into separate folders
---verbose            Display debug information while running
---force-cookies      Interpret the next to arguments as authentication cookie and session cookie
+--help                   Display this message
+--quality                Set the quality of the downloaded video. Quality can be set to 'all' which
+                             will download all qualities and place them into separate folders
+--output                 Set the output filename
+--output-directory       Set the directory where files are output
+--verbose                Display debug information while running
+--force-cookies          Interpret the next to arguments as authentication cookie and session cookie
 ```
 dropout-dl will download the episode into a folder with the name of the series in the format
 `S<season-num>E<episode-num><name>.mp4`

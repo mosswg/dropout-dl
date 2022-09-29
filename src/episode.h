@@ -39,7 +39,6 @@ namespace dropout_dl {
         std::string embedded_page_data;
         std::string config_url;
         std::string config_data;
-        std::string filename;
         std::vector<std::string> qualities;
         std::vector<std::string> quality_urls;
 
@@ -113,16 +112,6 @@ namespace dropout_dl {
             std::replace(this->series.begin(), this->series.end(), ' ', '_');
 
             std::replace(this->series.begin(), this->series.end(), ',', '_');
-
-            this->filename = "S" + (this->season_number.size() < 2 ? "0" + this->season_number : this->season_number) + "E" + (this->episode_number.size() < 2 ? "0" + this->episode_number : this->episode_number) + this->name + ".mp4";
-
-            std::replace(filename.begin(), filename.end(), ' ', '_');
-
-            std::replace(filename.begin(), filename.end(), ',', '_');
-
-            if (verbose) {
-                std::cout << "filename: " << filename << '\n';
-            }
 
             this->embedded_url = get_embed_url(episode_data);
 

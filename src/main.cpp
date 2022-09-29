@@ -321,6 +321,8 @@ public:
     bool verbose = false;
     bool cookies_forced = false;
     std::string quality;
+    std::string filename;
+    std::string series_dir;
     std::vector<std::string> cookies;
 
     static std::vector<std::string> convert_program_args(int argc, char** argv) {
@@ -334,43 +336,56 @@ public:
     options(int argc, char** argv) {
         std::vector<std::string> args = convert_program_args(argc, argv);
 
-        bool next_is_quality = false;
-        bool next_is_cookie = false;
-        for (const auto& arg : args) {
-            if (next_is_quality) {
-                quality = arg;
-                next_is_quality = false;
-                continue;
-            }
-            if (next_is_cookie) {
-                cookies.emplace_back(arg);
-                if (cookies.size() == 2) {
-                    next_is_quality = false;
-                }
-                continue;
-            }
-            else if (arg.substr(0, 2) != "--") {
+        for (int i = 0; i < args.size(); i++) {
+            const auto& arg = args[i];
+
+            if (arg.substr(0, 2) != "--") {
                 url = arg;
             }
             else {
                 if (arg == "--verbose") {
                     verbose = true;
                 } else if (arg == "--quality") {
-                    next_is_quality = true;
+                    if (i + 1 >= args.size()) {
+                        std::cerr << "ARGUMENT PARSE ERROR: --quality used with too few following arguments\n";
+                        exit(8);
+                    }
+                    quality = args[++i];
                 }
                 else if (arg == "--force-cookies") {
-                    next_is_cookie = true;
+                    if (i + 2 >= args.size()) {
+                        std::cerr << "ARGUMENT PARSE ERROR: --force-cookies used with too few following arguments\n";
+                        exit(8);
+                    }
+                    cookies.emplace_back(args[++i]);
+                    cookies.emplace_back(args[++i]);
                     cookies_forced = true;
+                }
+                else if (arg == "--output") {
+                    if (i + 1 >= args.size()) {
+                        std::cerr << "ARGUMENT PARSE ERROR: --output used with too few following arguments\n";
+                        exit(8);
+                    }
+                    filename = args[++i];
+                }
+                else if (arg == "--output-directory") {
+                    if (i + 1 >= args.size()) {
+                        std::cerr << "ARGUMENT PARSE ERROR: --output-directory used with too few following arguments\n";
+                        exit(8);
+                    }
+                    series_dir = args[++i];
                 }
                 else if (arg == "--help") {
                     std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
                                  "\n"
                                  "Options:\n"
-                                    "\t--help               Display this message\n"
-                                    "\t--quality            Set the quality of the downloaded video. Quality can be set to 'all' which\n"
-                                    "\t                         will download all qualities and place them into separate folders\n"
-                                    "\t--verbose            Display debug information while running\n"
-                                    "\t--force-cookies      Interpret the next to arguments as authentication cookie and session cookie\n"
+                                    "\t--help                   Display this message\n"
+                                    "\t--quality                Set the quality of the downloaded video. Quality can be set to 'all' which\n"
+                                    "\t                             will download all qualities and place them into separate folders\n"
+                                    "\t--output                 Set the output filename\n"
+                                    "\t--output-directory       Set the directory where files are output\n"
+                                    "\t--verbose                Display debug information while running\n"
+                                    "\t--force-cookies          Interpret the next to arguments as authentication cookie and session cookie\n"
                                     << std::endl;
 
                     exit(0);
@@ -412,6 +427,24 @@ int main(int argc, char** argv) {
 
     dropout_dl::episode ep(options.url, options.cookies, options.verbose);
 
+    if (options.filename.empty()) {
+        options.filename = "S" + (ep.season_number.size() < 2 ? "0" + ep.season_number : ep.season_number) + "E" +
+                           (ep.episode_number.size() < 2 ? "0" + ep.episode_number : ep.episode_number) + ep.name +
+                           ".mp4";
+
+        std::replace(options.filename.begin(), options.filename.end(), ' ', '_');
+
+        std::replace(options.filename.begin(), options.filename.end(), ',', '_');
+    }
+
+    if (options.verbose) {
+        std::cout << "filename: " << options.filename << '\n';
+    }
+
+    if (options.series_dir.empty()) {
+        options.series_dir = ep.series;
+    }
+
     if (!std::filesystem::is_directory(ep.series)) {
         std::filesystem::create_directories(ep.series);
         if (options.verbose) {
@@ -421,20 +454,20 @@ int main(int argc, char** argv) {
 
     if (options.quality == "all") {
         for (const auto& possible_quality : ep.qualities) {
-            if (!std::filesystem::is_directory(ep.series + "/" + possible_quality)) {
-                std::filesystem::create_directories(ep.series + "/" + possible_quality);
+            if (!std::filesystem::is_directory(options.series_dir + "/" + possible_quality)) {
+                std::filesystem::create_directories(options.series_dir + "/" + possible_quality);
                 if (options.verbose) {
                     std::cout << "Creating series directory" << '\n';
                 }
             }
-            std::fstream out(ep.series + "/" + possible_quality + "/" + ep.filename,
+            std::fstream out(options.series_dir + "/" + possible_quality + "/" + options.filename,
                              std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
             out << ep.get_video_data(possible_quality) << std::endl;
         }
     }
     else {
-        std::fstream out(ep.series + "/" + ep.filename, std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+        std::fstream out(options.series_dir + "/" + options.filename, std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
         out << ep.get_video_data(options.quality) << std::endl;
     }
