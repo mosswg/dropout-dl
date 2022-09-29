@@ -219,9 +219,14 @@ namespace dropout_dl {
         exit(9);
     }
 
-    void series::download(const std::string &quality, const std::string &series_directory) {
+    void series::download(const std::string &quality, const std::string& base) {
+        if (!std::filesystem::is_directory(base + "/" + series_directory)) {
+            std::filesystem::create_directories(base + "/" + series_directory);
+            std::cout << "Creating series directory" << '\n';
+        }
+
         for (auto& season : seasons) {
-            season.download(quality, series_directory);
+            season.download(quality, base + "/" + series_directory);
         }
     }
 

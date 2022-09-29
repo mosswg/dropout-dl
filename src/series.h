@@ -15,6 +15,7 @@ namespace dropout_dl {
             std::string name;
             std::string url;
             std::string page_data;
+            std::string series_directory;
             std::vector<season> seasons;
 
             static std::string get_series_name(const std::string& html_data);
@@ -23,7 +24,7 @@ namespace dropout_dl {
 
             static season get_season(const std::string& url, const std::vector<std::string>& cookies);
 
-           void download(const std::string& quality, const std::string& series_directory);
+           void download(const std::string& quality, const std::string& base);
 
             explicit series(const std::string& url, const std::vector<std::string>& cookies) {
                 this->url = url;
@@ -33,6 +34,11 @@ namespace dropout_dl {
                     std::cerr << "SERIES PARSE ERROR: Could not parse series name\n";
                     exit(10);
                 }
+
+                this->series_directory = name;
+                std::replace(this->series_directory.begin(), this->series_directory.end(), ' ', '_');
+                std::replace(this->series_directory.begin(), this->series_directory.end(), ',', '_');
+
                 this->seasons = get_seasons(page_data, cookies);
             }
     };

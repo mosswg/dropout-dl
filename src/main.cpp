@@ -302,7 +302,7 @@ public:
     bool season = false;
     std::string quality;
     std::string filename;
-    std::string series_dir;
+    std::string output_directory;
     std::string episode;
     std::vector<std::string> cookies;
 
@@ -355,7 +355,7 @@ public:
                     std::cerr << "ARGUMENT PARSE ERROR: --output-directory used with too few following arguments\n";
                     exit(8);
                 }
-                series_dir = args[++i];
+                output_directory = args[++i];
             }
             else if (arg == "series") {
                 series = true;
@@ -382,6 +382,9 @@ public:
             }
         }
 
+        if (output_directory.empty()) {
+            output_directory = ".";
+        }
 
         if (season && series) {
             std::cerr << "ARGUMENT PARSE ERROR: Season and Series arguments used\n";
@@ -420,28 +423,18 @@ int main(int argc, char** argv) {
     if (options.series) {
         dropout_dl::series series(options.url, options.cookies);
 
-        if (options.series_dir.empty()) {
-            options.series_dir = series.name;
-
-            std::replace(options.series_dir.begin(), options.series_dir.end(), ' ', '_');
-
-            std::replace(options.series_dir.begin(), options.series_dir.end(), ',', '_');
-        }
-
-        series.download(options.quality, options.series_dir);
+        series.download(options.quality, options.output_directory);
     }
     else if (options.season) {
         dropout_dl::season season = dropout_dl::series::get_season(options.url, options.cookies);
 
-        if (options.series_dir.empty()) {
-            options.series_dir = season.series_name;
+        std::string series_directory = season.series_name;
 
-            std::replace(options.series_dir.begin(), options.series_dir.end(), ' ', '_');
+        std::replace(series_directory.begin(), series_directory.end(), ' ', '_');
 
-            std::replace(options.series_dir.begin(), options.series_dir.end(), ',', '_');
-        }
+        std::replace(series_directory.begin(), series_directory.end(), ',', '_');
 
-        season.download(options.quality, options.series_dir);
+        season.download(options.quality, options.output_directory + "/" + series_directory);
     }
     else {
         dropout_dl::episode ep(options.url, options.cookies, options.verbose);
@@ -460,10 +453,6 @@ int main(int argc, char** argv) {
             std::cout << "filename: " << options.filename << '\n';
         }
 
-        if (options.series_dir.empty()) {
-            options.series_dir = ep.series;
-        }
-
         if (!std::filesystem::is_directory(ep.series)) {
             std::filesystem::create_directories(ep.series);
             if (options.verbose) {
@@ -471,7 +460,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        ep.download(options.quality, options.series_dir, options.filename);
+        ep.download(options.quality, options.output_directory + "/" + ep.series, options.filename);
     }
 
 

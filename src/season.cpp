@@ -54,6 +54,11 @@ namespace dropout_dl {
     }
 
     void season::download(const std::string &quality, const std::string &series_directory) {
+        if (!std::filesystem::is_directory(series_directory)) {
+            std::filesystem::create_directories(series_directory);
+            std::cout << "Creating series directory" << '\n';
+        }
+
         std::string dir = series_directory + "/" + this->name;
 
         std::replace(dir.begin(), dir.end(), ' ', '_');
