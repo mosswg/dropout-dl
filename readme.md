@@ -19,7 +19,7 @@ sudo xbps-install -S libcurl sqlite-devel
 
 #### Debian
 ```
-sudo apt install libcurl sqlite-devel
+sudo apt install libcurl4-gnutls-dev sqlite-devel
 ```
 
 ## cookies
