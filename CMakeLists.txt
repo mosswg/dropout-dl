@@ -3,7 +3,7 @@ project(dropout-dl)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(dropout-dl main.cpp)
+add_executable(dropout-dl src/episode.cpp src/main.cpp)
 
 IF (EXISTS "firefox_profile")
     target_link_libraries(dropout-dl curl sqlite3)
