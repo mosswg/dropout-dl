@@ -64,7 +64,6 @@ This needs to be redone every time the cookies expire (~30 minutes)
 --verbose                Display debug information while running
 --force-cookies          Interpret the next to arguments as authentication cookie and session cookie
 --series                 Interpret the url as a link to a series and download all episodes from all seasons
---episode                Select an episode from the series to download
---season                 Select a season from the series to download
+--season                 Interpret the url as a link to a season and download all episodes from all seasons
 ```
 By default, dropout-dl will download the episode in the format `<series>/S<season-num>E<episode-num><name>.mp4`

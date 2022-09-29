@@ -77,7 +77,6 @@ namespace dropout_dl {
         void download(const std::string& quality, const std::string& series_directory, std::string filename = "");
 
         episode(const std::string& episode_url, std::vector<std::string> cookies, bool verbose = false) {
-            std::cout << episode_url << std::endl;
 
             this->episode_url = episode_url;
             this->verbose = verbose;

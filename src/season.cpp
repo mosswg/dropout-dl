@@ -24,7 +24,7 @@ namespace dropout_dl {
                 for (int j = 0; j + i < html_data.size(); j++) {
                     if (html_data[i + j] == '"') {
                         start_point += 15;
-                        return episode(html_data.substr(i, j), cookies);
+                        return {html_data.substr(i, j), cookies};
                     }
                 }
             }
@@ -45,6 +45,7 @@ namespace dropout_dl {
                 if (e.episode_url.empty()) {
                     continue;
                 }
+                std::cout << e.episode_number << ": " << e.name << ": " << e.episode_url << '\n';
                 out.push_back(e);
             }
         }
@@ -53,8 +54,14 @@ namespace dropout_dl {
     }
 
     void season::download(const std::string &quality, const std::string &series_directory) {
+        std::string dir = series_directory + "/" + this->name;
+
+        std::replace(dir.begin(), dir.end(), ' ', '_');
+
+        std::replace(dir.begin(), dir.end(), ',', '_');
+
         for (auto& ep : episodes) {
-            ep.download(quality, series_directory + "/" + this->name);
+            ep.download(quality, dir);
         }
     }
 } // dropout_dl

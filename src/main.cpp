@@ -292,26 +292,6 @@ std::vector<std::string> get_cookies(bool verbose = false) {
     }
 }
 
-/*
- * <select class="js-switch-season btn-dropdown-transparent margin-right-small" data-switch-season="">
-                  <option value="https://www.dropout.tv/game-changer/season:1" selected="">
-                    Season 1
-                  </option>
-                  <option value="https://www.dropout.tv/game-changer/season:2">
-                    Season 2
-                  </option>
-                  <option value="https://www.dropout.tv/game-changer/season:3">
-                    Season 3
-                  </option>
-                  <option value="https://www.dropout.tv/game-changer/season:4">
-                    Season 4
-                  </option>
-                  <option value="https://www.dropout.tv/game-changer/season:7">
-                    Bonus Content
-                  </option>
-              </select>
- */
-
 class options {
 public:
 
@@ -319,11 +299,11 @@ public:
     bool verbose = false;
     bool cookies_forced = false;
     bool series = false;
+    bool season = false;
     std::string quality;
     std::string filename;
     std::string series_dir;
     std::string episode;
-    std::string season;
     std::vector<std::string> cookies;
 
     static std::vector<std::string> convert_program_args(int argc, char** argv) {
@@ -380,19 +360,8 @@ public:
             else if (arg == "series") {
                 series = true;
             }
-            else if (arg == "episode") {
-                if (i + 1 >= args.size()) {
-                    std::cerr << "ARGUMENT PARSE ERROR: --episode used with too few following arguments\n";
-                    exit(8);
-                }
-                episode = args[++i];
-            }
             else if (arg == "season") {
-                if (i + 1 >= args.size()) {
-                    std::cerr << "ARGUMENT PARSE ERROR: --season used with too few following arguments\n";
-                    exit(8);
-                }
-                season = args[++i];
+                season = true;
             }
             else if (arg == "help") {
                 std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
@@ -406,14 +375,17 @@ public:
                                 "\t--verbose                Display debug information while running\n"
                                 "\t--force-cookies          Interpret the next to arguments as authentication cookie and session cookie\n"
                                 "\t--series                 Interpret the url as a link to a series and download all episodes from all seasons\n"
-                                "\t--episode                Select an episode from the series to download\n"
-                                "\t--season                 Select a season from the series to download\n"
+                                "\t--season                 Interpret the url as a link to a season and download all episodes from all seasons\n"
                                 << std::endl;
 
                 exit(0);
             }
         }
 
+
+        if (season && series) {
+            std::cerr << "ARGUMENT PARSE ERROR: Season and Series arguments used\n";
+        }
         if (quality.empty()) {
             quality = "1080p";
         }
@@ -457,6 +429,19 @@ int main(int argc, char** argv) {
         }
 
         series.download(options.quality, options.series_dir);
+    }
+    else if (options.season) {
+        dropout_dl::season season = dropout_dl::series::get_season(options.url, options.cookies);
+
+        if (options.series_dir.empty()) {
+            options.series_dir = season.series_name;
+
+            std::replace(options.series_dir.begin(), options.series_dir.end(), ' ', '_');
+
+            std::replace(options.series_dir.begin(), options.series_dir.end(), ',', '_');
+        }
+
+        season.download(options.quality, options.series_dir);
     }
     else {
         dropout_dl::episode ep(options.url, options.cookies, options.verbose);
