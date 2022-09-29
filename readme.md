@@ -34,7 +34,7 @@ close firefox and go to your [firefox profile folder](https://support.mozilla.or
 sqlite3 cookies.sqlite "SELECT value FROM moz_cookies WHERE host LIKE '%dropout.tv%' AND name='__cf_bm';" > <build-dir>/auth_cookie
 sqlite3 cookies.sqlite "SELECT value FROM moz_cookies WHERE host LIKE '%dropout.tv%' AND name='_session';" > <build-dir>/session_cookie
 ```
-this needs to be redone every time the cookies expire (~1-2 hours)
+this needs to be redone every time the cookies expire (~30 minutes)
 #### option 3
 open firefox and go to any dropout.tv episode \
 open the dev tools and go to network then refresh \
@@ -42,11 +42,14 @@ search for `?api` and select the top request \
 copy the `__cf_bm` cookie from the cookies section \
 create a file called `auth_cookie` and paste the cookie in the file \
 go back to firefox and copy the `_session` cookie into a file named `session_cookie` \
-this needs to be redone everytime the cookie expires (~1-2 hours)
+this needs to be redone everytime the cookie expires (~30 minutes)
 ### chrome
+#### option 1 (requires sqlite-devel and libgcrypt) NOT CURRENTLY FUNCTIONAL
+create a file named `chrome_profile` in the build directory and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
+#### option 2
 go to settings > privacy and security > cookies > see all cookies > vhx.tv > __cf_bm \
 copy the `content` and paste it into the `cookie` file \
-this needs to be redone every time the cookies expire (~1-2 hours)
+this needs to be redone every time the cookies expire (~30 minutes)
 
 ## how to use
 run the command
