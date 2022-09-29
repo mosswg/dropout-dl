@@ -11,7 +11,6 @@
 #endif
 #endif
 
-
 static int sqlite_write_callback(void* data, int argc, char** argv, char** azColName)
 {
     if (argc < 1) {
@@ -298,8 +297,8 @@ std::vector<std::string> get_cookies(bool verbose = false) {
 
 int main(int argc, char** argv) {
 
-    bool verbose = true;
-    std::string quality = "1080p";
+    bool verbose = false;
+    std::string quality = "all";
 
     std::string firefox_profile;
     std::string chrome_profile;
@@ -325,12 +324,6 @@ int main(int argc, char** argv) {
 
     dropout_dl::episode ep(episode_url, cookies, verbose);
 
-    std::string video_url = ep.get_video_url(quality);
-    if (verbose) {
-        std::cout << "Got video url: " << video_url << '\n';
-    }
-
-
     if (!std::filesystem::is_directory(ep.series)) {
         std::filesystem::create_directories(ep.series);
         if (verbose) {
@@ -338,9 +331,25 @@ int main(int argc, char** argv) {
         }
     }
 
-    std::fstream out(ep.filename, std::ios_base::in|std::ios_base::out|std::ios_base::trunc);
+    if (quality == "all") {
+        for (const auto& possible_quality : ep.qualities) {
+            if (!std::filesystem::is_directory(ep.series + "/" + possible_quality)) {
+                std::filesystem::create_directories(ep.series + "/" + possible_quality);
+                if (verbose) {
+                    std::cout << "Creating series directory" << '\n';
+                }
+            }
+            std::fstream out(ep.series + "/" + possible_quality + "/" + ep.filename,
+                             std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-    out << ep.get_video_data(quality) << std::endl;
+            out << ep.get_video_data(possible_quality) << std::endl;
+        }
+    }
+    else {
+        std::fstream out(ep.series + "/" + ep.filename, std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+
+        out << ep.get_video_data(quality) << std::endl;
+    }
 
     return 0;
 }

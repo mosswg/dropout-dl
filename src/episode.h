@@ -113,7 +113,7 @@ namespace dropout_dl {
 
             std::replace(this->series.begin(), this->series.end(), ',', '_');
 
-            this->filename = this->series + "/S" + (this->season_number.size() < 2 ? "0" + this->season_number : this->season_number) + "E" + (this->episode_number.size() < 2 ? "0" + this->episode_number : this->episode_number) + this->name + ".mp4";
+            this->filename = "S" + (this->season_number.size() < 2 ? "0" + this->season_number : this->season_number) + "E" + (this->episode_number.size() < 2 ? "0" + this->episode_number : this->episode_number) + this->name + ".mp4";
 
             std::replace(filename.begin(), filename.end(), ' ', '_');
 
