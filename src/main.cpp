@@ -1,8 +1,6 @@
 #include <iostream>
-#include <fstream>
-#include <filesystem>
 
-#include "episode.h"
+#include "series.h"
 
 #ifdef DROPOUT_DL_SQLITE
 #include <sqlite3.h>
@@ -320,9 +318,12 @@ public:
     std::string url;
     bool verbose = false;
     bool cookies_forced = false;
+    bool series = false;
     std::string quality;
     std::string filename;
     std::string series_dir;
+    std::string episode;
+    std::string season;
     std::vector<std::string> cookies;
 
     static std::vector<std::string> convert_program_args(int argc, char** argv) {
@@ -337,59 +338,79 @@ public:
         std::vector<std::string> args = convert_program_args(argc, argv);
 
         for (int i = 0; i < args.size(); i++) {
-            const auto& arg = args[i];
+            std::string arg = args[i];
 
             if (arg.substr(0, 2) != "--") {
                 url = arg;
+                continue;
             }
-            else {
-                if (arg == "--verbose") {
-                    verbose = true;
-                } else if (arg == "--quality") {
-                    if (i + 1 >= args.size()) {
-                        std::cerr << "ARGUMENT PARSE ERROR: --quality used with too few following arguments\n";
-                        exit(8);
-                    }
-                    quality = args[++i];
+            arg = arg.substr(2);
+            if (arg == "verbose") {
+                verbose = true;
+            } else if (arg == "quality") {
+                if (i + 1 >= args.size()) {
+                    std::cerr << "ARGUMENT PARSE ERROR: --quality used with too few following arguments\n";
+                    exit(8);
                 }
-                else if (arg == "--force-cookies") {
-                    if (i + 2 >= args.size()) {
-                        std::cerr << "ARGUMENT PARSE ERROR: --force-cookies used with too few following arguments\n";
-                        exit(8);
-                    }
-                    cookies.emplace_back(args[++i]);
-                    cookies.emplace_back(args[++i]);
-                    cookies_forced = true;
+                quality = args[++i];
+            }
+            else if (arg == "force-cookies") {
+                if (i + 2 >= args.size()) {
+                    std::cerr << "ARGUMENT PARSE ERROR: --force-cookies used with too few following arguments\n";
+                    exit(8);
                 }
-                else if (arg == "--output") {
-                    if (i + 1 >= args.size()) {
-                        std::cerr << "ARGUMENT PARSE ERROR: --output used with too few following arguments\n";
-                        exit(8);
-                    }
-                    filename = args[++i];
+                cookies.emplace_back(args[++i]);
+                cookies.emplace_back(args[++i]);
+                cookies_forced = true;
+            }
+            else if (arg == "output") {
+                if (i + 1 >= args.size()) {
+                    std::cerr << "ARGUMENT PARSE ERROR: --output used with too few following arguments\n";
+                    exit(8);
                 }
-                else if (arg == "--output-directory") {
-                    if (i + 1 >= args.size()) {
-                        std::cerr << "ARGUMENT PARSE ERROR: --output-directory used with too few following arguments\n";
-                        exit(8);
-                    }
-                    series_dir = args[++i];
+                filename = args[++i];
+            }
+            else if (arg == "output-directory") {
+                if (i + 1 >= args.size()) {
+                    std::cerr << "ARGUMENT PARSE ERROR: --output-directory used with too few following arguments\n";
+                    exit(8);
                 }
-                else if (arg == "--help") {
-                    std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
-                                 "\n"
-                                 "Options:\n"
-                                    "\t--help                   Display this message\n"
-                                    "\t--quality                Set the quality of the downloaded video. Quality can be set to 'all' which\n"
-                                    "\t                             will download all qualities and place them into separate folders\n"
-                                    "\t--output                 Set the output filename\n"
-                                    "\t--output-directory       Set the directory where files are output\n"
-                                    "\t--verbose                Display debug information while running\n"
-                                    "\t--force-cookies          Interpret the next to arguments as authentication cookie and session cookie\n"
-                                    << std::endl;
+                series_dir = args[++i];
+            }
+            else if (arg == "series") {
+                series = true;
+            }
+            else if (arg == "episode") {
+                if (i + 1 >= args.size()) {
+                    std::cerr << "ARGUMENT PARSE ERROR: --episode used with too few following arguments\n";
+                    exit(8);
+                }
+                episode = args[++i];
+            }
+            else if (arg == "season") {
+                if (i + 1 >= args.size()) {
+                    std::cerr << "ARGUMENT PARSE ERROR: --season used with too few following arguments\n";
+                    exit(8);
+                }
+                season = args[++i];
+            }
+            else if (arg == "help") {
+                std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
+                             "\n"
+                             "Options:\n"
+                                "\t--help                   Display this message\n"
+                                "\t--quality                Set the quality of the downloaded video. Quality can be set to 'all' which\n"
+                                "\t                             will download all qualities and place them into separate folders\n"
+                                "\t--output                 Set the output filename\n"
+                                "\t--output-directory       Set the directory where files are output\n"
+                                "\t--verbose                Display debug information while running\n"
+                                "\t--force-cookies          Interpret the next to arguments as authentication cookie and session cookie\n"
+                                "\t--series                 Interpret the url as a link to a series and download all episodes from all seasons\n"
+                                "\t--episode                Select an episode from the series to download\n"
+                                "\t--season                 Select a season from the series to download\n"
+                                << std::endl;
 
-                    exit(0);
-                }
+                exit(0);
             }
         }
 
@@ -401,7 +422,6 @@ public:
 
 
 int main(int argc, char** argv) {
-
     options options(argc, argv);
 
     std::cout << "quality: " << options.quality << std::endl;
@@ -425,52 +445,50 @@ int main(int argc, char** argv) {
         options.cookies = get_cookies(options.verbose);
     }
 
-    dropout_dl::episode ep(options.url, options.cookies, options.verbose);
+    if (options.series) {
+        dropout_dl::series series(options.url, options.cookies);
 
-    if (options.filename.empty()) {
-        options.filename = "S" + (ep.season_number.size() < 2 ? "0" + ep.season_number : ep.season_number) + "E" +
-                           (ep.episode_number.size() < 2 ? "0" + ep.episode_number : ep.episode_number) + ep.name +
-                           ".mp4";
+        if (options.series_dir.empty()) {
+            options.series_dir = series.name;
 
-        std::replace(options.filename.begin(), options.filename.end(), ' ', '_');
+            std::replace(options.series_dir.begin(), options.series_dir.end(), ' ', '_');
 
-        std::replace(options.filename.begin(), options.filename.end(), ',', '_');
-    }
-
-    if (options.verbose) {
-        std::cout << "filename: " << options.filename << '\n';
-    }
-
-    if (options.series_dir.empty()) {
-        options.series_dir = ep.series;
-    }
-
-    if (!std::filesystem::is_directory(ep.series)) {
-        std::filesystem::create_directories(ep.series);
-        if (options.verbose) {
-            std::cout << "Creating series directory" << '\n';
+            std::replace(options.series_dir.begin(), options.series_dir.end(), ',', '_');
         }
-    }
 
-    if (options.quality == "all") {
-        for (const auto& possible_quality : ep.qualities) {
-            if (!std::filesystem::is_directory(options.series_dir + "/" + possible_quality)) {
-                std::filesystem::create_directories(options.series_dir + "/" + possible_quality);
-                if (options.verbose) {
-                    std::cout << "Creating series directory" << '\n';
-                }
-            }
-            std::fstream out(options.series_dir + "/" + possible_quality + "/" + options.filename,
-                             std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
-
-            out << ep.get_video_data(possible_quality) << std::endl;
-        }
+        series.download(options.quality, options.series_dir);
     }
     else {
-        std::fstream out(options.series_dir + "/" + options.filename, std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+        dropout_dl::episode ep(options.url, options.cookies, options.verbose);
 
-        out << ep.get_video_data(options.quality) << std::endl;
+        if (options.filename.empty()) {
+            options.filename = "S" + (ep.season_number.size() < 2 ? "0" + ep.season_number : ep.season_number) + "E" +
+                               (ep.episode_number.size() < 2 ? "0" + ep.episode_number : ep.episode_number) + ep.name +
+                               ".mp4";
+
+            std::replace(options.filename.begin(), options.filename.end(), ' ', '_');
+
+            std::replace(options.filename.begin(), options.filename.end(), ',', '_');
+        }
+
+        if (options.verbose) {
+            std::cout << "filename: " << options.filename << '\n';
+        }
+
+        if (options.series_dir.empty()) {
+            options.series_dir = ep.series;
+        }
+
+        if (!std::filesystem::is_directory(ep.series)) {
+            std::filesystem::create_directories(ep.series);
+            if (options.verbose) {
+                std::cout << "Creating series directory" << '\n';
+            }
+        }
+
+        ep.download(options.quality, options.series_dir, options.filename);
     }
+
 
     return 0;
 }

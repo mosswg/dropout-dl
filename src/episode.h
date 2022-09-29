@@ -7,14 +7,14 @@
 #include <curl/curl.h>
 #include <vector>
 #include <algorithm>
+#include <fstream>
+#include <filesystem>
 
 namespace dropout_dl {
 
     bool substr_is(const std::string& string, int start, const std::string& test_str);
 
     void replace_all(std::string& str, const std::string& from, const std::string& to);
-
-    bool contains(const std::string& string, const std::string& test_str);
 
     #if defined(__WIN32__)
     #include <windows.h>
@@ -25,6 +25,10 @@ namespace dropout_dl {
     #endif
 
     static int curl_progress_func(void* ptr, double total_to_download, double downloaded, double total_to_upload, double uploaded);
+
+    size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
+
+    std::string get_generic_page(const std::string& url, bool verbose = false);
 
     class episode {
 
@@ -42,21 +46,13 @@ namespace dropout_dl {
         std::vector<std::string> qualities;
         std::vector<std::string> quality_urls;
 
-        bool verbose;
+        bool verbose = false;
 
         // Curl
-
-        static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
-        {
-            ((std::string*)userp)->append((char*)contents, size * nmemb);
-            return size * nmemb;
-        }
 
         static std::string get_episode_page(const std::string& url, const std::string& auth_cookie, const std::string& session_cookie, bool verbose = false);
 
         static std::string get_embedded_page(const std::string& url, const std::string& cookie, bool verbose = false);
-
-        static std::string get_config_page(const std::string& url, bool verbose = false);
 
 
         // Parsing
@@ -78,8 +74,11 @@ namespace dropout_dl {
 
         std::string get_video_data(const std::string& quality);
 
+        void download(const std::string& quality, const std::string& series_directory, std::string filename = "");
 
-        explicit episode(const std::string& episode_url, std::vector<std::string> cookies, bool verbose = false) {
+        episode(const std::string& episode_url, std::vector<std::string> cookies, bool verbose = false) {
+            std::cout << episode_url << std::endl;
+
             this->episode_url = episode_url;
             this->verbose = verbose;
 
@@ -141,10 +140,12 @@ namespace dropout_dl {
                 std::cout << "Got config url: " << this->embedded_url << '\n';
             }
 
-            this->config_data = get_config_page(this->config_url);
+            this->config_data = get_generic_page(this->config_url);
 
             this->get_qualities();
         }
+
+        episode() = default;
     };
 
 } // dropout_dl

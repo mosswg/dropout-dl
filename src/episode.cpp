@@ -27,15 +27,6 @@ namespace dropout_dl {
         }
     }
 
-    bool contains(const std::string& string, const std::string& test_str) {
-        for (int i = 0; i < string.size() - test_str.size(); i++) {
-            if (string.substr(i, test_str.size()) == test_str) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     #if defined(__WIN32__)
         #include <windows.h>
         msec_t time_ms(void)
@@ -80,6 +71,12 @@ namespace dropout_dl {
             std::cout.flush();
         }
         return 0;
+    }
+
+    size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+    {
+        ((std::string*)userp)->append((char*)contents, size * nmemb);
+        return size * nmemb;
     }
 
     // episode statics
@@ -358,14 +355,13 @@ namespace dropout_dl {
         return embedded_page;
     }
 
-    std::string episode::get_config_page(const std::string& url, bool verbose) {
-        CURLcode ret;
+    std::string get_generic_page(const std::string& url, bool verbose) {
         CURL *hnd;
         struct curl_slist *slist1;
 
         std::string config_page;
 
-        slist1 = NULL;
+        slist1 = nullptr;
         slist1 = curl_slist_append(slist1, "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0");
         slist1 = curl_slist_append(slist1, "Accept: */*");
         slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en;q=0.5");
@@ -394,30 +390,12 @@ namespace dropout_dl {
         curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &config_page);
 
-        /* Here is a list of options the curl code used that cannot get generated
-           as source easily. You may choose to either not use them or implement
-           them yourself.
-
-        CURLOPT_WRITEDATA set to a objectpointer
-        CURLOPT_INTERLEAVEDATA set to a objectpointer
-        CURLOPT_WRITEFUNCTION set to a functionpointer
-        CURLOPT_READDATA set to a objectpointer
-        CURLOPT_READFUNCTION set to a functionpointer
-        CURLOPT_SEEKDATA set to a objectpointer
-        CURLOPT_SEEKFUNCTION set to a functionpointer
-        CURLOPT_ERRORBUFFER set to a objectpointer
-        CURLOPT_STDERR set to a objectpointer
-        CURLOPT_HEADERFUNCTION set to a functionpointer
-        CURLOPT_HEADERDATA set to a objectpointer
-
-        */
-
-        ret = curl_easy_perform(hnd);
+        curl_easy_perform(hnd);
 
         curl_easy_cleanup(hnd);
-        hnd = NULL;
+        hnd = nullptr;
         curl_slist_free_all(slist1);
-        slist1 = NULL;
+        slist1 = nullptr;
 
         return config_page;
     }
@@ -468,7 +446,6 @@ namespace dropout_dl {
         return qualities;
     }
 
-
     std::string episode::get_video_url(const std::string& quality) {
         for (int i = 0; i < qualities.size(); i++) {
             if (qualities[i] == quality) {
@@ -492,7 +469,7 @@ namespace dropout_dl {
             std::string out;
 
             curl_easy_setopt(curl, CURLOPT_URL, get_video_url(quality).c_str());
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::episode::WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::WriteCallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
             curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
             curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, dropout_dl::curl_progress_func);
@@ -502,5 +479,34 @@ namespace dropout_dl {
             return out;
         }
         return "CURL ERROR";
+    }
+
+
+    void episode::download(const std::string& quality, const std::string& series_directory, std::string filename) {
+        if (filename.empty()) {
+            filename = "S" + (this->season_number.size() < 2 ? "0" + this->season_number : this->season_number) + "E" +
+                       (this->episode_number.size() < 2 ? "0" + this->episode_number : this->episode_number) + this->name +
+                       ".mp4";
+        }
+
+        if (quality == "all") {
+            for (const auto &possible_quality: this->qualities) {
+                if (!std::filesystem::is_directory(series_directory + "/" + possible_quality)) {
+                    std::filesystem::create_directories(series_directory + "/" + possible_quality);
+                    if (this->verbose) {
+                        std::cout << "Creating quality directory" << '\n';
+                    }
+                }
+                std::fstream out(series_directory + "/" + possible_quality + "/" + filename,
+                                 std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+
+                out << this->get_video_data(possible_quality) << std::endl;
+            }
+        } else {
+            std::fstream out(series_directory + "/" + filename,
+                             std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+
+            out << this->get_video_data(quality) << std::endl;
+        }
     }
 } // dropout_dl
