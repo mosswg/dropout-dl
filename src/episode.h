@@ -14,6 +14,7 @@ namespace dropout_dl {
 
     void replace_all(std::string& str, const std::string& from, const std::string& to);
 
+    bool contains(const std::string& string, const std::string& test_str);
 
     #if defined(__WIN32__)
     #include <windows.h>

@@ -294,48 +294,136 @@ std::vector<std::string> get_cookies(bool verbose = false) {
     }
 }
 
+/*
+ * <select class="js-switch-season btn-dropdown-transparent margin-right-small" data-switch-season="">
+                  <option value="https://www.dropout.tv/game-changer/season:1" selected="">
+                    Season 1
+                  </option>
+                  <option value="https://www.dropout.tv/game-changer/season:2">
+                    Season 2
+                  </option>
+                  <option value="https://www.dropout.tv/game-changer/season:3">
+                    Season 3
+                  </option>
+                  <option value="https://www.dropout.tv/game-changer/season:4">
+                    Season 4
+                  </option>
+                  <option value="https://www.dropout.tv/game-changer/season:7">
+                    Bonus Content
+                  </option>
+              </select>
+ */
+
+class options {
+public:
+
+    std::string url;
+    bool verbose = false;
+    bool cookies_forced = false;
+    std::string quality;
+    std::vector<std::string> cookies;
+
+    static std::vector<std::string> convert_program_args(int argc, char** argv) {
+        std::vector<std::string> out;
+        for (int i = 1; i < argc; i++) {
+            out.emplace_back(argv[i]);
+        }
+        return out;
+    }
+
+    options(int argc, char** argv) {
+        std::vector<std::string> args = convert_program_args(argc, argv);
+
+        bool next_is_quality = false;
+        bool next_is_cookie = false;
+        for (const auto& arg : args) {
+            if (next_is_quality) {
+                quality = arg;
+                next_is_quality = false;
+                continue;
+            }
+            if (next_is_cookie) {
+                cookies.emplace_back(arg);
+                if (cookies.size() == 2) {
+                    next_is_quality = false;
+                }
+                continue;
+            }
+            else if (arg.substr(0, 2) != "--") {
+                url = arg;
+            }
+            else {
+                if (arg == "--verbose") {
+                    verbose = true;
+                } else if (arg == "--quality") {
+                    next_is_quality = true;
+                }
+                else if (arg == "--force-cookies") {
+                    next_is_cookie = true;
+                    cookies_forced = true;
+                }
+                else if (arg == "--help") {
+                    std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
+                                 "\n"
+                                 "Options:\n"
+                                    "\t--help\t\t\t\tDisplay this message\n"
+                                    "\t--quality\t\t\tSet the quality of the downloaded video. Quality can be set to 'all' which\n"
+                                    "\t\t\t\t\t\twill download all qualities and place them into separate folders\n"
+                                    "\t--verbose\t\t\tDisplay debug information while running\n"
+                                    "\t--force-cookies\t\tInterpret the next to arguments as authentication cookie and session cookie\n"
+                                    << std::endl;
+
+                    exit(0);
+                }
+            }
+        }
+
+        if (quality.empty()) {
+            quality = "1080p";
+        }
+    }
+};
+
 
 int main(int argc, char** argv) {
 
-    bool verbose = false;
-    std::string quality = "all";
+    options options(argc, argv);
+
+    std::cout << "quality: " << options.quality << std::endl;
+    std::cout << "verbose: " << options.verbose << std::endl;
+    std::cout << "url: \"" << options.url << '"' << std::endl;
 
     std::string firefox_profile;
     std::string chrome_profile;
 
-    std::string episode_url;
-
-    std::vector<std::string> cookies;
-
     std::string video_data;
 
-    if (argc > 1) {
-        episode_url = argv[1];
-        if (verbose) {
-            std::cout << "Got episode url: " << episode_url << " from program arguments\n";
-        }
-    }
-    else {
+    if (options.url.empty()) {
         std::cout << "Enter episode url: ";
-        std::cin >> episode_url;
+        std::cin >> options.url;
+    }
+    else if (options.verbose) {
+        std::cout << "Got episode url: " << options.url << " from program arguments\n";
     }
 
-    cookies = get_cookies(verbose);
+    if (!options.cookies_forced) {
+        options.cookies = get_cookies(options.verbose);
+    }
 
-    dropout_dl::episode ep(episode_url, cookies, verbose);
+    dropout_dl::episode ep(options.url, options.cookies, options.verbose);
 
     if (!std::filesystem::is_directory(ep.series)) {
         std::filesystem::create_directories(ep.series);
-        if (verbose) {
+        if (options.verbose) {
             std::cout << "Creating series directory" << '\n';
         }
     }
 
-    if (quality == "all") {
+    if (options.quality == "all") {
         for (const auto& possible_quality : ep.qualities) {
             if (!std::filesystem::is_directory(ep.series + "/" + possible_quality)) {
                 std::filesystem::create_directories(ep.series + "/" + possible_quality);
-                if (verbose) {
+                if (options.verbose) {
                     std::cout << "Creating series directory" << '\n';
                 }
             }
@@ -348,7 +436,7 @@ int main(int argc, char** argv) {
     else {
         std::fstream out(ep.series + "/" + ep.filename, std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-        out << ep.get_video_data(quality) << std::endl;
+        out << ep.get_video_data(options.quality) << std::endl;
     }
 
     return 0;

@@ -27,6 +27,15 @@ namespace dropout_dl {
         }
     }
 
+    bool contains(const std::string& string, const std::string& test_str) {
+        for (int i = 0; i < string.size() - test_str.size(); i++) {
+            if (string.substr(i, test_str.size()) == test_str) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     #if defined(__WIN32__)
         #include <windows.h>
         msec_t time_ms(void)
