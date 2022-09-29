@@ -366,11 +366,11 @@ public:
                     std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
                                  "\n"
                                  "Options:\n"
-                                    "\t--help\t\t\t\tDisplay this message\n"
-                                    "\t--quality\t\t\tSet the quality of the downloaded video. Quality can be set to 'all' which\n"
-                                    "\t\t\t\t\t\twill download all qualities and place them into separate folders\n"
-                                    "\t--verbose\t\t\tDisplay debug information while running\n"
-                                    "\t--force-cookies\t\tInterpret the next to arguments as authentication cookie and session cookie\n"
+                                    "\t--help               Display this message\n"
+                                    "\t--quality            Set the quality of the downloaded video. Quality can be set to 'all' which\n"
+                                    "\t                         will download all qualities and place them into separate folders\n"
+                                    "\t--verbose            Display debug information while running\n"
+                                    "\t--force-cookies      Interpret the next to arguments as authentication cookie and session cookie\n"
                                     << std::endl;
 
                     exit(0);
