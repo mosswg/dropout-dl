@@ -39,6 +39,10 @@ namespace dropout_dl {
         std::string config_url;
         std::string config_data;
         std::string filename;
+        std::vector<std::string> qualities;
+        std::vector<std::string> quality_urls;
+
+        bool verbose;
 
         // Curl
 
@@ -68,6 +72,8 @@ namespace dropout_dl {
 
         static std::string get_config_url(const std::string& html_data);
 
+        std::vector<std::string> get_qualities();
+
         std::string get_video_url(const std::string& quality);
 
         std::string get_video_data(const std::string& quality);
@@ -75,6 +81,7 @@ namespace dropout_dl {
 
         explicit episode(const std::string& episode_url, std::vector<std::string> cookies, bool verbose = false) {
             this->episode_url = episode_url;
+            this->verbose = verbose;
 
             episode_data = get_episode_page(episode_url, cookies[0], cookies[1]);
 
@@ -140,6 +147,8 @@ namespace dropout_dl {
             }
 
             this->config_data = get_config_page(this->config_url);
+
+            this->get_qualities();
         }
     };
 

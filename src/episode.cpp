@@ -48,7 +48,7 @@ namespace dropout_dl {
     long last_progress_timestamp;
 
     int curl_progress_func(void* ptr, double total_to_download, double downloaded, double total_to_upload, double uploaded) {
-        const double number_chars = 100;
+        const double number_chars = 50;
         const char* full_character = "▓";
         const char* empty_character = "░";
 
@@ -413,38 +413,67 @@ namespace dropout_dl {
         return config_page;
     }
 
-
-
-    std::string episode::get_video_url(const std::string& quality) {
+    std::vector<std::string> episode::get_qualities() {
+        if (!qualities.empty()) {
+            return qualities;
+        }
         int i = 0;
         bool video_section = false;
-        for (; i < this->config_data.size(); i++ ) {
+
+        const std::string quality_marker = R"("quality":")";
+        for (; i < config_data.size(); i++ ) {
             // std::cout << i << "/" << javascript_data.size() << ": " << javascript_data[i] << ": " << javascript_data.substr(i, 17) << ": " << video_section << "\n";
-            if (this->config_data.substr(i, 9) == "video/mp4") {
+            if (config_data.substr(i, 9) == "video/mp4") {
                 video_section = true;
             }
 
-            if (video_section && this->config_data.substr(i, (R"("quality":")" + quality + '"').size()) == R"("quality":")" + quality + '"') {
-                break;
+            if (video_section && config_data.substr(i, quality_marker.size()) == quality_marker) {
+                i += quality_marker.size();
+                for (int j = 0; j + i < config_data.size(); j++) {
+                    if (config_data[i + j] == '"') {
+                        this->qualities.push_back(config_data.substr(i, j));
+                        if (this->verbose) {
+                            std::cout << "Found quality (" << i << " + " << j << "): " << qualities.back() << std::endl;
+                        }
+                        break;
+                    }
+                }
+                for (int j = i; j > 0; j--) {
+                    // std::cout << i << ": " << javascript_data[i] << ": " << javascript_data.substr(i-7, 7) << "\n";
+                    if (this->config_data.substr(j-7, 7) == R"("url":")") {
+                        for (int k = 0; k < i - j; k++) {
+                            if (config_data[j + k] == '"') {
+                                this->quality_urls.emplace_back(config_data.substr(j, k));
+                                if (this->verbose) {
+                                    std::cout << "Found url (" << j << " + " << k << "): " << quality_urls.back()
+                                              << std::endl;
+                                }
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
             }
         }
-        if (i == this->config_data.size()) {
-            std::cerr << "ERROR: quality of " << quality << " not found" << std::endl;
-            exit(7);
-        }
+        return qualities;
+    }
 
-        std::string url;
-        for (; i > 0; i--) {
-            // std::cout << i << ": " << javascript_data[i] << ": " << javascript_data.substr(i-7, 7) << "\n";
-            if (this->config_data.substr(i-7, 7) == R"("url":")") {
-                break;
+
+    std::string episode::get_video_url(const std::string& quality) {
+        for (int i = 0; i < qualities.size(); i++) {
+            if (qualities[i] == quality) {
+                return quality_urls[i];
             }
         }
-
-        while (this->config_data[i] != '"') {
-            url += this->config_data[i++];
+        std::cerr << "ERROR: quality of " << quality << " not found\nPossible qualities: ";
+        for (int i = 0; i < qualities.size(); i++) {
+            std::cerr << qualities[i];
+            if (i != qualities.size() - 1) {
+                std::cerr << ", ";
+            }
         }
-        return url;
+        exit(6);
     }
 
     std::string episode::get_video_data(const std::string &quality) {
