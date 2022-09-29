@@ -91,6 +91,11 @@ namespace dropout_dl {
                 std::cout << "Got name: " << name << '\n';
             }
 
+            if (name == "ERROR") {
+                std::cerr << "EPISODE ERROR: Invalid Episode URL\n";
+                exit(6);
+            }
+
             this->season_number = get_season_number(episode_data);
 
             if (verbose) {
