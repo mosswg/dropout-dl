@@ -20,3 +20,6 @@ IF(GCRYPT_FOUND)
     add_compile_definitions(DROPOUT_DL_GCRYPT)
 ENDIF()
 
+# IF(DROPOUT_BUILD_TESTS)
+    add_subdirectory(tests)
+# ENDIF()
