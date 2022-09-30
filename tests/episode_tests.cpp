@@ -1,8 +1,7 @@
 //
 // Created by moss on 9/30/22.
 //
-#include "episode.h"
-#include "test.h"
+#include "episode_tests.h"
 
 namespace dropout_dl {
     tests test_episode_name_parsing() {
@@ -286,37 +285,24 @@ namespace dropout_dl {
     }
 }
 
-int main() {
+std::vector<dropout_dl::tests> test_episode() {
 
-    dropout_dl::tests name_tests = dropout_dl::test_episode_name_parsing();
+    std::vector<dropout_dl::tests> testss;
 
-
-    dropout_dl::tests number_tests = dropout_dl::test_episode_number_parsing();
-
-
-    dropout_dl::tests series_tests = dropout_dl::test_episode_series_name_parsing();
+    testss.push_back(dropout_dl::test_episode_name_parsing());
 
 
-    dropout_dl::tests embedded_tests = dropout_dl::test_episode_embedded_url_parsing();
+    testss.push_back(dropout_dl::test_episode_number_parsing());
 
 
-    dropout_dl::tests config_tests = dropout_dl::test_episode_config_url_parsing();
+    testss.push_back(dropout_dl::test_episode_series_name_parsing());
 
 
-    if (name_tests.success && number_tests.success && series_tests.success && embedded_tests.success && config_tests.success) {
-        std::cout << TESTNAME << BOLDRED << "Episode Tests" << RESET << std::endl;
-    }
-    else {
-        std::cout << TESTNAME << BOLDGREEN << "Episode Tests" << RESET << std::endl;
-    }
+    testss.push_back(dropout_dl::test_episode_embedded_url_parsing());
 
-    name_tests.display();
 
-    number_tests.display();
+    testss.push_back(dropout_dl::test_episode_config_url_parsing());
 
-    series_tests.display();
 
-    embedded_tests.display();
-
-    config_tests.display();
+    return testss;
 }

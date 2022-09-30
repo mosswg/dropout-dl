@@ -3,9 +3,9 @@ project(dropout-dl-tests)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(episode-test test.cpp episode.cpp ../src/episode.cpp)
+add_executable(test test.cpp episode_tests.cpp ../src/episode.cpp)
 
-target_link_libraries(episode-test curl sqlite3 gcrypt)
+target_link_libraries(test curl sqlite3 gcrypt)
 
 message(STATUS "Building Tests")
 
