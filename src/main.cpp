@@ -8,6 +8,9 @@
 
 namespace dropout_dl {
 
+    /**
+     * A class for handling and storing the program arguments.
+     */
     class options {
     public:
 
@@ -22,6 +25,14 @@ namespace dropout_dl {
         std::string episode;
         std::vector<cookie> cookies;
 
+        /**
+         *
+         * @param argc - The number of provided program arguments
+         * @param argv - The provided program arguments
+         * @return A vector of arguments in the c++ string format
+         *
+         * Converts the C style program arguments to a vector of strings
+         */
         static std::vector<std::string> convert_program_args(int argc, char** argv) {
             std::vector<std::string> out;
             for (int i = 1; i < argc; i++) {
@@ -30,6 +41,13 @@ namespace dropout_dl {
             return out;
         }
 
+        /**
+         *
+         * @param argc - The number of provided program arguments
+         * @param argv - The provided program arguments
+         *
+         * Parses and handles the program arguments and creates an options object.
+         */
         options(int argc, char** argv) {
             std::vector<std::string> args = convert_program_args(argc, argv);
 
@@ -113,6 +131,14 @@ namespace dropout_dl {
 }
 
 #ifdef DROPOUT_DL_SQLITE
+/**
+ *
+ * @param firefox_profile_path - The path to a firefox profile
+ * @param verbose - Whether or not to be verbose
+ * @return A vector of cookies
+ *
+ * Gets the needed cookies from the firefox sqlite database associated with the path provided.
+ */
 std::vector<dropout_dl::cookie> get_cookies_from_firefox(const std::filesystem::path& firefox_profile_path, bool verbose = false) {
 
     std::fstream firefox_profile_file(firefox_profile_path);
@@ -158,9 +184,9 @@ std::vector<dropout_dl::cookie> get_cookies_from_firefox(const std::filesystem::
     }
 
     if (verbose) {
-        std::cout << auth.name << ": " << auth.len << ": " << auth.str << '\n';
+        std::cout << auth.name << ": " << auth.len << ": " << auth.value << '\n';
 
-        std::cout << session.name << ": " << session.len << ": " << session.str << '\n';
+        std::cout << session.name << ": " << session.len << ": " << session.value << '\n';
     }
 
     out.push_back(auth);
@@ -171,6 +197,16 @@ std::vector<dropout_dl::cookie> get_cookies_from_firefox(const std::filesystem::
 }
 
 #ifdef DROPOUT_DL_GCRYPT
+/**
+ *
+ * @param chrome_profile_path - The path to a chrome profile
+ * @param verbose - Whether or not to be verbose
+ * @return A vector of cookies
+ *
+ * Gets the needed cookies from the chrome sqlite database associated with the path provided and decrypts them using the libgcrypt library.
+ * This function does not work for windows and must be modified slightly for mac os.
+ * For mac os the calls to cookie::chrome_decrypt must be passed the parameters detailed in it's documentation.
+ */
 std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::path& chrome_profile_path, bool verbose = false) {
 
     std::fstream chrome_profile_file(chrome_profile_path);
@@ -215,12 +251,10 @@ std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::p
 
     session.chrome_decrypt();
 
-    session.url_decode();
-
     if (verbose) {
-        std::cout << auth.name << ": " << auth.len << ": " << auth.str << '\n';
+        std::cout << auth.name << ": " << auth.len << ": " << auth.value << '\n';
 
-        std::cout << session.name << ": " << session.len << ": " << session.str << '\n';
+        std::cout << session.name << ": " << session.len << ": " << session.value << '\n';
     }
 
     out.push_back(auth);
@@ -231,58 +265,36 @@ std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::p
 #endif
 #endif
 
-std::vector<dropout_dl::cookie> get_cookies_from_files(const std::filesystem::path& auth_cookie_path, const std::filesystem::path& session_cookie_path, bool verbose = false) {
-    std::fstream auth_cookie_file("auth_cookie");
-    std::fstream session_cookie_file("session_cookie");
-
-    std::string auth_cookie;
-    std::string session_cookie;
-
-    std::vector<dropout_dl::cookie> out;
-
-    auth_cookie_file >> auth_cookie;
-    if (verbose) {
-        std::cout << "Got __cf_bm cookie from auth_cookie file db\n";
-    }
-
-    out.emplace_back(auth_cookie);
-
-    session_cookie_file >> session_cookie;
-    if (verbose) {
-        std::cout << "Got _session cookie from auth_cookie file db\n";
-    }
-
-    out.emplace_back(session_cookie);
-
-    return out;
-}
-
+/**
+ *
+ * @param verbose - Whether or not to be verbose
+ * @return A vector of cookies
+ *
+ * Determines whether to get cookies from firefox or chrome. This function should not be run if cookies are forced using the `--force-cookies` option.
+ * This function checks firefox first so if both firefox and chrome profiles are provided it will use firefox.
+ */
 std::vector<dropout_dl::cookie> get_cookies(bool verbose = false) {
 
-#ifdef DROPOUT_DL_SQLITE
     std::filesystem::path firefox_profile("firefox_profile");
-#ifdef DROPOUT_DL_GCRYPT
     std::filesystem::path chrome_profile("chrome_profile");
-#endif
-#endif
-    std::filesystem::path auth_cookie("auth_cookie");
-    std::filesystem::path session_cookie("session_cookie");
 
-
-    #ifdef DROPOUT_DL_SQLITE
     if (std::filesystem::exists(firefox_profile)) {
+
+        #ifdef DROPOUT_DL_SQLITE
         return get_cookies_from_firefox(firefox_profile, verbose);
-    } else
-    #ifdef DROPOUT_DL_GCRYPT
-    if (std::filesystem::exists(chrome_profile)) {
-        return get_cookies_from_chrome(chrome_profile, verbose);
-    } else
-    #endif
-    #endif
-    if (std::filesystem::exists(auth_cookie) && std::filesystem::exists(session_cookie)){
-        return get_cookies_from_files(auth_cookie, session_cookie, verbose);
+        #else
+                std::cout << "WARNING: Firefox profile file exists but sqlite3-dev is not installed" << std::endl;
+        #endif
     }
-    else {
+    if (std::filesystem::exists(chrome_profile)) {
+        #if defined(DROPOUT_DL_GCRYPT) & defined(DROPOUT_DL_SQLITE)
+        return get_cookies_from_chrome(chrome_profile, verbose);
+        #else
+        std::cout << "WARNING: Chrome profile file exists but libgcrypt or sqlite3-dev is not installed" << std::endl;
+        #endif
+    }
+
+    {
         std::cerr << "ERROR: dropout.tv cookies could not be found" << std::endl;
         exit(7);
     }
@@ -292,9 +304,11 @@ std::vector<dropout_dl::cookie> get_cookies(bool verbose = false) {
 int main(int argc, char** argv) {
     dropout_dl::options options(argc, argv);
 
-//    std::cout << "quality: " << options.quality << std::endl;
-//    std::cout << "verbose: " << options.verbose << std::endl;
-//    std::cout << "url: \"" << options.url << '"' << std::endl;
+    if (options.verbose) {
+        std::cout << "quality: " << options.quality << std::endl;
+        std::cout << "verbose: " << options.verbose << std::endl;
+        std::cout << "url: \"" << options.url << '"' << std::endl;
+    }
 
     std::string firefox_profile;
     std::string chrome_profile;
@@ -331,16 +345,6 @@ int main(int argc, char** argv) {
     }
     else {
         dropout_dl::episode ep(options.url, options.cookies, options.verbose);
-
-        if (options.filename.empty()) {
-            options.filename = "S" + (ep.season_number.size() < 2 ? "0" + ep.season_number : ep.season_number) + "E" +
-                               (ep.episode_number.size() < 2 ? "0" + ep.episode_number : ep.episode_number) + ep.name +
-                               ".mp4";
-
-            std::replace(options.filename.begin(), options.filename.end(), ' ', '_');
-
-            std::replace(options.filename.begin(), options.filename.end(), ',', '_');
-        }
 
         if (options.verbose) {
             std::cout << "filename: " << options.filename << '\n';
