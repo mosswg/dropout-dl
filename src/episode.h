@@ -222,8 +222,6 @@ namespace dropout_dl {
         std::string name;
         /// The number of the episode in the season. This can be a number or a string
         std::string episode_number;
-        /// The number of the season. This can be a number or a string
-        std::string season_number;
         /// The url for the main episode page
         std::string episode_url;
         /// The data of the main episode page
@@ -284,15 +282,6 @@ namespace dropout_dl {
          * Get the number of the episode from the episode page
          */
         static std::string get_episode_number(const std::string& html_data);
-
-        /**
-         *
-         * @param html_data - Episode page data
-         * @return The season number
-         *
-         * Get the season number from the episode page
-         */
-        static std::string get_season_number(const std::string& html_data);
 
         /**
          *
@@ -376,12 +365,6 @@ namespace dropout_dl {
             if (name == "ERROR") {
                 std::cerr << "EPISODE ERROR: Invalid Episode URL\n";
                 exit(6);
-            }
-
-            this->season_number = get_season_number(episode_data);
-
-            if (verbose) {
-                std::cout << "Got season: " << this->season_number << '\n';
             }
 
             this->episode_number = get_episode_number(episode_data);

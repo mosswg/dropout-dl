@@ -113,7 +113,7 @@ namespace dropout_dl {
                 }
             }
         }
-        return "-1";
+        return "ERROR";
     }
 
     std::string episode::get_episode_name(const std::string& html_data) {
@@ -151,24 +151,6 @@ namespace dropout_dl {
                         return episode_num;
                     }
                     episode_num += html_data[j];
-                }
-            }
-        }
-        return "-1";
-    }
-
-    std::string episode::get_season_number(const std::string& html_data) {
-        std::string season("Season");
-        std::string dash(",");
-        std::string season_num;
-        for (int i = 0; i < html_data.size(); i++) {
-            if (substr_is(html_data, i, season)) {
-                for (int j = i + 7; j < html_data.size(); j++) {
-                    if (html_data[j] == '\n' || html_data[j] == ' ' || html_data[j] == '\t') continue;
-                    if (html_data[j] == '-' || html_data[j] == ',' ) {
-                        return season_num;
-                    }
-                    season_num += html_data[j];
                 }
             }
         }
