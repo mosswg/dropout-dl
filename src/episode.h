@@ -254,7 +254,6 @@ namespace dropout_dl {
          */
         static std::string get_episode_page(const std::string& url, const std::string& auth_cookie, const std::string& session_cookie, bool verbose = false);
 
-
         // Parsing
         /**
          *
@@ -403,7 +402,7 @@ namespace dropout_dl {
             replace_all(this->config_url, "\\u0026", "&");
 
             if (verbose) {
-                std::cout << "Got config url: " << this->embedded_url << '\n';
+                std::cout << "Got config url: " << this->config_url << '\n';
             }
 
             this->config_data = get_generic_page(this->config_url);
