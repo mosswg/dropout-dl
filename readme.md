@@ -49,6 +49,12 @@ By default, dropout-dl will download the episode in the format `<series>/S<seaso
 --season                 Interpret the url as a link to a season and download all episodes from all seasons
 ```
 
+## TODO
+- [ ] Test build process on other setups with other OSs.
+- [ ] Handle non-alphanumeric characters
+- [ ] Create tests
+
+
 ## Contributing
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://makeapullrequest.com)
 ### Issues
