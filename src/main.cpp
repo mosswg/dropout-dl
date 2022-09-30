@@ -4,33 +4,124 @@
 
 #ifdef DROPOUT_DL_SQLITE
 #include <sqlite3.h>
-#ifdef DROPOUT_DL_GCRYPT
-#include <gcrypt.h>
-#endif
 #endif
 
-static int sqlite_write_callback(void* data, int argc, char** argv, char** azColName)
-{
-    if (argc < 1) {
-        std::cerr << "ERROR: sqlite could not find dropout.tv cookie" << std::endl;
-        return -1;
-    }
-    else {
-        *(std::string*)data = argv[0];
-        return 0;
-    }
+namespace dropout_dl {
+
+    class options {
+    public:
+
+        std::string url;
+        bool verbose = false;
+        bool cookies_forced = false;
+        bool series = false;
+        bool season = false;
+        std::string quality;
+        std::string filename;
+        std::string output_directory;
+        std::string episode;
+        std::vector<cookie> cookies;
+
+        static std::vector<std::string> convert_program_args(int argc, char** argv) {
+            std::vector<std::string> out;
+            for (int i = 1; i < argc; i++) {
+                out.emplace_back(argv[i]);
+            }
+            return out;
+        }
+
+        options(int argc, char** argv) {
+            std::vector<std::string> args = convert_program_args(argc, argv);
+
+            for (int i = 0; i < args.size(); i++) {
+                std::string arg = args[i];
+
+                if (arg.substr(0, 2) != "--") {
+                    url = arg;
+                    continue;
+                }
+                arg = arg.substr(2);
+                if (arg == "verbose") {
+                    verbose = true;
+                } else if (arg == "quality") {
+                    if (i + 1 >= args.size()) {
+                        std::cerr << "ARGUMENT PARSE ERROR: --quality used with too few following arguments\n";
+                        exit(8);
+                    }
+                    quality = args[++i];
+                }
+                else if (arg == "force-cookies") {
+                    if (i + 2 >= args.size()) {
+                        std::cerr << "ARGUMENT PARSE ERROR: --force-cookies used with too few following arguments\n";
+                        exit(8);
+                    }
+                    cookies.emplace_back(args[++i]);
+                    cookies.emplace_back(args[++i]);
+                    cookies_forced = true;
+                }
+                else if (arg == "output") {
+                    if (i + 1 >= args.size()) {
+                        std::cerr << "ARGUMENT PARSE ERROR: --output used with too few following arguments\n";
+                        exit(8);
+                    }
+                    filename = args[++i];
+                }
+                else if (arg == "output-directory") {
+                    if (i + 1 >= args.size()) {
+                        std::cerr << "ARGUMENT PARSE ERROR: --output-directory used with too few following arguments\n";
+                        exit(8);
+                    }
+                    output_directory = args[++i];
+                }
+                else if (arg == "series") {
+                    series = true;
+                }
+                else if (arg == "season") {
+                    season = true;
+                }
+                else if (arg == "help") {
+                    std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
+                                 "\n"
+                                 "Options:\n"
+                                 "\t--help                   Display this message\n"
+                                 "\t--quality                Set the quality of the downloaded video. Quality can be set to 'all' which\n"
+                                 "\t                             will download all qualities and place them into separate folders\n"
+                                 "\t--output                 Set the output filename. Only works for single episode downloads\n"
+                                 "\t--output-directory       Set the directory where files are output\n"
+                                 "\t--verbose                Display debug information while running\n"
+                                 "\t--force-cookies          Interpret the next to arguments as authentication cookie and session cookie\n"
+                                 "\t--series                 Interpret the url as a link to a series and download all episodes from all seasons\n"
+                                 "\t--season                 Interpret the url as a link to a season and download all episodes from all seasons\n"
+                              << std::endl;
+
+                    exit(0);
+                }
+            }
+
+            if (output_directory.empty()) {
+                output_directory = ".";
+            }
+
+            if (season && series) {
+                std::cerr << "ARGUMENT PARSE ERROR: Season and Series arguments used\n";
+            }
+            if (quality.empty()) {
+                quality = "1080p";
+            }
+        }
+    };
 }
 
 #ifdef DROPOUT_DL_SQLITE
-std::vector<std::string> get_cookies_from_firefox(const std::filesystem::path& firefox_profile_path, bool verbose = false) {
+std::vector<dropout_dl::cookie> get_cookies_from_firefox(const std::filesystem::path& firefox_profile_path, bool verbose = false) {
 
     std::fstream firefox_profile_file(firefox_profile_path);
     std::string firefox_profile;
 
-    std::string auth_cookie;
-    std::string session_cookie;
+    dropout_dl::cookie auth("__cf_bm");
+    dropout_dl::cookie session("_session");
 
-    std::vector<std::string> out;
+    std::vector<dropout_dl::cookie> out;
 
     firefox_profile_file >> firefox_profile;
 
@@ -57,55 +148,38 @@ std::vector<std::string> get_cookies_from_firefox(const std::filesystem::path& f
             }
         }
 
-        char *err_code = nullptr;
+        std::string len;
 
-        std::string sql("SELECT value FROM moz_cookies WHERE host LIKE '%dropout.tv%' AND name='__cf_bm';");
+        auth.get_value_from_db(db, "FROM moz_cookies WHERE host LIKE '%dropout.tv%'", "value");
 
-        rc = sqlite3_exec(db, sql.c_str(), sqlite_write_callback, &auth_cookie, &err_code);
+        session.get_value_from_db(db, "FROM moz_cookies WHERE host LIKE '%dropout.tv%'", "value");
 
-        out.emplace_back(auth_cookie);
-
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", err_code);
-            sqlite3_free(err_code);
-            sqlite3_close(db);
-            exit(2);
-        } else if (verbose) {
-            std::cout << "Got __cf_bm cookie from firefox sqlite db\n";
-        }
-
-        sql = "SELECT value FROM moz_cookies WHERE host LIKE '%dropout.tv%' AND name='_session';";
-
-        rc = sqlite3_exec(db, sql.c_str(), sqlite_write_callback, &session_cookie, &err_code);
-
-        out.emplace_back(session_cookie);
-
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", err_code);
-            sqlite3_free(err_code);
-            sqlite3_close(db);
-            exit(3);
-        } else if (verbose) {
-            std::cout << "Got _session cookie from firefox sqlite db\n";
-        }
         sqlite3_close(db);
     }
+
+    if (verbose) {
+        std::cout << auth.name << ": " << auth.len << ": " << auth.str << '\n';
+
+        std::cout << session.name << ": " << session.len << ": " << session.str << '\n';
+    }
+
+    out.push_back(auth);
+    out.push_back(session);
+
 
     return out;
 }
 
 #ifdef DROPOUT_DL_GCRYPT
-std::vector<std::string> get_cookies_from_chrome(const std::filesystem::path& chrome_profile_path, bool verbose = false) {
+std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::path& chrome_profile_path, bool verbose = false) {
 
     std::fstream chrome_profile_file(chrome_profile_path);
     std::string chrome_profile;
 
-    std::string auth_cookie;
-    int auth_cookie_length;
-    std::string session_cookie;
-    int session_cookie_length;
+    dropout_dl::cookie auth("__cf_bm");
+    dropout_dl::cookie session("_session");
 
-    std::vector<std::string> out;
+    std::vector<dropout_dl::cookie> out;
 
     getline(chrome_profile_file, chrome_profile);
 
@@ -127,122 +201,44 @@ std::vector<std::string> get_cookies_from_chrome(const std::filesystem::path& ch
             }
         }
 
-        char *err_code = nullptr;
-
         std::string len;
 
-        std::string sql = "SELECT length(encrypted_value) FROM cookies WHERE host_key LIKE '%dropout.tv%' AND name='__cf_bm';";
+        auth.get_value_from_db(db, "FROM cookies WHERE host_key LIKE '%dropout.tv%'", "encrypted_value");
 
-        sqlite3_exec(db, sql.c_str(), sqlite_write_callback, &len, &err_code);
+        session.get_value_from_db(db, "FROM cookies WHERE host_key LIKE '%dropout.tv%'", "encrypted_value");
 
-        auth_cookie_length = std::stoi(len);
-
-        sql = "SELECT encrypted_value FROM cookies WHERE host_key LIKE '%dropout.tv%' AND name='__cf_bm';";
-
-        rc = sqlite3_exec(db, sql.c_str(), sqlite_write_callback, &auth_cookie, &err_code);
-
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", err_code);
-            sqlite3_free(err_code);
-            sqlite3_close(db);
-            exit(2);
-        } else if (verbose) {
-            std::cout << "Got __cf_bm cookie from chrome sqlite db\n" << auth_cookie << '\n';
-        }
-
-        sql = "SELECT length(encrypted_value) FROM cookies WHERE host_key LIKE '%dropout.tv%' AND name='_session';";
-
-        sqlite3_exec(db, sql.c_str(), sqlite_write_callback, &len, &err_code);
-
-        session_cookie_length = std::stoi(len);
-
-        sql = "SELECT encrypted_value FROM cookies WHERE host_key LIKE '%dropout.tv%' AND name='_session';";
-
-        rc = sqlite3_exec(db, sql.c_str(), sqlite_write_callback, &session_cookie, &err_code);
-
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", err_code);
-            sqlite3_free(err_code);
-            sqlite3_close(db);
-            exit(3);
-        } else if (verbose) {
-            std::cout << "Got _session cookie from chrome sqlite db\n";
-        }
         sqlite3_close(db);
 
-        // system(("echo \"SELECT value FROM moz_cookies WHERE originAttributes LIKE '%dropout.tv%';\" | sqlite3 " + firefox_profile + "/cookies.sqlite > cookie").c_str());
     }
 
-    // For mac os this is your keychain password
-    // For linux leave as "peanuts"
-    std::string password = "peanuts";
-    std::string salt = "saltysalt";
-    int length = 16;
-    int iterations = 1;
+    auth.chrome_decrypt();
 
-    uint8_t key[32];
+    session.chrome_decrypt();
 
-    char output[2048];
+    session.url_decode();
 
-    char iv[16];
+    if (verbose) {
+        std::cout << auth.name << ": " << auth.len << ": " << auth.str << '\n';
 
-    for (char& c : iv) {
-        c = ' ';
+        std::cout << session.name << ": " << session.len << ": " << session.str << '\n';
     }
 
-    for (char& c : output) {
-        c = 0;
-    }
-
-    for (int i = 0; i < auth_cookie_length; i++) {
-        std::cout << std::hex << (0xFF & (int)auth_cookie[i]) << ' ';
-    }
-    std::cout << '\n';
-
-    gcry_kdf_derive(password.c_str(), password.size(), GCRY_KDF_PBKDF2, GCRY_KDF_ARGON2ID, salt.c_str(), salt.size(), iterations, length, key);
-
-    gcry_cipher_hd_t handle;
-
-    gcry_cipher_open(&handle, GCRY_CIPHER_AES, GCRY_CIPHER_MODE_CBC, 0);
-
-    gcry_cipher_setkey(handle, (const void*) &key, length);
-
-    gcry_cipher_setiv(handle, (const void*)&iv, 16);
-
-    unsigned long err = gcry_cipher_decrypt(handle, (unsigned char*)output, 2048, auth_cookie.c_str() + 3, auth_cookie_length - 3);
-
-    if (err) {
-        std::cout << gcry_strerror(err) << std::endl;
-        exit(2);
-    }
-
-    for (char& c : output) {
-        if (c == '\017') {
-            c = 0;
-        }
-    }
-
-    out.emplace_back(output);
-
-    gcry_cipher_setiv(handle, (const void*)&iv, 16);
-
-    gcry_cipher_decrypt(handle, (unsigned char*)output, 2048, session_cookie.c_str() + 3, session_cookie_length - 3);
-
-    out.emplace_back(output);
+    out.push_back(auth);
+    out.push_back(session);
 
     return out;
 }
 #endif
 #endif
 
-std::vector<std::string> get_cookies_from_files(const std::filesystem::path& auth_cookie_path, const std::filesystem::path& session_cookie_path, bool verbose = false) {
+std::vector<dropout_dl::cookie> get_cookies_from_files(const std::filesystem::path& auth_cookie_path, const std::filesystem::path& session_cookie_path, bool verbose = false) {
     std::fstream auth_cookie_file("auth_cookie");
     std::fstream session_cookie_file("session_cookie");
 
     std::string auth_cookie;
     std::string session_cookie;
 
-    std::vector<std::string> out;
+    std::vector<dropout_dl::cookie> out;
 
     auth_cookie_file >> auth_cookie;
     if (verbose) {
@@ -261,7 +257,7 @@ std::vector<std::string> get_cookies_from_files(const std::filesystem::path& aut
     return out;
 }
 
-std::vector<std::string> get_cookies(bool verbose = false) {
+std::vector<dropout_dl::cookie> get_cookies(bool verbose = false) {
 
 #ifdef DROPOUT_DL_SQLITE
     std::filesystem::path firefox_profile("firefox_profile");
@@ -292,116 +288,13 @@ std::vector<std::string> get_cookies(bool verbose = false) {
     }
 }
 
-class options {
-public:
-
-    std::string url;
-    bool verbose = false;
-    bool cookies_forced = false;
-    bool series = false;
-    bool season = false;
-    std::string quality;
-    std::string filename;
-    std::string output_directory;
-    std::string episode;
-    std::vector<std::string> cookies;
-
-    static std::vector<std::string> convert_program_args(int argc, char** argv) {
-        std::vector<std::string> out;
-        for (int i = 1; i < argc; i++) {
-            out.emplace_back(argv[i]);
-        }
-        return out;
-    }
-
-    options(int argc, char** argv) {
-        std::vector<std::string> args = convert_program_args(argc, argv);
-
-        for (int i = 0; i < args.size(); i++) {
-            std::string arg = args[i];
-
-            if (arg.substr(0, 2) != "--") {
-                url = arg;
-                continue;
-            }
-            arg = arg.substr(2);
-            if (arg == "verbose") {
-                verbose = true;
-            } else if (arg == "quality") {
-                if (i + 1 >= args.size()) {
-                    std::cerr << "ARGUMENT PARSE ERROR: --quality used with too few following arguments\n";
-                    exit(8);
-                }
-                quality = args[++i];
-            }
-            else if (arg == "force-cookies") {
-                if (i + 2 >= args.size()) {
-                    std::cerr << "ARGUMENT PARSE ERROR: --force-cookies used with too few following arguments\n";
-                    exit(8);
-                }
-                cookies.emplace_back(args[++i]);
-                cookies.emplace_back(args[++i]);
-                cookies_forced = true;
-            }
-            else if (arg == "output") {
-                if (i + 1 >= args.size()) {
-                    std::cerr << "ARGUMENT PARSE ERROR: --output used with too few following arguments\n";
-                    exit(8);
-                }
-                filename = args[++i];
-            }
-            else if (arg == "output-directory") {
-                if (i + 1 >= args.size()) {
-                    std::cerr << "ARGUMENT PARSE ERROR: --output-directory used with too few following arguments\n";
-                    exit(8);
-                }
-                output_directory = args[++i];
-            }
-            else if (arg == "series") {
-                series = true;
-            }
-            else if (arg == "season") {
-                season = true;
-            }
-            else if (arg == "help") {
-                std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
-                             "\n"
-                             "Options:\n"
-                                "\t--help                   Display this message\n"
-                                "\t--quality                Set the quality of the downloaded video. Quality can be set to 'all' which\n"
-                                "\t                             will download all qualities and place them into separate folders\n"
-                                "\t--output                 Set the output filename\n"
-                                "\t--output-directory       Set the directory where files are output\n"
-                                "\t--verbose                Display debug information while running\n"
-                                "\t--force-cookies          Interpret the next to arguments as authentication cookie and session cookie\n"
-                                "\t--series                 Interpret the url as a link to a series and download all episodes from all seasons\n"
-                                "\t--season                 Interpret the url as a link to a season and download all episodes from all seasons\n"
-                                << std::endl;
-
-                exit(0);
-            }
-        }
-
-        if (output_directory.empty()) {
-            output_directory = ".";
-        }
-
-        if (season && series) {
-            std::cerr << "ARGUMENT PARSE ERROR: Season and Series arguments used\n";
-        }
-        if (quality.empty()) {
-            quality = "1080p";
-        }
-    }
-};
-
 
 int main(int argc, char** argv) {
-    options options(argc, argv);
+    dropout_dl::options options(argc, argv);
 
-    std::cout << "quality: " << options.quality << std::endl;
-    std::cout << "verbose: " << options.verbose << std::endl;
-    std::cout << "url: \"" << options.url << '"' << std::endl;
+//    std::cout << "quality: " << options.quality << std::endl;
+//    std::cout << "verbose: " << options.verbose << std::endl;
+//    std::cout << "url: \"" << options.url << '"' << std::endl;
 
     std::string firefox_profile;
     std::string chrome_profile;

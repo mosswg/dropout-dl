@@ -5,7 +5,7 @@
 #include "season.h"
 
 namespace dropout_dl {
-    episode get_episode(const std::string& html_data, int& start_point, const std::vector<std::string>& cookies) {
+    episode get_episode(const std::string& html_data, int& start_point, const std::vector<cookie>& cookies) {
         int link_start = 0;
         for (int i = start_point; i > 0; i--) {
             if (substr_is(html_data, i, "<a")) {
@@ -33,7 +33,7 @@ namespace dropout_dl {
         exit(8);
     }
 
-    std::vector<episode> season::get_episodes(const std::string &html_data, const std::vector<std::string>& cookies) {
+    std::vector<episode> season::get_episodes(const std::string &html_data, const std::vector<cookie>& cookies) {
         std::vector<episode> out;
 
         std::string site_video(R"(class="browse-item-link" data-track-event="site_video")");

@@ -9,8 +9,103 @@
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
+#include <sqlite3.h>
+#ifdef DROPOUT_DL_GCRYPT
+#include <gcrypt.h>
+#endif
 
 namespace dropout_dl {
+
+    class cookie {
+    public:
+        static int sqlite_write_callback(void* data, int argc, char** argv, char** azColName)
+        {
+            if (argc < 1) {
+                std::cerr << "ERROR: sqlite could not find dropout.tv cookie" << std::endl;
+                return -1;
+            }
+            else {
+                *(std::string*)data = argv[0];
+                return 0;
+            }
+        }
+
+        static int sqlite_write_callback_uchar(void* data, int argc, char** argv, char** azColName)
+        {
+            if (argc < 1) {
+                std::cerr << "ERROR: sqlite could not find dropout.tv cookie" << std::endl;
+                return -1;
+            }
+            else {
+
+                auto* ck = (dropout_dl::cookie*)data;
+
+                for (int i = 0; i < ck->len; i++) {
+                    if (argv[0][i] > 32 && argv[0][i] < 126) {
+                        std::cout << (unsigned char) argv[0][i] << ' ';
+                    }
+                    else {
+                        std::cout << std::hex << ((int)argv[0][i] & 0xFF) << ' ';
+                    }
+                    ck->str[i] = (unsigned char)argv[0][i];
+                }
+                return 0;
+            }
+        }
+
+
+        std::string name;
+        std::string str;
+        int len;
+
+
+        explicit cookie(const std::string& name) {
+            this->name = name;
+            this->len = 0;
+        }
+
+        cookie(const std::string& name, const std::string& cookie) {
+            this->name = name;
+            this->str = cookie;
+            this->len = cookie.size();
+        }
+
+        cookie(const std::string& cookie, int length) {
+            this->str = cookie;
+            this->name = "?";
+            this->len = length;
+        }
+
+        cookie(const std::string& name, const std::string& cookie, int length) {
+            this->name = name;
+            this->str = cookie;
+            this->len = length;
+        }
+
+        /**
+         *
+         * @param db - An sqlite3 database
+         * @param sql_query_base - A base without the name search e.g. "FROM cookies" this function would then append the text "SELECT <value>" and "WHERE name='<name>'"
+         * @param value - The name of the value to fill the cookie with
+         *
+         *
+         */
+        void get_value_from_db(sqlite3* db, const std::string& sql_query_base, const std::string& value, bool verbose = false, int (*callback)(void*,int,char**,char**) = sqlite_write_callback);
+
+        void format_from_chrome();
+
+        /**
+         *
+         * @param password - Default is "peanuts". This works for linux. The password should be keychain password on MacOS
+         * @param salt - Salt is "saltysalt" for both MacOS and Linux
+         * @param length - Length of 16 is standard for both MacOS and Linux
+         * @param iterations - 1 on linux and 1003 on MacOS
+         */
+        void chrome_decrypt(const std::string& password = "peanuts", int iterations = 1, const std::string& salt = "saltysalt", int length = 16);
+
+        void url_decode();
+    };
+
 
     bool substr_is(const std::string& string, int start, const std::string& test_str);
 
@@ -76,12 +171,12 @@ namespace dropout_dl {
 
         void download(const std::string& quality, const std::string& series_directory, std::string filename = "");
 
-        episode(const std::string& episode_url, std::vector<std::string> cookies, bool verbose = false) {
+        episode(const std::string& episode_url, std::vector<cookie> cookies, bool verbose = false) {
 
             this->episode_url = episode_url;
             this->verbose = verbose;
 
-            episode_data = get_episode_page(episode_url, cookies[0], cookies[1]);
+            episode_data = get_episode_page(episode_url, cookies[0].str, cookies[1].str);
 
             name = get_episode_name(episode_data);
 
@@ -124,7 +219,7 @@ namespace dropout_dl {
                 std::cout << "Got embedded url: " << this->embedded_url << '\n';
             }
 
-            this->embedded_page_data = get_embedded_page(this->embedded_url, cookies[0]);
+            this->embedded_page_data = get_embedded_page(this->embedded_url, cookies[0].str);
 
             if (this->embedded_page_data.find("you are not authorized") != std::string::npos) {
                 std::cerr << "ERROR: Could not access video. Try refreshing cookies.\n";

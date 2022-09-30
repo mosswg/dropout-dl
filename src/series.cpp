@@ -40,7 +40,7 @@ namespace dropout_dl {
         return "-1";
     }
 
-    std::vector<season> series::get_seasons(const std::string &html_data, const std::vector<std::string>& cookies) {
+    std::vector<season> series::get_seasons(const std::string &html_data, const std::vector<cookie>& cookies) {
         std::vector<season> out;
 
         std::string search_class("js-switch-season");
@@ -127,7 +127,7 @@ namespace dropout_dl {
     }
 
 
-    season series::get_season(const std::string &url, const std::vector<std::string>& cookies) {
+    season series::get_season(const std::string &url, const std::vector<cookie>& cookies) {
         std::string html_data = get_generic_page(url);
 
         std::string search_class("js-switch-season");

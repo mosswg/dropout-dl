@@ -18,11 +18,11 @@ namespace dropout_dl {
             std::string page_data;
             std::vector<episode> episodes;
 
-            static std::vector<episode> get_episodes(const std::string& html_data, const std::vector<std::string>& cookies);
+            static std::vector<episode> get_episodes(const std::string& html_data, const std::vector<cookie>& cookies);
 
             void download(const std::string& quality, const std::string& series_directory);
 
-            season(const std::string& url, const std::string& name, const std::vector<std::string>& cookies, const std::string& series_name = "") {
+            season(const std::string& url, const std::string& name, const std::vector<cookie>& cookies, const std::string& series_name = "") {
                 this->url = url;
                 this->name = name;
                 this->series_name = series_name;

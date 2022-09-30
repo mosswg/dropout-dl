@@ -20,13 +20,13 @@ namespace dropout_dl {
 
             static std::string get_series_name(const std::string& html_data);
 
-            static std::vector<season> get_seasons(const std::string& html_data, const std::vector<std::string>& cookies);
+            static std::vector<season> get_seasons(const std::string& html_data, const std::vector<cookie>& cookies);
 
-            static season get_season(const std::string& url, const std::vector<std::string>& cookies);
+            static season get_season(const std::string& url, const std::vector<cookie>& cookies);
 
            void download(const std::string& quality, const std::string& base);
 
-            explicit series(const std::string& url, const std::vector<std::string>& cookies) {
+            explicit series(const std::string& url, const std::vector<dropout_dl::cookie>& cookies) {
                 this->url = url;
                 this->page_data = get_generic_page(url);
                 this->name = get_series_name(page_data);

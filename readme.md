@@ -22,7 +22,7 @@ sudo xbps-install -S libcurl sqlite-devel
 sudo apt install libcurl4-gnutls-dev sqlite-devel
 ```
 
-## cookies
+## Cookies
 ### Firefox
 #### Option 1 (requires sqlite-devel)
 Create a file named `firefox_profile` in the build directory and paste in your [firefox profile folder path](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data)
@@ -42,7 +42,7 @@ Create a file called `auth_cookie` and paste the cookie in the file \
 Go back to firefox and copy the `_session` cookie into a file named `session_cookie` \
 This needs to be redone everytime the cookie expires (~30 minutes)
 ### chrome
-#### Option 1 (requires sqlite-devel and libgcrypt) NOT CURRENTLY FUNCTIONAL
+#### Option 1 (requires sqlite-devel and libgcrypt)
 Create a file named `chrome_profile` in the build directory and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
 #### Option 2
 Go to settings > privacy and security > cookies > see all cookies > vhx.tv > __cf_bm \
