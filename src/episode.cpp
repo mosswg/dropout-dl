@@ -46,9 +46,8 @@ namespace dropout_dl {
 
     long current_time;
     long last_progress_timestamp;
-    std::string curl_filename;
 
-    int curl_progress_func(void* ptr, double total_to_download, double downloaded, double total_to_upload, double uploaded) {
+    int curl_progress_func(void* filename, double total_to_download, double downloaded, double total_to_upload, double uploaded) {
         const double number_chars = 50;
         const char* full_character = "▓";
         const char* empty_character = "░";
@@ -57,7 +56,7 @@ namespace dropout_dl {
         if (current_time - 50 > last_progress_timestamp) {
             double percent_done = (downloaded / total_to_download) * number_chars;
             double percent_done_clone = percent_done;
-            std::cout << curl_filename << " [";
+            std::cout << *(std::string*)filename << " [";
             while (percent_done_clone-- > 0) {
                 std::cout << full_character;
             }
@@ -290,70 +289,6 @@ namespace dropout_dl {
         return episode_data;
     }
 
-    std::string episode::get_embedded_page(const std::string& url, const std::string& cookie, bool verbose) {
-        CURLcode ret;
-        CURL *hnd;
-        struct curl_slist *slist1;
-        std::string embedded_page;
-
-        slist1 = NULL;
-        slist1 = curl_slist_append(slist1, "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0");
-        slist1 = curl_slist_append(slist1, "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
-        slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en;q=0.5");
-        slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
-        slist1 = curl_slist_append(slist1, "DNT: 1");
-        slist1 = curl_slist_append(slist1, "Connection: keep-alive");
-        slist1 = curl_slist_append(slist1, "Referer: https://www.dropout.tv/");
-        slist1 = curl_slist_append(slist1, "Cookie: __cf_bm=Ayc3uSgUEf9kJ20sfVBLgdo5fvloLmSLWBkJtzzhZR8-1662831290-0-ASVO2Fg9txI6nslt2tle7Y2MjRw4sI8/gFRbMDI8vHIP0nhb1SDk1I7lF5hWK9RMGP9wOFJwyqThLXQkuTj9m2c=");
-        slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
-        slist1 = curl_slist_append(slist1, "Sec-Fetch-Dest: iframe");
-        slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");
-        slist1 = curl_slist_append(slist1, "Sec-Fetch-Site: cross-site");
-        slist1 = curl_slist_append(slist1, "Sec-GPC: 1");
-
-        hnd = curl_easy_init();
-        curl_easy_setopt(hnd, CURLOPT_BUFFERSIZE, 102400L);
-        curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
-        curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
-        curl_easy_setopt(hnd, CURLOPT_USERAGENT, "curl/7.84.0");
-        curl_easy_setopt(hnd, CURLOPT_MAXREDIRS, 50L);
-        curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
-        curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
-        curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
-        curl_easy_setopt(hnd, CURLOPT_VERBOSE, verbose);
-
-
-        curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
-        curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &embedded_page);
-        /* Here is a list of options the curl code used that cannot get generated
-           as source easily. You may choose to either not use them or implement
-           them yourself.
-
-        CURLOPT_WRITEDATA set to a objectpointer
-        CURLOPT_INTERLEAVEDATA set to a objectpointer
-        CURLOPT_WRITEFUNCTION set to a functionpointer
-        CURLOPT_READDATA set to a objectpointer
-        CURLOPT_READFUNCTION set to a functionpointer
-        CURLOPT_SEEKDATA set to a objectpointer
-        CURLOPT_SEEKFUNCTION set to a functionpointer
-        CURLOPT_ERRORBUFFER set to a objectpointer
-        CURLOPT_STDERR set to a objectpointer
-        CURLOPT_HEADERFUNCTION set to a functionpointer
-        CURLOPT_HEADERDATA set to a objectpointer
-
-        */
-
-        ret = curl_easy_perform(hnd);
-
-        curl_easy_cleanup(hnd);
-        hnd = NULL;
-        curl_slist_free_all(slist1);
-        slist1 = NULL;
-
-        return embedded_page;
-    }
-
     std::string get_generic_page(const std::string& url, bool verbose) {
         CURL *hnd;
         struct curl_slist *slist1;
@@ -445,11 +380,11 @@ namespace dropout_dl {
             std::cout << "Got " << this->name << " cookie\n";
         }
 
-        this->str = tmp;
+        this->value = tmp;
     }
 
     void cookie::format_from_chrome() {
-        this->str = this->str.substr(3);
+        this->value = this->value.substr(3);
         this->len -= 3;
     }
 
@@ -481,7 +416,7 @@ namespace dropout_dl {
 
         gcry_cipher_setiv(handle, (const void*)&iv, 16);
 
-        unsigned long err = gcry_cipher_decrypt(handle, output, this->len, this->str.c_str(), this->len);
+        unsigned long err = gcry_cipher_decrypt(handle, output, this->len, this->value.c_str(), this->len);
 
         if (err) {
             std::cout << gcry_strerror(err) << std::endl;
@@ -489,25 +424,28 @@ namespace dropout_dl {
         }
 
 
-        this->str = output;
-        this->str = this->str.substr(0, this->len-7);
+        this->value = output;
+
+        this->url_decode();
+
+        this->value = this->value.substr(0, this->len - 7);
         this->len -= 7;
     }
 
     void cookie::url_decode() {
         std::string out;
 
-        for (int i = 0; i < this->str.size() - 3; i++) {
-            if (substr_is(this->str, i, "%3D")) {
+        for (int i = 0; i < this->value.size() - 3; i++) {
+            if (substr_is(this->value, i, "%3D")) {
                 out += "=";
                 i += 2;
             }
             else {
-                out += this->str[i];
+                out += this->value[i];
             }
         }
 
-        this->str = out;
+        this->value = out;
         this->len = out.size();
     }
 
@@ -573,7 +511,7 @@ namespace dropout_dl {
         exit(6);
     }
 
-    std::string episode::get_video_data(const std::string &quality) {
+    std::string episode::get_video_data(const std::string &quality, const std::string& filename) {
         CURL* curl = curl_easy_init();
         CURLcode res;
         if(curl) {
@@ -586,6 +524,7 @@ namespace dropout_dl {
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
             curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
             curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, dropout_dl::curl_progress_func);
+            curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &filename);
             res = curl_easy_perform(curl);
             curl_easy_cleanup(curl);
 
@@ -597,8 +536,7 @@ namespace dropout_dl {
 
     void episode::download(const std::string& quality, const std::string& series_directory, std::string filename) {
         if (filename.empty()) {
-            filename = "S" + (this->season_number.size() < 2 ? "0" + this->season_number : this->season_number) + "E" +
-                       (this->episode_number.size() < 2 ? "0" + this->episode_number : this->episode_number) + this->name +
+            filename = "E" + (this->episode_number.size() < 2 ? "0" + this->episode_number : this->episode_number) + this->name +
                        ".mp4";
 
             std::replace(filename.begin(), filename.end(), ' ', '_');
@@ -618,9 +556,7 @@ namespace dropout_dl {
                 std::fstream out(series_directory + "/" + possible_quality + "/" + filename,
                                  std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-                curl_filename = series_directory + "/" + possible_quality + "/" + filename;
-
-                out << this->get_video_data(possible_quality) << std::endl;
+                out << this->get_video_data(possible_quality, series_directory + "/" + possible_quality + "/" + filename) << std::endl;
             }
         } else {
             if (!std::filesystem::is_directory(series_directory)) {
@@ -633,9 +569,7 @@ namespace dropout_dl {
             std::fstream out(series_directory + "/" + filename,
                              std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-            curl_filename = series_directory + "/" + filename;
-
-            out << this->get_video_data(quality) << std::endl;
+            out << this->get_video_data(quality, series_directory + "/" + filename) << std::endl;
         }
     }
 } // dropout_dl
