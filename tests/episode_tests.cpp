@@ -5,7 +5,7 @@
 
 namespace dropout_dl {
     tests test_episode_name_parsing() {
-        bool success;
+        std::vector<dropout_dl::test<std::string>> out;
 
         std::string (*test_function)(const std::string&) = episode::get_episode_name;
 
@@ -14,7 +14,7 @@ namespace dropout_dl {
                                 "        <strong>" + base_test_solution + "</strong>\n"
                                                                           "      </h1>";
 
-        test base("Basic Episode Name Parsing", test_function, base_test, base_test_solution);
+        out.emplace_back("Basic Episode Name Parsing", test_function, base_test, base_test_solution);
 
 
         std::string multiple_header_test_solution = "Multi Header Test Title";
@@ -35,7 +35,7 @@ namespace dropout_dl {
                                                                                                 "</h1>";
 
 
-        test multiple_header("Multiple Header Episode Name Parsing", test_function, multiple_header_test, multiple_header_test_solution);
+        out.emplace_back("Multiple Header Episode Name Parsing", test_function, multiple_header_test, multiple_header_test_solution);
 
         std::string no_valid_header_test_solution = "ERROR";
         std::string no_valid_header_test = "<h1>\n"
@@ -48,7 +48,7 @@ namespace dropout_dl {
                                            "<strong>Header with strong</strong>"
                                            "</h1>\n";
 
-        test no_valid_header("No Valid Header Episode Name Parsing", test_function, no_valid_header_test, no_valid_header_test_solution);
+        out.emplace_back("No Valid Header Episode Name Parsing", test_function, no_valid_header_test, no_valid_header_test_solution);
 
 
         std::string html_character_test_solution = "'&;";
@@ -56,14 +56,14 @@ namespace dropout_dl {
                                           "        <strong>&#39;&#38;&#59;</strong>\n"
                                           "</h1>";
 
-        test html_character_code("Html Character Code Episode Name Parsing", test_function, html_character_test, html_character_test_solution);
+        out.emplace_back("Html Character Code Episode Name Parsing", test_function, html_character_test, html_character_test_solution);
 
 
-        return tests("Episode Name Parsing", {base, multiple_header, no_valid_header, html_character_code});
+        return {"Episode Name Parsing", out};
     }
 
     tests test_episode_number_parsing() {
-        bool success;
+        std::vector<dropout_dl::test<std::string>> out;
 
         std::string (*test_function)(const std::string&) = episode::get_episode_number;
 
@@ -72,7 +72,7 @@ namespace dropout_dl {
                                 "    Season 1, Episode 1\n"
                                 "</a>";
 
-        test base("Basic Episode Number Parsing", test_function, base_test, base_test_solution);
+        out.emplace_back("Basic Episode Number Parsing", test_function, base_test, base_test_solution);
 
 
         std::string multiple_link_test_solution = "1";
@@ -86,7 +86,7 @@ namespace dropout_dl {
                                          "    Season 1, Episode 2\n";
 
 
-        test multiple_link("Multiple Link Episode Number Parsing", test_function, multiple_link_test, multiple_link_test_solution);
+        out.emplace_back("Multiple Link Episode Number Parsing", test_function, multiple_link_test, multiple_link_test_solution);
 
         std::string no_valid_number_test_solution = "-1";
         std::string no_valid_number_test = "<a>\n"
@@ -99,7 +99,7 @@ namespace dropout_dl {
                                            "Episode"
                                            "</a>\n";
 
-        test no_valid_number("No Valid Episode Number Parsing", test_function, no_valid_number_test, no_valid_number_test_solution);
+        out.emplace_back("No Valid Episode Number Parsing", test_function, no_valid_number_test, no_valid_number_test_solution);
 
 
         std::string earlier_episode_text_test_solution = "15";
@@ -110,13 +110,13 @@ namespace dropout_dl {
                                                 "    Season 1, Episode 15\n"
                                                 "</a>";
 
-        test earlier_episode_text("Earlier Episode Text Number Parsing", test_function, earlier_episode_text_test, earlier_episode_text_test_solution);
+        out.emplace_back("Earlier Episode Text Number Parsing", test_function, earlier_episode_text_test, earlier_episode_text_test_solution);
 
-        return tests("Episode Name Parsing", {base, multiple_link, no_valid_number, earlier_episode_text});
+        return {"Episode Name Parsing", out};
     }
 
     tests test_episode_series_name_parsing() {
-        bool success;
+        std::vector<dropout_dl::test<std::string>> out;
 
         std::string (*test_function)(const std::string&) = episode::get_series_name;
 
@@ -127,7 +127,7 @@ namespace dropout_dl {
                                 "   </a>\n"
                                 "</h3>";
 
-        test base("Basic Episode Series Name Parsing", test_function, base_test, base_test_solution);
+        out.emplace_back("Basic Episode Series Name Parsing", test_function, base_test, base_test_solution);
 
 
         std::string multiple_header_test_solution = "Multi Header Test Title";
@@ -148,7 +148,7 @@ namespace dropout_dl {
                                                                                                 "</h3>";
 
 
-        test multiple_header("Multiple Header Episode Series Name Parsing", test_function, multiple_header_test, multiple_header_test_solution);
+        out.emplace_back("Multiple Header Episode Series Name Parsing", test_function, multiple_header_test, multiple_header_test_solution);
 
         std::string no_valid_header_test_solution = "ERROR";
         std::string no_valid_header_test = "<h3>\n"
@@ -161,7 +161,7 @@ namespace dropout_dl {
                                            "<a>Header with strong</a>"
                                            "</h3>\n";
 
-        test no_valid_header("No Valid Header Episode Series Name Parsing", test_function, no_valid_header_test, no_valid_header_test_solution);
+        out.emplace_back("No Valid Header Episode Series Name Parsing", test_function, no_valid_header_test, no_valid_header_test_solution);
 
 
         std::string html_character_test_solution = "'&;";
@@ -169,13 +169,13 @@ namespace dropout_dl {
                                           "        <a>&#39;&#38;&#59;</a>\n"
                                           "</h3>";
 
-        test html_character("Html Character Code Episode Series Name Parsing", test_function, html_character_test, html_character_test_solution);
+        out.emplace_back("Html Character Code Episode Series Name Parsing", test_function, html_character_test, html_character_test_solution);
 
-        return tests("Episode Name Parsing", {base, multiple_header, no_valid_header, html_character});
+        return {"Episode Name Parsing", out};
     }
 
     tests test_episode_embedded_url_parsing() {
-        bool success;
+        std::vector<dropout_dl::test<std::string>> out;
 
         std::string (*test_function)(const std::string&) = episode::get_embed_url;
 
@@ -184,7 +184,7 @@ namespace dropout_dl {
                                 "      embed_url: \"" + base_test_solution + "\"\n"
                                 "    };";
 
-        test base("Basic Episode Embedded URL Parsing", test_function, base_test, base_test_solution);
+        out.emplace_back("Basic Episode Embedded URL Parsing", test_function, base_test, base_test_solution);
 
 
         std::string multiple_script_test_solution = "Multi Header Test Title";
@@ -247,7 +247,7 @@ namespace dropout_dl {
                                            "  </script>";
 
 
-        test multiple_script("Multiple Script Embedded URL Parsing", test_function, multiple_script_test, multiple_script_test_solution);
+        out.emplace_back("Multiple Script Embedded URL Parsing", test_function, multiple_script_test, multiple_script_test_solution);
 
         std::string no_valid_URL_test_solution = "";
         std::string no_valid_URL_test = "  <script>\n"
@@ -260,28 +260,28 @@ namespace dropout_dl {
                                            "    };\n"
                                            "  </script>";
 
-        test no_valid_URL("No Valid Embedded URL Parsing", test_function, no_valid_URL_test, no_valid_URL_test_solution);
+        out.emplace_back("No Valid Embedded URL Parsing", test_function, no_valid_URL_test, no_valid_URL_test_solution);
 
-        return tests("Episode Name Parsing", {base, multiple_script, no_valid_URL});
+        return {"Episode Name Parsing", out};
     }
 
     tests test_episode_config_url_parsing() {
-        bool success;
+        std::vector<dropout_dl::test<std::string>> out;
 
         std::string (*test_function)(const std::string&) = episode::get_config_url;
 
         std::string base_test_solution = "Base Test URL";
         std::string base_test = R"(window.OTTData = {"config_url":")" + base_test_solution +  "\"};";
 
-        test base("Basic Episode Config URL Parsing", test_function, base_test, base_test_solution);
+        out.emplace_back("Basic Episode Config URL Parsing", test_function, base_test, base_test_solution);
 
 
         std::string no_valid_URL_test_solution = "";
         std::string no_valid_URL_test = R"(window.OTTData = {"api_data":{"api_host":"","api_token":"","user_auth_token":{"auth_user_token":"","embed_referrer_host":""}},"buy_button":{"label":null,"url":null},"collection":{"id":null},"product":{"id":null},"":{"label":"","url":""},"site":{"id":null,"subdomain":"","twitter_name":""},"video":{"duration":null,"id":null,"is_trailer":"","title":"","is_live_video":false,"live_event_id":null},"google_cast_app_id":"","hide_chrome":null,"initial_time":null,"js_api_enabled":null,"locale":"","show_share_actions":null,"user":{"id":,"email":""},"analytics_url":""})";
 
-        test no_valid_URL("No Valid Config URL Parsing", test_function, no_valid_URL_test, no_valid_URL_test_solution);
+        out.emplace_back("No Valid Config URL Parsing", test_function, no_valid_URL_test, no_valid_URL_test_solution);
 
-        return tests("Episode Name Parsing", {base, no_valid_URL});
+        return {"Episode Name Parsing", out};
     }
 }
 

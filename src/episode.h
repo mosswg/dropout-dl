@@ -162,6 +162,15 @@ namespace dropout_dl {
      */
     void replace_all(std::string& str, const std::string& from, const std::string& to);
 
+    /**
+     *
+     * @param str - A string
+     * @return <b>str</b> with any leading or following whitespace
+     *
+     * Removes leading and following whitespace from a string and returns the modified string
+     */
+    std::string remove_leading_and_following_whitespace(const std::string& str);
+
     #if defined(__WIN32__)
     #include <windows.h>
     msec_t time_ms(void);

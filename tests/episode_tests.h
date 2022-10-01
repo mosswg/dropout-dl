@@ -4,7 +4,7 @@
 #pragma once
 
 
-#include "episode.h"
+#include "../src/episode.h"
 #include "test.h"
 
 std::vector<dropout_dl::tests> test_episode();

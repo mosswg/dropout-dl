@@ -76,7 +76,7 @@ namespace dropout_dl {
                 this->url = url;
                 this->page_data = get_generic_page(url);
                 this->name = get_series_name(page_data);
-                if (name == "-1") {
+                if (name == "ERROR") {
                     std::cerr << "SERIES PARSE ERROR: Could not parse series name\n";
                     exit(10);
                 }

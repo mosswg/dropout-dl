@@ -27,7 +27,18 @@ namespace dropout_dl {
         }
     }
 
-    #if defined(__WIN32__)
+
+    std::string remove_leading_and_following_whitespace(const std::string& str) {
+        int start = 0;
+        int end = str.length() - 1;
+
+        for (; str[start] == ' ' || str[start] == '\t' || str[start] == '\n'; start++);
+        for (; str[end] == ' ' || str[end] == '\t' || str[end] == '\n'; end--);
+
+        return str.substr(start, end - start + 1);
+    }
+
+#if defined(__WIN32__)
         #include <windows.h>
         msec_t time_ms(void)
         {

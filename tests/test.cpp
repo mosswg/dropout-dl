@@ -2,6 +2,7 @@
 // Created by moss on 9/30/22.
 //
 #include "test.h"
+#include "series_tests.h"
 #include "episode_tests.h"
 
 template<typename t>
@@ -28,6 +29,7 @@ void dropout_dl::tests::display() {
 
 
 int main() {
+    std::string episode_tests_name = "Episode Tests";
     std::vector<dropout_dl::tests> episode_tests = test_episode();
 
     bool episode_tests_success = true;
@@ -36,13 +38,36 @@ int main() {
     }
 
     if (episode_tests_success) {
-        std::cout << TESTNAME << BOLDGREEN << "Episode Tests" << std::endl;
+        std::cout << TESTNAME << BOLDGREEN << episode_tests_name << std::endl;
     }
     else {
-        std::cout << TESTNAME << BOLDRED << "Episode Tests" << std::endl;
+        std::cout << TESTNAME << BOLDRED << episode_tests_name << std::endl;
     }
 
     for (auto& test : episode_tests) {
+        test.display();
+    }
+
+
+    std::cout << "\n\n";
+
+
+    std::string series_tests_name = "Series Tests";
+    std::vector<dropout_dl::tests> series_tests = test_series();
+
+    bool series_tests_success = true;
+    for (const auto& test : episode_tests) {
+        series_tests_success &= test.success;
+    }
+
+    if (series_tests_success) {
+        std::cout << TESTNAME << BOLDGREEN << series_tests_name << std::endl;
+    }
+    else {
+        std::cout << TESTNAME << BOLDRED << series_tests_name << std::endl;
+    }
+
+    for (auto& test : series_tests) {
         test.display();
     }
 }

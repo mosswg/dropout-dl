@@ -8,11 +8,8 @@ namespace dropout_dl {
 
     std::string series::get_series_name(const std::string& html_data) {
         std::string collection_title("collection-title");
-        std::string open_a_tag("<h1");
         std::string close_tag(">");
         std::string close_a("</h1>");
-
-        int series_name_start = -1;
 
         for (int i = 0; i < html_data.size(); i++) {
             if (substr_is(html_data, i, collection_title)) {
@@ -20,24 +17,15 @@ namespace dropout_dl {
                     if (html_data[j] == '\n' || html_data[j] == ' ' || html_data[j] == '\t') continue;
                     if (substr_is(html_data, j, close_tag)) {
                         for (int l = 0; l < html_data.size() - j; l++) {
-                            char c = html_data[j + l];
-                            if (series_name_start == -1) {
-                                if (html_data[j + l + 1] == '\n' || html_data[j + l + 1] == ' ' ||
-                                    html_data[j + l + 1] == '\t') {
-                                    continue;
-                                } else {
-                                    series_name_start = j + l + 1;
-                                }
-                            }
-                            if (substr_is(html_data, j + l, close_a) || (series_name_start != -1 && html_data[j + l] == '\n')) {
-                                return html_data.substr(series_name_start, l - (series_name_start - j));
+                            if (substr_is(html_data, j + l, close_a)) {
+                                return remove_leading_and_following_whitespace(html_data.substr(j + 1, l - 1));
                             }
                         }
                     }
                 }
             }
         }
-        return "-1";
+        return "ERROR";
     }
 
     std::vector<season> series::get_seasons(const std::string &html_data, const std::vector<cookie>& cookies) {
