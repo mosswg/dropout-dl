@@ -95,8 +95,6 @@ namespace dropout_dl {
         std::string close_tag(">");
         std::string close_a("</a>");
 
-        int series_name_start = -1;
-
         for (int i = 0; i < html_data.size(); i++) {
             if (substr_is(html_data, i, series_title)) {
                 for (int j = i + series_title.size(); j < html_data.size(); j++) {
@@ -104,18 +102,10 @@ namespace dropout_dl {
                     if (substr_is(html_data, j, open_a_tag)) {
                         for (int k = j + open_a_tag.size(); k < html_data.size(); k++) {
                             if (substr_is(html_data, k, close_tag)) {
+                                k++;
                                 for (int l = 0; l < html_data.size() - k; l++) {
-                                    char c = html_data[k + l];
-                                    if (series_name_start == -1) {
-                                        if (html_data[k + l + 1] == '\n' || html_data[k + l + 1] == ' ' ||
-                                            html_data[k + l + 1] == '\t') {
-                                            continue;
-                                        } else {
-                                            series_name_start = k + l + 1;
-                                        }
-                                    }
-                                    if (substr_is(html_data, k + l, close_a) || (series_name_start != -1 && html_data[k + l] == '\n')) {
-                                        return html_data.substr(series_name_start, l - (series_name_start - k));
+                                    if (substr_is(html_data, k + l, close_a)) {
+                                        return remove_leading_and_following_whitespace(html_data.substr(k, l));
                                     }
                                 }
                             }
@@ -136,13 +126,13 @@ namespace dropout_dl {
             if (substr_is(html_data, i, video_title)) {
                 for (int j = i; j < html_data.size(); j++) {
                     if (substr_is(html_data, j, open_strong)) {
-                        title_start = j + 8;
+                        title_start = j + open_strong.size();
                         break;
                     }
                 }
                 for (int j = 0; j < html_data.size() - title_start; j++) {
                     if (substr_is(html_data, title_start + j, close_strong)) {
-                        return html_data.substr(title_start, j);
+                        return remove_leading_and_following_whitespace(html_data.substr(title_start, j));
                     }
                 }
             }

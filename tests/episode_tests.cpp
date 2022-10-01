@@ -112,7 +112,7 @@ namespace dropout_dl {
 
         out.emplace_back("Earlier Episode Text Number Parsing", test_function, earlier_episode_text_test, earlier_episode_text_test_solution);
 
-        return {"Episode Name Parsing", out};
+        return {"Episode Number Parsing", out};
     }
 
     tests test_episode_series_name_parsing() {
@@ -171,7 +171,7 @@ namespace dropout_dl {
 
         out.emplace_back("Html Character Code Episode Series Name Parsing", test_function, html_character_test, html_character_test_solution);
 
-        return {"Episode Name Parsing", out};
+        return {"Series Name Parsing", out};
     }
 
     tests test_episode_embedded_url_parsing() {
@@ -262,7 +262,7 @@ namespace dropout_dl {
 
         out.emplace_back("No Valid Embedded URL Parsing", test_function, no_valid_URL_test, no_valid_URL_test_solution);
 
-        return {"Episode Name Parsing", out};
+        return {"Embedded URL Parsing", out};
     }
 
     tests test_episode_config_url_parsing() {
@@ -281,7 +281,7 @@ namespace dropout_dl {
 
         out.emplace_back("No Valid Config URL Parsing", test_function, no_valid_URL_test, no_valid_URL_test_solution);
 
-        return {"Episode Name Parsing", out};
+        return {"Config URL Parsing", out};
     }
 }
 
