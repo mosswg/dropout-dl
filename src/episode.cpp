@@ -293,14 +293,13 @@ namespace dropout_dl {
 
         std::string episode_data;
 
-        slist1 = NULL;
-        slist1 = curl_slist_append(slist1, "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0");
-        slist1 = curl_slist_append(slist1, "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
-        slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en;q=0.5");
+        slist1 = nullptr;
+        slist1 = curl_slist_append(slist1, "Accept: text/html");
+        slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en");
         slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
         slist1 = curl_slist_append(slist1, "DNT: 1");
         slist1 = curl_slist_append(slist1, "Connection: keep-alive");
-        slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; referrer_url=https%3A%2F%2Fwww.dropout.tv%2Fgame-changer; _session=" + session_cookie + "; __stripe_mid=3dd96b43-2e51-411d-8614-9f052c92d8ba0506a7; _device=X11%3AFirefox%3A1u9pxwBcfaKsXubmTnNbfA; __cf_bm=" + auth_cookie + "; tracker=%7B%22country%22%3A%22us%22%2C%22platform%22%3A%22linux%22%2C%22uid%22%3A1048462031243%2C%22site_id%22%3A%2236348%22%7D").c_str());
+        slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; _session=" + session_cookie + "; __cf_bm=" + auth_cookie).c_str());
         slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
         slist1 = curl_slist_append(slist1, "Sec-Fetch-Dest: document");
         slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");
@@ -312,7 +311,6 @@ namespace dropout_dl {
         curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
         curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
         curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
-        curl_easy_setopt(hnd, CURLOPT_USERAGENT, "curl/7.84.0");
         curl_easy_setopt(hnd, CURLOPT_MAXREDIRS, 50L);
         curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
         curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
@@ -342,9 +340,9 @@ namespace dropout_dl {
         ret = curl_easy_perform(hnd);
 
         curl_easy_cleanup(hnd);
-        hnd = NULL;
+        hnd = nullptr;
         curl_slist_free_all(slist1);
-        slist1 = NULL;
+        slist1 = nullptr;
 
         return episode_data;
     }
@@ -356,9 +354,8 @@ namespace dropout_dl {
         std::string config_page;
 
         slist1 = nullptr;
-        slist1 = curl_slist_append(slist1, "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0");
-        slist1 = curl_slist_append(slist1, "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
-        slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en;q=0.5");
+        slist1 = curl_slist_append(slist1, "Accept: text/html");
+        slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en");
         slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
         slist1 = curl_slist_append(slist1, "DNT: 1");
         slist1 = curl_slist_append(slist1, "Connection: keep-alive");
@@ -374,7 +371,6 @@ namespace dropout_dl {
         curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
         curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
         curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
-        curl_easy_setopt(hnd, CURLOPT_USERAGENT, "curl/7.84.0");
         curl_easy_setopt(hnd, CURLOPT_MAXREDIRS, 50L);
         curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
         curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
