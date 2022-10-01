@@ -10,7 +10,7 @@ make
 ```
 
 ### Dependency Installation
-sqlite-devel is optional but highly recommended.
+sqlite-devel is optional with the use of the `--force-cookies` option but this is not recommended.
 
 #### Void
 ```
@@ -26,7 +26,7 @@ sudo apt install libcurl4-gnutls-dev sqlite-devel
 ### Firefox
 Create a file named `firefox_profile` in the build directory and paste in your [firefox profile folder path](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data)
 ### Chrome
-Create a file named `chrome_profile` in the build directory and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
+Install libgcrypt and create a file named `chrome_profile` in the build directory and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
 ### Other/No Sqlite
 Use the `--force-cookies` program option to manually input cookies.
 
