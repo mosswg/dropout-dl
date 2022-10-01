@@ -189,6 +189,15 @@ namespace dropout_dl {
      */
     std::string format_name_string(const std::string& str);
 
+    /**
+     *
+     * @param str - A string
+     * @return <b>str</b> properly formatted to be a filename
+     *
+     * Removes non-alphanumeric characters and spaces
+     */
+    std::string format_filename(const std::string& str);
+
     #if defined(__WIN32__)
     #include <windows.h>
     msec_t time_ms(void);
@@ -245,6 +254,8 @@ namespace dropout_dl {
     public:
         /// The name of the series that the episode belongs to
         std::string series;
+        /// The directory for the series
+        std::string series_directory;
         /// The name of the episode
         std::string name;
         /// The number of the episode in the season. This can be a number or a string
@@ -405,9 +416,11 @@ namespace dropout_dl {
                 std::cout << "Got series: " << this->series << '\n';
             }
 
-            std::replace(this->series.begin(), this->series.end(), ' ', '_');
+            this->series_directory = format_filename(this->series);
 
-            std::replace(this->series.begin(), this->series.end(), ',', '_');
+            if (verbose) {
+                std::cout << "Got series directory: " << this->series_directory << '\n';
+            }
 
             this->embedded_url = get_embed_url(episode_data);
 

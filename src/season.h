@@ -55,7 +55,7 @@ namespace dropout_dl {
                 this->url = url;
                 this->name = name;
                 this->series_name = series_name;
-                std::cout << series_name << ": " << name << ": " << url << "\n";
+                std::cout << series_name << ": " << name << ": " << "\n";
                 this->page_data = get_generic_page(url);
                 this->episodes = get_episodes(page_data, cookies);
             }

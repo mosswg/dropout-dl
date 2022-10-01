@@ -81,9 +81,7 @@ namespace dropout_dl {
                     exit(10);
                 }
 
-                this->series_directory = name;
-                std::replace(this->series_directory.begin(), this->series_directory.end(), ' ', '_');
-                std::replace(this->series_directory.begin(), this->series_directory.end(), ',', '_');
+                this->series_directory = format_filename(name);
 
                 this->seasons = get_seasons(page_data, cookies);
             }

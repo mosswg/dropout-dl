@@ -45,7 +45,7 @@ namespace dropout_dl {
                 if (e.episode_url.empty()) {
                     continue;
                 }
-                std::cout << e.episode_number << ": " << e.name << ": " << e.episode_url << '\n';
+                std::cout << '\t' << e.episode_number << ": " << e.name << '\n';
                 out.push_back(e);
             }
         }
@@ -59,11 +59,7 @@ namespace dropout_dl {
             std::cout << "Creating series directory" << '\n';
         }
 
-        std::string dir = series_directory + "/" + this->name;
-
-        std::replace(dir.begin(), dir.end(), ' ', '_');
-
-        std::replace(dir.begin(), dir.end(), ',', '_');
+        std::string dir = format_filename(series_directory + "/" + this->name);
 
         for (auto& ep : episodes) {
             ep.download(quality, dir);

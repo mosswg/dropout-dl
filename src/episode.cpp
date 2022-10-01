@@ -94,6 +94,27 @@ namespace dropout_dl {
         return replace_html_character_codes(remove_leading_and_following_whitespace(str));
     }
 
+    std::string format_filename(const std::string& str) {
+        std::string out;
+
+        for (int i = 0; i < str.size(); i++) {
+            char c = str[i];
+
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '.' || c == '/' || c == '-' || c == '_') {
+                out += c;
+            }2
+            else if (c == ',' && str[i + 1] == ' ') {
+                out+= '-';
+                i++;
+            }
+            else if (c == ',' || c == '\'' || c == ' ') {
+                out += '-';
+            }
+        }
+
+        return out;
+    }
+
 #if defined(__WIN32__)
         #include <windows.h>
         msec_t time_ms(void)
@@ -463,10 +484,7 @@ namespace dropout_dl {
             filename = "E" + (this->episode_number.size() < 2 ? "0" + this->episode_number : this->episode_number) + this->name +
                        ".mp4";
 
-            std::replace(filename.begin(), filename.end(), ' ', '_');
-
-            std::replace(filename.begin(), filename.end(), ',', '_');
-
+            filename = format_filename(filename);
         }
 
         if (quality == "all") {
@@ -503,8 +521,6 @@ namespace dropout_dl {
 
     void cookie::get_value_from_db(sqlite3 *db, const std::string &sql_query_base, const std::string& value, bool verbose, int (*callback)(void*,int,char**,char**)) {
         std::string sql_mod_base = sql_query_base;
-
-        verbose = true;
 
         if (sql_mod_base.find("WHERE") == std::string::npos) {
             sql_mod_base += " WHERE ";

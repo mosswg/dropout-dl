@@ -335,11 +335,9 @@ int main(int argc, char** argv) {
     else if (options.season) {
         dropout_dl::season season = dropout_dl::series::get_season(options.url, options.cookies);
 
-        std::string series_directory = season.series_name;
+        std::string series_directory = dropout_dl::format_filename(season.series_name);
 
-        std::replace(series_directory.begin(), series_directory.end(), ' ', '_');
-
-        std::replace(series_directory.begin(), series_directory.end(), ',', '_');
+        std::cout << "ser: " << season.series_name << "\ndir: " << series_directory << '\n';
 
         season.download(options.quality, options.output_directory + "/" + series_directory);
     }
@@ -350,14 +348,18 @@ int main(int argc, char** argv) {
             std::cout << "filename: " << options.filename << '\n';
         }
 
-        if (!std::filesystem::is_directory(ep.series)) {
-            std::filesystem::create_directories(ep.series);
+        if (!std::filesystem::is_directory(options.output_directory)) {
+            std::filesystem::create_directories(options.output_directory);
             if (options.verbose) {
                 std::cout << "Creating series directory" << '\n';
             }
         }
 
-        ep.download(options.quality, options.output_directory + "/" + ep.series, options.filename);
+        if (options.filename.empty()) {
+            options.filename = dropout_dl::format_filename(ep.name + ".mp4");
+        }
+
+        ep.download(options.quality, options.output_directory, options.filename);
     }
 
 

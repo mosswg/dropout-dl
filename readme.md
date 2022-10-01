@@ -51,7 +51,7 @@ By default, dropout-dl will download the episode in the format `<series>/S<seaso
 
 ## TODO
 - [x] Create tests
-- [ ] Handle non-alphanumeric characters
+- [x] Handle non-alphanumeric characters
 - [ ] Test build process on other setups with other OSs.
 
 
