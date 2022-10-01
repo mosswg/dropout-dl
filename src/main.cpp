@@ -181,6 +181,16 @@ std::vector<dropout_dl::cookie> get_cookies_from_firefox(const std::filesystem::
         session.get_value_from_db(db, "FROM moz_cookies WHERE host LIKE '%dropout.tv%'", "value");
 
         sqlite3_close(db);
+
+        std::filesystem::remove("tmp/firefox_cookies.sqlite");
+
+        if (std::filesystem::is_empty("tmp")) {
+            std::filesystem::remove("tmp/");
+        }
+    }
+    else {
+        std::cerr << "FIREFOX COOKIE ERROR: Attempted to get cookies from firefox without profile." << std::endl;
+        exit(4);
     }
 
     if (verbose) {
@@ -245,6 +255,10 @@ std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::p
 
         sqlite3_close(db);
 
+    }
+    else {
+        std::cerr << "CHROME COOKIE ERROR: Attempted to get cookies from chrome without profile." << std::endl;
+        exit(4);
     }
 
     auth.chrome_decrypt();
