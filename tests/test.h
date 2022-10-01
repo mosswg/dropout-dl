@@ -38,20 +38,13 @@ namespace dropout_dl {
             std::string name;
             t result;
             t expected_result;
-            bool success;
+            bool success = false;
 
-            test(const std::string& name, const t& result, const t& expected_result) {
-                this->name = name;
-                this->result = result;
-                this->expected_result = expected_result;
-                this->success = (result == expected_result);
-            }
+            test(std::string  name, const t& result, const t& expected_result) : name(std::move(name)), result(result), expected_result(expected_result), success(result == expected_result) {}
 
-            test(const std::string& test_name, t (*function)(const t &), const t &argument, const t& expected_result) {
+            test(std::string  test_name, t (*function)(const t &), const t &argument, const t& expected_result) : name(std::move(test_name)), expected_result(expected_result) {
                 t test_result = function(argument);
-                this->name = test_name;
                 this->result = test_result;
-                this->expected_result = expected_result;
                 this->success = test_result == expected_result;
             }
 
@@ -67,9 +60,7 @@ namespace dropout_dl {
             std::string name;
             bool success;
 
-            tests(const std::string& name, const std::vector<test<std::string>>& tests) {
-                this->name = name;
-                this->tests_vector = tests;
+            tests(std::string name, std::vector<test<std::string>> tests) : name(std::move(name)), tests_vector(std::move(tests)) {
                 this->success = tests_vector.front().success;
                 for (const auto& test : tests_vector) {
                     success = success && test.success;
