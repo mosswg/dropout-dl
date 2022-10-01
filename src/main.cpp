@@ -297,14 +297,14 @@ std::vector<dropout_dl::cookie> get_cookies(bool verbose = false) {
         #ifdef DROPOUT_DL_SQLITE
         return get_cookies_from_firefox(firefox_profile, verbose);
         #else
-                std::cout << "WARNING: Firefox profile file exists but sqlite3-dev is not installed" << std::endl;
+                std::cout << "WARNING: Firefox profile file exists but sqlite is not installed" << std::endl;
         #endif
     }
     if (std::filesystem::exists(chrome_profile)) {
         #if defined(DROPOUT_DL_GCRYPT) & defined(DROPOUT_DL_SQLITE)
         return get_cookies_from_chrome(chrome_profile, verbose);
         #else
-        std::cout << "WARNING: Chrome profile file exists but libgcrypt or sqlite3-dev is not installed" << std::endl;
+        std::cout << "WARNING: Chrome profile file exists but libgcrypt or sqlite is not installed" << std::endl;
         #endif
     }
 
