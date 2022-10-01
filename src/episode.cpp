@@ -575,6 +575,7 @@ namespace dropout_dl {
 
     void cookie::chrome_decrypt(const std::string &password, int iterations, const std::string &salt, int length) {
 
+        #ifdef DROPOUT_DL_GCRYPT
         this->format_from_chrome();
 
         uint8_t key[32];
@@ -615,6 +616,10 @@ namespace dropout_dl {
 
         this->value = this->value.substr(0, this->len - 7);
         this->len -= 7;
+        #else
+        std::cerr << "CHROME COOKIE ERROR: Attempted to Decrypt Chrome Cookie With libgcrypt\n";
+        exit(12);
+        #endif
     }
 
     void cookie::url_decode() {
