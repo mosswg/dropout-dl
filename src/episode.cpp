@@ -38,6 +38,62 @@ namespace dropout_dl {
         return str.substr(start, end - start + 1);
     }
 
+    std::string replace_html_character_codes(const std::string& str) {
+        std::string out;
+
+        for (int i = 0; i < str.size(); i++) {
+            if (substr_is(str, i, "&#")) {
+                i += 2;
+                char code = 0;
+
+                if (i > str.size() - 4) {
+                    if (str[str.size() - 1] == ';') {
+                        // Numerical character code length is two at the end of the string
+
+                        code = str[str.size() - 2] - '0';
+                        code += (str[str.size() - 3] - '0') * 10;
+                        i += 2;
+                    }
+                }
+                else {
+                    if (str[i + 3] == ';') {
+                        // Numerical character code length is three
+                        code = str[i + 2] - '0';
+                        code += (str[i + 1] - '0') * 10;
+                        code += (str[i] - '0') * 10;
+                        i += 3;
+                    }
+                    else if (str[i + 2] == ';'){
+                        code = str[i + 1] - '0';
+                        code += (str[i] - '0') * 10;
+                        i += 2;
+                    }
+                    else {
+                        std::cerr << "HTML CHAR CODE ERROR: Code with numerical length of one used\n";
+                        exit(11);
+                    }
+                }
+
+                if (code < 32) {
+                    std::cerr << "HTML CHAR CODE ERROR: Control Character Decoded. This is not supported and likely an error.\n";
+                    exit(11);
+                }
+
+                out += code;
+            }
+            else {
+                out += str[i];
+            }
+        }
+
+        return out;
+    }
+
+
+    std::string format_name_string(const std::string& str) {
+        return replace_html_character_codes(remove_leading_and_following_whitespace(str));
+    }
+
 #if defined(__WIN32__)
         #include <windows.h>
         msec_t time_ms(void)
@@ -105,7 +161,7 @@ namespace dropout_dl {
                                 k++;
                                 for (int l = 0; l < html_data.size() - k; l++) {
                                     if (substr_is(html_data, k + l, close_a)) {
-                                        return remove_leading_and_following_whitespace(html_data.substr(k, l));
+                                        return format_name_string(html_data.substr(k, l));
                                     }
                                 }
                             }
@@ -132,7 +188,7 @@ namespace dropout_dl {
                 }
                 for (int j = 0; j < html_data.size() - title_start; j++) {
                     if (substr_is(html_data, title_start + j, close_strong)) {
-                        return remove_leading_and_following_whitespace(html_data.substr(title_start, j));
+                        return format_name_string(html_data.substr(title_start, j));
                     }
                 }
             }

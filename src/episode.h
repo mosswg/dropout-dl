@@ -171,6 +171,24 @@ namespace dropout_dl {
      */
     std::string remove_leading_and_following_whitespace(const std::string& str);
 
+    /**
+     *
+     * @param str - A string
+     * @return <b>str</b> with any html character codes replaced with their ascii equivalent.
+     *
+     * E.G. \&#39; would be replaced with '
+     */
+    std::string replace_html_character_codes(const std::string& str);
+
+    /**
+     *
+     * @param str - A string
+     * @return <b>str</b> with junk removed or replace
+     *
+     * Removed leading and following whitespace and replaces html character codes
+     */
+    std::string format_name_string(const std::string& str);
+
     #if defined(__WIN32__)
     #include <windows.h>
     msec_t time_ms(void);

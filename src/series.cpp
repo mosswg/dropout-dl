@@ -18,7 +18,7 @@ namespace dropout_dl {
                     if (substr_is(html_data, j, close_tag)) {
                         for (int l = 0; l < html_data.size() - j; l++) {
                             if (substr_is(html_data, j + l, close_a)) {
-                                return remove_leading_and_following_whitespace(html_data.substr(j + 1, l - 1));
+                                return format_name_string(html_data.substr(j + 1, l - 1));
                             }
                         }
                     }
