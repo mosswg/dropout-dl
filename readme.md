@@ -2,7 +2,7 @@
 A tool to download [dropout.tv](dropout.tv) episodes.
 
 
-## How to bBild
+## How to Build
 ```
 cmake -S <source-dir> -B <build-dir>
 cd <build-dir>
