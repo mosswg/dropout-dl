@@ -1,5 +1,5 @@
 # dropout-dl
-dropout-dl is tool to download [dropout.tv](dropout.tv) episodes. It can download single episodes, seasons, or full series. 
+dropout-dl is tool to download [dropout.tv](dropout.tv) episodes. It can download single episodes, seasons, or full series.
 
 
 * [Installation](#installation)
@@ -19,8 +19,8 @@ make
 ### Dependencies
 
 ### Required
-* [cURL](https://curl.se/libcurl/) - Required for downloading pages and videos. 
-### Recommended 
+* [cURL](https://curl.se/libcurl/) - Required for downloading pages and videos.
+### Recommended
 * [SQLite](https://www.sqlite.org/index.html) - Required for retrieving cookies from browsers. This can be avoided by using the `--force-cookies` [option](#options).
 ### Optional
 * [libgcrypt](https://www.gnupg.org/software/libgcrypt/index.html) - Used for decrypting chrome cookies retrieved from the sqlite database.
@@ -80,4 +80,3 @@ If you'd like to contribute a good place to start is looking at open issues and 
 
 ## Contributors
 - Moss - [mossx-dev](https://github.com/mossx-dev)
-
