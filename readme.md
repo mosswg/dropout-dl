@@ -1,7 +1,14 @@
 # dropout-dl
-A tool to download [dropout.tv](dropout.tv) episodes.
+dropout-dl is tool to download [dropout.tv](dropout.tv) episodes. It can download single episodes, seasons, or full series. 
 
 
+* [Installation](#installation)
+  * [How to Build](#how-to-build)
+  * [Dependencies](#Dependencies)
+
+
+
+# Installation
 ## How to Build
 ```
 cmake -S <source-dir> -B <build-dir>
@@ -9,26 +16,24 @@ cd <build-dir>
 make
 ```
 
-### Dependency Installation
-sqlite-devel is optional with the use of the `--force-cookies` option but this is not recommended.
+### Dependencies
+
+### Required
+* [cURL](https://curl.se/libcurl/) - Required for downloading pages and videos. 
+### Recommended 
+* [SQLite](https://www.sqlite.org/index.html) - Required for retrieving cookies from browsers. This can be avoided by using the `--force-cookies` [option](#options).
+### Optional
+* [libgcrypt](https://www.gnupg.org/software/libgcrypt/index.html) - Used for decrypting chrome cookies retrieved from the sqlite database.
 
 #### Void
 ```
-sudo xbps-install -S libcurl sqlite-devel
+sudo xbps-install -S libcurl sqlite-devel libgcrypt
 ```
 
 #### Debian
 ```
 sudo apt install libcurl4-gnutls-dev sqlite-devel
 ```
-
-## Cookies
-### Firefox
-Create a file named `firefox_profile` in the build directory and paste in your [firefox profile folder path](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data)
-### Chrome
-Install libgcrypt and create a file named `chrome_profile` in the build directory and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
-### Other/No Sqlite
-Use the `--force-cookies` program option to manually input cookies.
 
 ## How to Use
 ```
@@ -49,10 +54,21 @@ By default, dropout-dl will download the episode in the format `<series>/S<seaso
 --season                 Interpret the url as a link to a season and download all episodes from all seasons
 ```
 
+## Cookies
+### Firefox
+Create a file named `firefox_profile` in the build directory and paste in your [firefox profile folder path](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data)
+### Chrome
+Install libgcrypt and create a file named `chrome_profile` in the build directory and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
+### Other/No Sqlite
+Use the `--force-cookies` program option to manually input cookies.
+
 ## TODO
 - [x] Create tests
 - [x] Handle non-alphanumeric characters
+- [ ] Create static executables
 - [ ] Test build process on other setups with other OSs.
+
+
 
 
 ## Contributing
