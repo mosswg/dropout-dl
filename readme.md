@@ -65,7 +65,6 @@ Use the `--force-cookies` program option to manually input cookies.
 ## TODO
 - [x] Create tests
 - [x] Handle non-alphanumeric characters
-- [ ] Create static executables
 - [ ] Test build process on other setups with other OSs.
 
 
