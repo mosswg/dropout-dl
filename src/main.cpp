@@ -289,7 +289,7 @@ std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::p
  */
 std::vector<dropout_dl::cookie> get_cookies(bool verbose = false) {
 
-	std::filesystem::path firefox_profile("_firefox_profile");
+	std::filesystem::path firefox_profile("firefox_profile");
 	std::filesystem::path chrome_profile("chrome_profile");
 
 	if (std::filesystem::exists(firefox_profile)) {
@@ -367,10 +367,6 @@ int main(int argc, char** argv) {
 			if (options.verbose) {
 				std::cout << "Creating series directory" << '\n';
 			}
-		}
-
-		if (options.filename.empty()) {
-			options.filename = dropout_dl::format_filename(ep.name + ".mp4");
 		}
 
 		ep.download(options.quality, options.output_directory, options.filename);

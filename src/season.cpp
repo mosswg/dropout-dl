@@ -45,7 +45,7 @@ namespace dropout_dl {
 				if (e.episode_url.empty()) {
 					continue;
 				}
-				std::cout << '\t' << e.episode_number << ": " << e.name << '\n';
+				std::cout << '\t' << e.name << '\n';
 				out.push_back(e);
 			}
 		}

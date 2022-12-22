@@ -166,51 +166,61 @@ namespace dropout_dl {
 		return size * nmemb;
 	}
 
+	std::string episode::get_meta_data_json(const std::string& html_data) {
+		std::string data_start("window.Page = {");
+		char data_open = '{';
+		char data_close = '}';
+		char current_char;
+		// The current grouping depth. 1 because we only use it after we're inside the data brackets
+		int grouping_depth = 1;
+		for (int i = 0; i < html_data.size(); i++) {
+			if (substr_is(html_data, i, data_start)) {
+				i += data_start.size();
+				for (int j = 0; j + i < html_data.size(); j++) {
+					current_char = html_data[j + i];
+					if (current_char == data_open) {
+						grouping_depth++;
+					}
+					else if(current_char == data_close) {
+						grouping_depth--;
+					}
+
+					if (grouping_depth == 0) {
+						return(html_data.substr(i, j));
+					}
+				}
+			}
+		}
+		return "ERROR";
+	}
+
 	// episode statics
-	std::string episode::get_series_name(const std::string& html_data) {
-		std::string series_title("series-title");
-		std::string open_a_tag("<a");
-		std::string close_tag(">");
-		std::string close_a("</a>");
-
-		for (int i = 0; i < html_data.size(); i++) {
-			if (substr_is(html_data, i, series_title)) {
-				for (int j = i + series_title.size(); j < html_data.size(); j++) {
-					if (html_data[j] == '\n' || html_data[j] == ' ' || html_data[j] == '\t') continue;
-					if (substr_is(html_data, j, open_a_tag)) {
-						for (int k = j + open_a_tag.size(); k < html_data.size(); k++) {
-							if (substr_is(html_data, k, close_tag)) {
-								k++;
-								for (int l = 0; l < html_data.size() - k; l++) {
-									if (substr_is(html_data, k + l, close_a)) {
-										return format_name_string(html_data.substr(k, l));
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		return "ERROR";
-	}
-
-	std::string episode::get_episode_name(const std::string& html_data) {
+	std::string episode::get_series_name(const std::string& meta_data) {
 		int title_start = -1;
-		std::string video_title("video-title");
-		std::string open_strong("<strong>");
-		std::string close_strong("</strong>");
-		for (int i = 0; i < html_data.size(); i++) {
-			if (substr_is(html_data, i, video_title)) {
-				for (int j = i; j < html_data.size(); j++) {
-					if (substr_is(html_data, j, open_strong)) {
-						title_start = j + open_strong.size();
-						break;
-					}
-				}
-				for (int j = 0; j < html_data.size() - title_start; j++) {
-					if (substr_is(html_data, title_start + j, close_strong)) {
-						return format_name_string(html_data.substr(title_start, j));
+		std::string parent_title("\"parent\"");
+		std::string series_title_title("\"name\"");
+		for (int i = 0; i < meta_data.size(); i++) {
+			if (substr_is(meta_data, i, parent_title)) {
+				// Skip "VIDEO_TITLE", the following colon, and the opening quotation mark.
+				i += parent_title.size() + 2;
+
+
+				int j;
+				for (j = 0; meta_data[i + j] != '}' && i + j < meta_data.size(); j++);
+
+				std::string series_data = meta_data.substr(i, j);
+
+				std::cout << "series_data: " << series_data << '\n';
+
+				for (j = 0; j < series_data.size(); j++) {
+					if (substr_is(series_data, j, series_title_title)) {
+						// Skip "name", the following colon, and the opening quotation mark.
+						j += series_title_title.size() + 2;
+
+						int k;
+						for (k = 0; j + k < series_data.size() && series_data[j + k] != '"'; k++);
+
+						return series_data.substr(j, k);
 					}
 				}
 			}
@@ -218,22 +228,38 @@ namespace dropout_dl {
 		return "ERROR";
 	}
 
-	std::string episode::get_episode_number(const std::string& html_data) {
-		std::string episode("Episode");
-		std::string close_a("</a>");
-		std::string episode_num;
-		for (int i = 0; i < html_data.size(); i++) {
-			if (substr_is(html_data, i, episode)) {
-				for (int j = i + 8; j < html_data.size(); j++) {
-					if (html_data[j] == '\n' || html_data[j] == ' ' || html_data[j] == '\t') continue;
-					if (substr_is(html_data, j, close_a)) {
-						return episode_num;
-					}
-					episode_num += html_data[j];
-				}
+	std::string episode::get_season_name(const std::string& meta_data) {
+		std::string season_title_title("\"COLLECTION_TITLE\"");
+		for (int i = 0; i < meta_data.size(); i++) {
+			if (substr_is(meta_data, i, season_title_title)) {
+				// Skip "VIDEO_TITLE", the following colon, and the opening quotation mark.
+				i += season_title_title.size() + 2;
+
+
+				int j;
+				for (j = 0; meta_data[i + j] != '"' && i + j < meta_data.size(); j++);
+
+				return meta_data.substr(i, j);
 			}
 		}
-		return "-1";
+		return "ERROR";
+	}
+
+	std::string episode::get_episode_name(const std::string& meta_data) {
+		std::string video_title_title("\"VIDEO_TITLE\"");
+		for (int i = 0; i < meta_data.size(); i++) {
+			if (substr_is(meta_data, i, video_title_title)) {
+				// Skip "VIDEO_TITLE", the following colon, and the opening quotation mark.
+				i += video_title_title.size() + 2;
+
+
+				int j;
+				for (j = 0; meta_data[i + j] != '"' && i + j < meta_data.size(); j++);
+
+				return meta_data.substr(i, j);
+			}
+		}
+		return "ERROR";
 	}
 
 	std::string episode::get_embed_url(const std::string& html_data) {
@@ -459,8 +485,6 @@ namespace dropout_dl {
 		if(curl) {
 			std::string out;
 
-
-
 			curl_easy_setopt(curl, CURLOPT_URL, get_video_url(quality).c_str());
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::WriteCallback);
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
@@ -478,10 +502,7 @@ namespace dropout_dl {
 
 	void episode::download(const std::string& quality, const std::string& series_directory, std::string filename) {
 		if (filename.empty()) {
-			filename = "E" + (this->episode_number.size() < 2 ? "0" + this->episode_number : this->episode_number) + this->name +
-					   ".mp4";
-
-			filename = format_filename(filename);
+			filename = this->series + " - " + this->season + " - " + this->name + ".mp4";
 		}
 
 		if (quality == "all") {

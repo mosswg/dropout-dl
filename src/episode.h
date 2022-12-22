@@ -256,10 +256,12 @@ namespace dropout_dl {
 		std::string series;
 		/// The directory for the series
 		std::string series_directory;
+		/// The name of the season that the episode belongs to
+		std::string season;
+		/// The json metadata of the episode
+		std::string metadata;
 		/// The name of the episode
 		std::string name;
-		/// The number of the episode in the season. This can be a number or a string
-		std::string episode_number;
 		/// The url for the main episode page
 		std::string episode_url;
 		/// The data of the main episode page
@@ -292,33 +294,43 @@ namespace dropout_dl {
 		 */
 		static std::string get_episode_page(const std::string& url, const std::string& auth_cookie, const std::string& session_cookie, bool verbose = false);
 
+		/**
+		 *
+		 * @param html_data - Episode page data
+		 * @return The json data for the episode
+		 *
+		 * Gets the json metadata of the episode
+		*/
+		static std::string get_meta_data_json(const std::string& html_data);
+
 		// Parsing
 		/**
 		 *
-		 * @param html_data - Episode page data
+		 * @param meta_data - Episode metadata in json format
 		 * @return The name of the series
 		 *
-		 * Get the name of the series from the episode page
+		 * Get the name of the series from the metadata
 		 */
-		static std::string get_series_name(const std::string& html_data);
+		static std::string get_series_name(const std::string& meta_data);
+
 
 		/**
 		 *
-		 * @param html_data - Episode page data
+		 * @param meta_data - Episode metadata in json format
+		 * @return The name of the season
+		 *
+		 * Get the name of the season from the metadata
+		 */
+		static std::string get_season_name(const std::string& meta_data);
+
+		/**
+		 *
+		 * @param meta_data - Episode metadata in json format
 		 * @return The name of the episode
 		 *
-		 * Get the name of the episode from the episode page
+		 * Get the name of the episode from the metadata
 		 */
-		static std::string get_episode_name(const std::string& html_data);
-
-		/**
-		 *
-		 * @param html_data - Episode page data
-		 * @return The number of the episode
-		 *
-		 * Get the number of the episode from the episode page
-		 */
-		static std::string get_episode_number(const std::string& html_data);
+		static std::string get_episode_name(const std::string& meta_data);
 
 		/**
 		 *
@@ -393,7 +405,17 @@ namespace dropout_dl {
 
 			episode_data = get_episode_page(episode_url, cookies[0].value, cookies[1].value);
 
-			name = get_episode_name(episode_data);
+			if (verbose) {
+				std::cout << "Got page data\n";
+			}
+
+			metadata = get_meta_data_json(episode_data);
+
+			if (verbose) {
+				std::cout << "Got episode metadata: " << metadata << '\n';
+			}
+
+			name = get_episode_name(metadata);
 
 			if (verbose) {
 				std::cout << "Got name: " << name << '\n';
@@ -404,16 +426,16 @@ namespace dropout_dl {
 				exit(6);
 			}
 
-			this->episode_number = get_episode_number(episode_data);
-
-			if (verbose) {
-				std::cout << "Got episode: " << this->episode_number << '\n';
-			}
-
-			this->series = get_series_name(episode_data);
+			this->series = get_series_name(metadata);
 
 			if (verbose) {
 				std::cout << "Got series: " << this->series << '\n';
+			}
+
+			this->season = get_season_name(metadata);
+
+			if (verbose) {
+				std::cout << "Got season: " << this->season << '\n';
 			}
 
 			this->series_directory = format_filename(this->series);
