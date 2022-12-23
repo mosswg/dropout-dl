@@ -102,7 +102,7 @@ namespace dropout_dl {
 			char c = str[i];
 
 			// Skip these
-			if (c == '?' || c == ':') {
+			if (c == '?' || c == ':' || c == '\\') {
 				continue;
 			}
 			// Replace these with dashes
@@ -254,7 +254,12 @@ namespace dropout_dl {
 
 
 				int j;
-				for (j = 0; meta_data[i + j] != '"' && i + j < meta_data.size(); j++);
+				for (j = 0; meta_data[i + j] != '"' && i + j < meta_data.size(); j++) {
+					// skip checking for quotes if prefaced by a forward slash
+					if (meta_data[i + j] == '\\') {
+						j++;
+					}
+				}
 
 				return meta_data.substr(i, j);
 			}
