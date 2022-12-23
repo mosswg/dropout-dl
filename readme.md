@@ -37,9 +37,9 @@ sudo apt install libcurl4-gnutls-dev sqlite-devel
 
 ## How to Use
 ```
-./dropout-dl <url> [OPTIONS]
+./dropout-dl [options] <url>
 ```
-By default, dropout-dl will download the episode in the format `<series>/S<season-num>E<episode-num><name>.mp4`
+By default, dropout-dl will download episodes in a season with the format `<series>/<season>/<series> - S<season-num>E<episode-num> - <episode-name>.mp4` and single episodes with the format `<series>/<season>/<series> - <season> - <episode-name>.mp4`.
 
 ### Options
 ```
@@ -51,8 +51,11 @@ By default, dropout-dl will download the episode in the format `<series>/S<seaso
 --verbose                Display debug information while running
 --force-cookies          Interpret the next to arguments as authentication cookie and session cookie
 --series                 Interpret the url as a link to a series and download all episodes from all seasons
---season                 Interpret the url as a link to a season and download all episodes from all seasons
+--season                 Interpret the url as a link to a season and download all episodes in the season
+--episode                Interpret the url as a link to a single episode
 ```
+
+If series, season, or episode is not used, the type will be inferred based on the link format.
 
 ## Cookies
 ### Firefox
