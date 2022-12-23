@@ -258,10 +258,14 @@ namespace dropout_dl {
 		std::string series_directory;
 		/// The name of the season that the episode belongs to
 		std::string season;
+		/// The number of the season (only set when downloading a season or series)
+		int season_number;
 		/// The json metadata of the episode
 		std::string metadata;
 		/// The name of the episode
 		std::string name;
+		/// The number of the episode (only set when downloading a season or series)
+		int episode_number;
 		/// The url for the main episode page
 		std::string episode_url;
 		/// The data of the main episode page

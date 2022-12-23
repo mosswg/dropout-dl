@@ -33,18 +33,20 @@ namespace dropout_dl {
 		exit(8);
 	}
 
-	std::vector<episode> season::get_episodes(const std::string &html_data, const std::vector<cookie>& cookies) {
+	std::vector<episode> season::get_episodes(const std::vector<cookie>& cookies) {
 		std::vector<episode> out;
 
 		std::string site_video(R"(class="browse-item-link" data-track-event="site_video")");
 
-
-		for (int i = 0; i < html_data.size(); i++) {
-			if (substr_is(html_data, i, site_video)) {
-				episode e = get_episode(html_data, i, cookies);
+		int number_of_episodes = 0;
+		for (int i = 0; i < this->page_data.size(); i++) {
+			if (substr_is(this->page_data, i, site_video)) {
+				episode e = get_episode(this->page_data, i, cookies);
 				if (e.episode_url.empty()) {
 					continue;
 				}
+				e.episode_number = ++number_of_episodes;
+				e.season_number = this->season_number;
 				std::cout << '\t' << e.name << '\n';
 				out.push_back(e);
 			}
@@ -53,13 +55,28 @@ namespace dropout_dl {
 		return out;
 	}
 
+	int season::get_season_number(const std::string& url) {
+		std::string reversed_number;
+		for (int i = url.length() - 1; i >= 0 && url[i] != ':'; i--) {
+			if (isdigit(url[i])) {
+				reversed_number += url[i];
+			}
+		}
+		std::string number;
+		for (int i = reversed_number.length() - 1, j = 0; i >= 0; i--, j++) {
+			number[j] += reversed_number[i];
+		}
+
+		return std::stoi(number);
+	}
+
 	void season::download(const std::string &quality, const std::string &series_directory) {
 		if (!std::filesystem::is_directory(series_directory)) {
 			std::filesystem::create_directories(series_directory);
 			std::cout << "Creating series directory" << '\n';
 		}
 
-		std::string dir = format_filename(series_directory + "/" + this->name);
+		std::string dir = series_directory + "/" + this->name;
 
 		for (auto& ep : episodes) {
 			ep.download(quality, dir);

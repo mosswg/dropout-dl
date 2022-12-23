@@ -101,15 +101,16 @@ namespace dropout_dl {
 		for (int i = 0; i < str.size(); i++) {
 			char c = str[i];
 
-			if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '.' || c == '/' || c == '-' || c == '_') {
-				out += c;
+			// Skip these
+			if (c == '?' || c == ':') {
+				continue;
 			}
-			else if (c == ',' && str[i + 1] == ' ') {
-				out+= '-';
-				i++;
-			}
-			else if (c == ',' || c == '\'' || c == ' ') {
+			// Replace these with dashes
+			else if (c == '/') {
 				out += '-';
+			}
+			else {
+				out += c;
 			}
 		}
 
@@ -143,7 +144,8 @@ namespace dropout_dl {
 
 		current_time = time_ms();
 		if (current_time - 50 > last_progress_timestamp) {
-			double percent_done = (downloaded / total_to_download) * number_chars;
+			// Percent of the file downloadede. Adding one to round up so that when its done it shows as a full bar rather than missing one.
+			double percent_done = ((downloaded / total_to_download) * number_chars) + 1;
 			double percent_done_clone = percent_done;
 			std::cout << *(std::string*)filename << " [";
 			while (percent_done_clone-- > 0) {
@@ -209,8 +211,6 @@ namespace dropout_dl {
 				for (j = 0; meta_data[i + j] != '}' && i + j < meta_data.size(); j++);
 
 				std::string series_data = meta_data.substr(i, j);
-
-				std::cout << "series_data: " << series_data << '\n';
 
 				for (j = 0; j < series_data.size(); j++) {
 					if (substr_is(series_data, j, series_title_title)) {
@@ -502,8 +502,20 @@ namespace dropout_dl {
 
 	void episode::download(const std::string& quality, const std::string& series_directory, std::string filename) {
 		if (filename.empty()) {
-			filename = this->series + " - " + this->season + " - " + this->name + ".mp4";
+			if (this->episode_number != 0) {
+				if (this->season_number != 0) {
+					filename = this->series + " - S" + ((this->season_number < 10) ? "0" : "") + std::to_string(this->season_number) + "E" + ((this->episode_number < 10) ? "0" : "") + std::to_string(this->episode_number) + " - " + this->name + ".mp4";
+				}
+				else {
+					filename = this->series + " - " + this->season + " Episode " + std::to_string(this->episode_number) + " - " + this->name + ".mp4";
+				}
+			}
+			else {
+				filename = this->series + " - " + this->season + " - " + this->name + ".mp4";
+			}
+			filename = format_filename(filename);
 		}
+
 
 		if (quality == "all") {
 			for (const auto &possible_quality: this->qualities) {
@@ -531,6 +543,8 @@ namespace dropout_dl {
 
 			out << this->get_video_data(quality, series_directory + "/" + filename) << std::endl;
 		}
+
+		std::cout << '\n';
 	}
 
 

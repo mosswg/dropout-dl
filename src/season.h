@@ -16,6 +16,8 @@ namespace dropout_dl {
 			std::string name;
 			/// The name of the series
 			std::string series_name;
+			/// The number of the season
+			int season_number;
 			/// The link to the season page
 			std::string url;
 			/// The season page data
@@ -31,7 +33,16 @@ namespace dropout_dl {
 			 *
 			 * Gets all the episodes of the season and returns in a vector
 			 */
-			static std::vector<episode> get_episodes(const std::string& html_data, const std::vector<cookie>& cookies);
+			std::vector<episode> get_episodes(const std::vector<cookie>& cookies);
+
+			/**
+			 *
+			 * @param url - The url of the season
+			 * @return The number of the season
+			 *
+			 * Gets the canonical number of the season for the url. This is sometimes different from the displayed number because of special seasons.
+			 */
+			 static int get_season_number(const std::string& url);
 
 			/**
 			 *
@@ -53,11 +64,12 @@ namespace dropout_dl {
 			 */
 			season(const std::string& url, const std::string& name, const std::vector<cookie>& cookies, const std::string& series_name = "") {
 				this->url = url;
+				this->season_number = get_season_number(this->url);
 				this->name = name;
 				this->series_name = series_name;
 				std::cout << series_name << ": " << name << ": " << "\n";
 				this->page_data = get_generic_page(url);
-				this->episodes = get_episodes(page_data, cookies);
+				this->episodes = get_episodes(cookies);
 			}
 	};
 

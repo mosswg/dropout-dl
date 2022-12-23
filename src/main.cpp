@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "series.h"
+#include <regex>
 
 #ifdef DROPOUT_DL_SQLITE
 #include <sqlite3.h>
@@ -17,8 +18,9 @@ namespace dropout_dl {
 		std::string url;
 		bool verbose = false;
 		bool cookies_forced = false;
-		bool series = false;
-		bool season = false;
+		bool is_series = false;
+		bool is_season = false;
+		bool is_episode = false;
 		std::string quality;
 		std::string filename;
 		std::string output_directory;
@@ -92,10 +94,13 @@ namespace dropout_dl {
 					output_directory = args[++i];
 				}
 				else if (arg == "series") {
-					series = true;
+					is_series = true;
 				}
 				else if (arg == "season") {
-					season = true;
+					is_season = true;
+				}
+				else if (arg == "episode") {
+					is_episode = true;
 				}
 				else if (arg == "help") {
 					std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
@@ -120,11 +125,28 @@ namespace dropout_dl {
 				output_directory = ".";
 			}
 
-			if (season && series) {
-				std::cerr << "ARGUMENT PARSE ERROR: Season and Series arguments used\n";
+			if ((is_season && is_series) || (is_season && is_episode) || (is_series && is_episode)) {
+				std::cerr << "ARGUMENT PARSE ERROR: Mulitple parse type arguments used\n";
 			}
 			if (quality.empty()) {
 				quality = "1080p";
+			}
+
+			if (!(is_season || is_series || is_episode)) {
+				std::regex season_regex("season:\\d+\\/?$", std::regex::ECMAScript);
+				std::regex episode_regex("season:\\d+\\/.+$", std::regex::ECMAScript);
+				if (std::regex_search(url, season_regex)) {
+					is_season = true;
+				}
+				else if (std::regex_search(url, episode_regex)) {
+					is_episode = true;
+				}
+				else {
+					is_series = true;
+				}
+			}
+			else {
+				std::cout << is_season << is_series << is_episode << '\n';
 			}
 		}
 	};
@@ -341,21 +363,26 @@ int main(int argc, char** argv) {
 		options.cookies = get_cookies(options.verbose);
 	}
 
-	if (options.series) {
+	if (options.is_series) {
+		if (options.verbose) {
+			std::cout << "Getting series\n";
+		}
 		dropout_dl::series series(options.url, options.cookies);
 
 		series.download(options.quality, options.output_directory);
 	}
-	else if (options.season) {
+	else if (options.is_season) {
+		if (options.verbose) {
+			std::cout << "Getting season\n";
+		}
 		dropout_dl::season season = dropout_dl::series::get_season(options.url, options.cookies);
 
-		std::string series_directory = dropout_dl::format_filename(season.series_name);
-
-		std::cout << "ser: " << season.series_name << "\ndir: " << series_directory << '\n';
-
-		season.download(options.quality, options.output_directory + "/" + series_directory);
+		season.download(options.quality, options.output_directory + "/" + season.series_name);
 	}
-	else {
+	else if (options.is_episode) {
+		if (options.verbose) {
+			std::cout << "Getting episode\n";
+		}
 		dropout_dl::episode ep(options.url, options.cookies, options.verbose);
 
 		if (options.verbose) {
@@ -370,6 +397,9 @@ int main(int argc, char** argv) {
 		}
 
 		ep.download(options.quality, options.output_directory, options.filename);
+	}
+	else {
+		std::cerr << "ERROR: Could not determine parsing type\n";
 	}
 
 
