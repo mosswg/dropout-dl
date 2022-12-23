@@ -220,7 +220,7 @@ namespace dropout_dl {
 						int k;
 						for (k = 0; j + k < series_data.size() && series_data[j + k] != '"'; k++);
 
-						return series_data.substr(j, k);
+						return format_name_string(series_data.substr(j, k));
 					}
 				}
 			}
@@ -239,7 +239,7 @@ namespace dropout_dl {
 				int j;
 				for (j = 0; meta_data[i + j] != '"' && i + j < meta_data.size(); j++);
 
-				return meta_data.substr(i, j);
+				return format_name_string(meta_data.substr(i, j));
 			}
 		}
 		return "ERROR";
@@ -261,7 +261,7 @@ namespace dropout_dl {
 					}
 				}
 
-				return meta_data.substr(i, j);
+				return format_name_string(meta_data.substr(i, j));
 			}
 		}
 		return "ERROR";
