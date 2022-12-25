@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
+#include "color.h"
 #include <sqlite3.h>
 #ifdef DROPOUT_DL_GCRYPT
 #include <gcrypt.h>
@@ -259,13 +260,13 @@ namespace dropout_dl {
 		/// The name of the season that the episode belongs to
 		std::string season;
 		/// The number of the season (only set when downloading a season or series)
-		int season_number;
+		int season_number = 0;
 		/// The json metadata of the episode
 		std::string metadata;
 		/// The name of the episode
 		std::string name;
 		/// The number of the episode (only set when downloading a season or series)
-		int episode_number;
+		int episode_number = 0;
 		/// The url for the main episode page
 		std::string episode_url;
 		/// The data of the main episode page
@@ -381,6 +382,18 @@ namespace dropout_dl {
 		 * Download the episode with the given quality and return the raw video data as a string. The <b>filename</b> parameter is only used for displaying while downloading the video so that the user knows what is being downloaded. The <b>filename</b> argument is entirely optional and this function will not place the video into a file whether the value is given or not.
 		 */
 		std::string get_video_data(const std::string& quality, const std::string& filename = "");
+
+
+		/**
+		 *
+		 * @param quality - The quality of the video
+		 * @param base_directory - The directory which the episode is downloaded into
+		 * @param filename - The name of the file (Will default if empty)
+		 *
+		 * Downloads the episode using the get_video_data function and places it into the <b>filename</b> file in the <b>base_directory</b> directory.
+		 * If the file already exists it will output the name in yellow and will not redownload.
+		 */
+		void download_quality(const std::string& quality, const std::string& base_directory, const std::string& filename);
 
 		/**
 		 *

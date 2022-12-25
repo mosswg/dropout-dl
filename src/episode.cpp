@@ -265,7 +265,6 @@ namespace dropout_dl {
 				// Skip "VIDEO_TITLE", the following colon, and the opening quotation mark.
 				i += video_title_title.size() + 2;
 
-
 				int j;
 				for (j = 0; meta_data[i + j] != '"' && i + j < meta_data.size(); j++) {
 					// skip checking for quotes if prefaced by a forward slash
@@ -518,6 +517,31 @@ namespace dropout_dl {
 	}
 
 
+	void episode::download_quality(const std::string& quality, const std::string& base_directory, const std::string& filename) {
+		if (!std::filesystem::is_directory(base_directory)) {
+			std::filesystem::create_directories(base_directory);
+			if (this->verbose) {
+				std::cout << "Creating quality directory" << '\n';
+			}
+		}
+
+		std::string filepath = base_directory + "/" + filename;
+
+		if(std::filesystem::is_regular_file(filepath)) {
+			std::cout << YELLOW << "File already exists: " << filepath << RESET << '\n';
+			return;
+		}
+		std::fstream out(filepath,
+						 std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+
+		out << this->get_video_data(quality, filepath) << std::endl;
+
+		std::cout << GREEN << filepath << RESET;
+
+		std::cout << '\n';
+	}
+
+
 	void episode::download(const std::string& quality, const std::string& series_directory, std::string filename) {
 		if (filename.empty()) {
 			if (this->episode_number != 0) {
@@ -537,32 +561,12 @@ namespace dropout_dl {
 
 		if (quality == "all") {
 			for (const auto &possible_quality: this->qualities) {
-				if (!std::filesystem::is_directory(series_directory + "/" + possible_quality)) {
-					std::filesystem::create_directories(series_directory + "/" + possible_quality);
-					if (this->verbose) {
-						std::cout << "Creating quality directory" << '\n';
-					}
-				}
-				std::fstream out(series_directory + "/" + possible_quality + "/" + filename,
-								 std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
-
-				out << this->get_video_data(possible_quality, series_directory + "/" + possible_quality + "/" + filename) << std::endl;
+				this->download_quality(possible_quality, series_directory + possible_quality, filename);
 			}
 		} else {
-			if (!std::filesystem::is_directory(series_directory)) {
-				std::filesystem::create_directories(series_directory);
-				if (this->verbose) {
-					std::cout << "Creating quality directory" << '\n';
-				}
-			}
-
-			std::fstream out(series_directory + "/" + filename,
-							 std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
-
-			out << this->get_video_data(quality, series_directory + "/" + filename) << std::endl;
+			this->download_quality(quality, series_directory, filename);
 		}
 
-		std::cout << '\n';
 	}
 
 
