@@ -25,6 +25,8 @@ namespace dropout_dl {
 			/// The list of all the episodes in the season
 			std::vector<episode> episodes;
 
+			episode get_episode(const std::string& html_data, int& start_point, const std::vector<cookie>& cookies, int episode_number = 0);
+
 			/**
 			 *
 			 * @param html_data - The season page data

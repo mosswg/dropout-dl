@@ -406,6 +406,87 @@ namespace dropout_dl {
 		 */
 		void download(const std::string& quality, const std::string& series_directory, std::string filename = "");
 
+
+
+		/**
+		 *
+		 * @param episode_url - Link to the episode
+		 * @param cookies - The current cookies from the browser
+		 * @param series - The series the episode is in
+		 * @param season - The season the episode is in
+		 * @param episode_number - The number of the episode
+		 * @param season_number - The number of the season the episode is in
+		 * @param verbose - Whether or not be verbose
+		 *
+		 * Create an episode object from the link using to cookies to get all the necessary information.
+		 * This constructor initializes all the object data.
+		 */
+		episode(const std::string& episode_url, std::vector<cookie> cookies, const std::string& series, const std::string& season, int episode_number, int season_number, bool verbose = false) {
+			this->episode_url = episode_url;
+			this->verbose = verbose;
+
+			episode_data = get_episode_page(episode_url, cookies[0].value, cookies[1].value);
+
+			if (verbose) {
+				std::cout << "Got page data\n";
+			}
+
+			metadata = get_meta_data_json(episode_data);
+
+			if (verbose) {
+				std::cout << "Got episode metadata: " << metadata << '\n';
+			}
+
+			name = get_episode_name(metadata);
+
+			if (verbose) {
+				std::cout << "Got name: " << name << '\n';
+			}
+
+			if (name == "ERROR") {
+				std::cerr << "EPISODE ERROR: Invalid Episode URL\n";
+				exit(6);
+			}
+
+			this->series = series;
+
+			this->series_directory = format_filename(this->series);
+
+			this->season = season;
+
+			this->episode_number = episode_number;
+
+			this->season_number = season_number;
+
+
+			this->embedded_url = get_embed_url(episode_data);
+
+			replace_all(this->embedded_url, "&amp;", "&");
+
+			if (verbose) {
+				std::cout << "Got embedded url: " << this->embedded_url << '\n';
+			}
+
+			this->embedded_page_data = get_generic_page(this->embedded_url);
+
+			if (this->embedded_page_data.find("you are not authorized") != std::string::npos) {
+				std::cerr << "ERROR: Could not access video. Try refreshing cookies.\n";
+				exit(6);
+			}
+
+			this->config_url = get_config_url(this->embedded_page_data);
+
+			replace_all(this->config_url, "\\u0026", "&");
+
+			if (verbose) {
+				std::cout << "Got config url: " << this->config_url << '\n';
+			}
+
+			this->config_data = get_generic_page(this->config_url);
+
+			this->get_qualities();
+			}
+
 		/**
 		 *
 		 * @param episode_url - Link to the episode
