@@ -20,19 +20,18 @@ make
 
 ### Required
 * [cURL](https://curl.se/libcurl/) - Required for downloading pages and videos.
-### Recommended
-* [SQLite](https://www.sqlite.org/index.html) - Required for retrieving cookies from browsers. This can be avoided by using the `--force-cookies` [option](#options).
 ### Optional
+* [SQLite](https://www.sqlite.org/index.html) - Required for retrieving cookies from browsers.
 * [libgcrypt](https://www.gnupg.org/software/libgcrypt/index.html) - Used for decrypting chrome cookies retrieved from the sqlite database.
 
 #### Void
 ```
-sudo xbps-install -S libcurl sqlite-devel libgcrypt
+sudo xbps-install -S libcurl
 ```
 
 #### Debian
 ```
-sudo apt install libcurl4-gnutls-dev sqlite-devel
+sudo apt install libcurl4-gnutls-dev
 ```
 
 ## How to Use
@@ -49,6 +48,7 @@ By default, dropout-dl will download episodes in a season with the format `<seri
 --output                 Set the output filename
 --output-directory       Set the directory where files are output
 --verbose                Display debug information while running
+--browser-cookies        Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'
 --force-cookies          Interpret the next to arguments as authentication cookie and session cookie
 --series                 Interpret the url as a link to a series and download all episodes from all seasons
 --season                 Interpret the url as a link to a season and download all episodes in the season
@@ -57,12 +57,20 @@ By default, dropout-dl will download episodes in a season with the format `<seri
 
 If series, season, or episode is not used, the type will be inferred based on the link format.
 
-## Cookies
-### Firefox
+### Login
+Login in information must be placed in a file called `login` in the same directory as the executable. The file must be email then on a new line password. For example if your email is `email@example.com` and password `password123` the file would be:
+```
+email@example.com
+password123
+```
+
+### Cookies
+If you would like to avoid putting logging in for any reason cookies can be used. The option `browser-cookies` must be provided.
+#### Firefox
 Create a file named `firefox_profile` in the build directory and paste in your [firefox profile folder path](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data)
-### Chrome
+#### Chrome
 Install libgcrypt and create a file named `chrome_profile` in the build directory and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
-### Other/No Sqlite
+#### Other/No Sqlite
 Use the `--force-cookies` program option to manually input cookies.
 
 ## TODO
