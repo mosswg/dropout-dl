@@ -187,25 +187,13 @@ namespace dropout_dl {
 
 		curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
 		curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &episode_data);
-		/* Here is a list of options the curl code used that cannot get generated
-		   as source easily. You may choose to either not use them or implement
-		   them yourself.
 
-		CURLOPT_WRITEDATA set to a objectpointer
-		CURLOPT_INTERLEAVEDATA set to a objectpointer
-		CURLOPT_WRITEFUNCTION set to a functionpointer
-		CURLOPT_READDATA set to a objectpointer
-		CURLOPT_READFUNCTION set to a functionpointer
-		CURLOPT_SEEKDATA set to a objectpointer
-		CURLOPT_SEEKFUNCTION set to a functionpointer
-		CURLOPT_ERRORBUFFER set to a objectpointer
-		CURLOPT_STDERR set to a objectpointer
-		CURLOPT_HEADERFUNCTION set to a functionpointer
-		CURLOPT_HEADERDATA set to a objectpointer
-
-		*/
+		std::string header;
+		curl_easy_setopt(hnd, CURLOPT_HEADERFUNCTION, WriteCallback);
+		curl_easy_setopt(hnd, CURLOPT_HEADERDATA, &header);
 
 		ret = curl_easy_perform(hnd);
+
 
 		curl_easy_cleanup(hnd);
 		hnd = nullptr;
@@ -213,49 +201,6 @@ namespace dropout_dl {
 		slist1 = nullptr;
 
 		return episode_data;
-	}
-
-	std::string get_generic_page(const std::string& url, bool verbose) {
-		CURL *hnd;
-		struct curl_slist *slist1;
-
-		std::string config_page;
-
-		slist1 = nullptr;
-		slist1 = curl_slist_append(slist1, "Accept: text/html");
-		slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en");
-		slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
-		slist1 = curl_slist_append(slist1, "DNT: 1");
-		slist1 = curl_slist_append(slist1, "Connection: keep-alive");
-		slist1 = curl_slist_append(slist1, "Referer: https://www.dropout.tv/");
-		slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
-		slist1 = curl_slist_append(slist1, "Sec-Fetch-Dest: iframe");
-		slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");
-		slist1 = curl_slist_append(slist1, "Sec-Fetch-Site: cross-site");
-		slist1 = curl_slist_append(slist1, "Sec-GPC: 1");
-
-		hnd = curl_easy_init();
-		curl_easy_setopt(hnd, CURLOPT_BUFFERSIZE, 102400L);
-		curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
-		curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
-		curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
-		curl_easy_setopt(hnd, CURLOPT_MAXREDIRS, 50L);
-		curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
-		curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
-		curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
-		curl_easy_setopt(hnd, CURLOPT_VERBOSE, verbose);
-
-		curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
-		curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &config_page);
-
-		curl_easy_perform(hnd);
-
-		curl_easy_cleanup(hnd);
-		hnd = nullptr;
-		curl_slist_free_all(slist1);
-		slist1 = nullptr;
-
-		return config_page;
 	}
 
 	std::vector<std::string> episode::get_qualities() {

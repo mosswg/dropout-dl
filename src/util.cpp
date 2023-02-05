@@ -174,4 +174,163 @@ namespace dropout_dl {
 		((std::string*)userp)->append((char*)contents, size * nmemb);
 		return size * nmemb;
 	}
+
+
+	std::string get_generic_page(const std::string& url, bool verbose, std::string* header_string) {
+		CURL *hnd;
+		struct curl_slist *slist1;
+
+		std::string page_data;
+
+		slist1 = nullptr;
+		slist1 = curl_slist_append(slist1, "Accept: text/html");
+		slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en");
+		slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
+		slist1 = curl_slist_append(slist1, "DNT: 1");
+		slist1 = curl_slist_append(slist1, "Connection: keep-alive");
+		slist1 = curl_slist_append(slist1, "Referer: https://www.dropout.tv/");
+		slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
+		slist1 = curl_slist_append(slist1, "Sec-Fetch-Dest: iframe");
+		slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");
+		slist1 = curl_slist_append(slist1, "Sec-Fetch-Site: cross-site");
+		slist1 = curl_slist_append(slist1, "Sec-GPC: 1");
+
+		hnd = curl_easy_init();
+		curl_easy_setopt(hnd, CURLOPT_BUFFERSIZE, 102400L);
+		curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
+		curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
+		curl_easy_setopt(hnd, CURLOPT_MAXREDIRS, 50L);
+		curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
+		curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
+		curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
+		curl_easy_setopt(hnd, CURLOPT_VERBOSE, verbose);
+
+		curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &page_data);
+
+		if (header_string) {
+			curl_easy_setopt(hnd, CURLOPT_HEADERFUNCTION, WriteCallback);
+			curl_easy_setopt(hnd, CURLOPT_HEADERDATA, header_string);
+		}
+
+		curl_easy_perform(hnd);
+
+		curl_easy_cleanup(hnd);
+		hnd = nullptr;
+		curl_slist_free_all(slist1);
+		slist1 = nullptr;
+
+		return page_data;
+	}
+
+
+	std::string get_generic_page_with_cookies(const std::string& url, std::string& session, std::string& cf_bm) {
+		CURL *hnd;
+		struct curl_slist *slist1;
+
+		std::string page_data;
+
+		slist1 = nullptr;
+		std::string cookies = "Cookie: _session=" + session + "; __cf_bm=" + cf_bm;
+		slist1 = curl_slist_append(slist1, "Accept: text/html");
+		slist1 = curl_slist_append(slist1, "Accept-Language: en-US,en");
+		slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
+		slist1 = curl_slist_append(slist1, "DNT: 1");
+		slist1 = curl_slist_append(slist1, "Connection: keep-alive");
+		slist1 = curl_slist_append(slist1, "Referer: https://www.dropout.tv/");
+		slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
+		slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");
+		slist1 = curl_slist_append(slist1, "Sec-Fetch-Site: cross-site");
+		slist1 = curl_slist_append(slist1, cookies.c_str());
+		slist1 = curl_slist_append(slist1, "Sec-GPC: 1");
+
+		hnd = curl_easy_init();
+		curl_easy_setopt(hnd, CURLOPT_BUFFERSIZE, 102400L);
+		curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
+		curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
+		curl_easy_setopt(hnd, CURLOPT_MAXREDIRS, 50L);
+		curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
+		curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
+		curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
+
+		curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &page_data);
+
+		std::string header_string;
+		curl_easy_setopt(hnd, CURLOPT_HEADERFUNCTION, WriteCallback);
+		curl_easy_setopt(hnd, CURLOPT_HEADERDATA, &header_string);
+
+		curl_easy_perform(hnd);
+
+
+		if (header_string.find("set-cookie: _session=")) {
+			std::cout << "updated session " << session << "->";
+			session = get_substring_in(header_string, "set-cookie: _session=", ";");
+			std::cout << session << "\n";
+		}
+
+		curl_easy_cleanup(hnd);
+		hnd = nullptr;
+		curl_slist_free_all(slist1);
+		slist1 = nullptr;
+
+		return page_data;
+	}
+
+
+
+	std::string get_substring_in(const std::string& string, const std::string& begin, const std::string& end) {
+		size_t substring_start = string.find(begin);
+
+		if (substring_start == std::string::npos) {
+			std::cerr << "ERROR: Could not find start of substring\n";
+			return "";
+		}
+
+		// Skip over the contents of 'begin'
+		substring_start += begin.size();
+
+		size_t substring_end = string.find(end, substring_start);
+
+		if (substring_end == std::string::npos) {
+			std::cerr << "ERROR: Could not find end of substring\n";
+			return "";
+		}
+
+
+		return string.substr(substring_start, substring_end - substring_start);
+	}
+
+
+	// https://stackoverflow.com/questions/154536/encode-decode-urls-in-c
+	std::string url_encode(const std::string& value) {
+		static auto hex_digt = "0123456789ABCDEF";
+
+		std::string result;
+		result.reserve(value.size() << 1);
+
+		for (auto ch : value)
+			{
+				if ((ch >= '0' && ch <= '9')
+					|| (ch >= 'A' && ch <= 'Z')
+					|| (ch >= 'a' && ch <= 'z')
+					|| ch == '-' || ch == '_' || ch == '!'
+					|| ch == '\'' || ch == '(' || ch == ')'
+					|| ch == '*' || ch == '~' || ch == '.')  // !'()*-._~
+					{
+						result.push_back(ch);
+					}
+				else
+					{
+						result += std::string("%") +
+							hex_digt[static_cast<unsigned char>(ch) >> 4]
+							+  hex_digt[static_cast<unsigned char>(ch) & 15];
+					}
+			}
+
+		return result;
+	}
+
 }

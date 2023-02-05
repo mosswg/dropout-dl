@@ -5,19 +5,39 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 IF(DROPOUT_DL_BUILD_ALL)
-    add_executable(dropout-dl-minimal src/episode.cpp src/season.cpp src/series.cpp src/main.cpp)
+	add_executable(dropout-dl-minimal
+		src/login.cpp
+		src/episode.cpp
+		src/season.cpp
+		src/series.cpp
+		src/util.cpp
+		src/main.cpp)
 
     target_link_libraries(dropout-dl-minimal curl)
 
 
-    add_executable(dropout-dl-sqlite src/episode.cpp src/season.cpp src/series.cpp src/main.cpp)
+	add_executable(dropout-dl-sqlite
+		src/cookie.cpp
+		src/login.cpp
+		src/episode.cpp
+		src/season.cpp
+		src/series.cpp
+		src/util.cpp
+		src/main.cpp)
 
     target_link_libraries(dropout-dl-sqlite curl sqlite3)
 
     target_compile_definitions(dropout-dl-sqlite PUBLIC DROPOUT_DL_SQLITE)
 
 
-    add_executable(dropout-dl-full src/episode.cpp src/season.cpp src/series.cpp src/main.cpp)
+	add_executable(dropout-dl-full
+		src/cookie.cpp
+		src/login.cpp
+		src/episode.cpp
+		src/season.cpp
+		src/series.cpp
+		src/util.cpp
+		src/main.cpp)
 
     target_link_libraries(dropout-dl-full curl gcrypt sqlite3)
 
@@ -27,7 +47,14 @@ IF(DROPOUT_DL_BUILD_ALL)
     add_subdirectory(tests)
 ELSE()
 
-add_executable(dropout-dl src/episode.cpp src/season.cpp src/series.cpp src/main.cpp)
+add_executable(dropout-dl
+	src/cookie.cpp
+	src/login.cpp
+	src/episode.cpp
+	src/season.cpp
+	src/series.cpp
+	src/util.cpp
+	src/main.cpp)
 
 target_link_libraries(dropout-dl curl)
 

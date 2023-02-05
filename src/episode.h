@@ -62,8 +62,8 @@ namespace dropout_dl {
 		/**
 		 *
 		 * @param url - The url of the episode page
-		 * @param auth_cookie - The authentication cookie with name "__cf_bm"
-		 * @param session_cookie - The session cookie with name "_session"
+		 * @param auth_cookie - The authentication cookie with name "__cf_bm".
+		 * @param session_cookie - The session cookie with name "_session".
 		 * @param verbose - Whether or not to be verbose (not recommended)
 		 * @return The episode page data
 		 */

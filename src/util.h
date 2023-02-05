@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
 #include <curl/curl.h>
 
@@ -107,14 +109,44 @@ namespace dropout_dl {
 	 */
 	size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
+
 	/**
 	 *
 	 * @param url - Url which is being downloaded
 	 * @param verbose - Whether or not to be verbose (not recommended)
+	 * @param header_string - A string to place header data in. optional
 	 * @return The page data as a string
 	 *
 	 * This function downloads the provided url and returns it as a string. Does not use cookies. This was ripped directly from a firefox network request for an episode page and modified minimally.
 	 */
-	std::string get_generic_page(const std::string& url, bool verbose = false);
+	std::string get_generic_page(const std::string& url, bool verbose = false, std::string* header_string = nullptr);
 
+	/**
+	 *
+	 * @param url - Url which is being downloaded
+	 * @param session - _session cookie. this is updated if possible
+	 * @param cf_bm - __cf_bm cookie. this is updated if possible
+	 * @return The page data as a string
+	 *
+	 * This function downloads the provided url and returns it as a string. Does not use cookies. This was ripped directly from a firefox network request for an episode page and modified minimally.
+	 */
+	std::string get_generic_page_with_cookies(const std::string& url, std::string& session, std::string& cf_bm);
+
+
+	/**
+	 *
+	 * @param string - the string that is searched
+	 * @param start - the starting string
+	 * @param end - the ending string
+	 * @return the substring of 'string' between 'start' and 'end'
+	 */
+	std::string get_substring_in(const std::string& string, const std::string& begin, const std::string& end);
+
+
+	/**
+	 *
+	 * @param value - the string to be encoded
+	 * @return 'value' with values escaped. e.g. "&" -> %26
+	 */
+	std::string url_encode(const std::string &value);
 }

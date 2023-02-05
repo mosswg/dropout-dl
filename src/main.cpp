@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "series.h"
+#include "login.h"
 #include <regex>
 
 #ifdef DROPOUT_DL_SQLITE
@@ -17,7 +18,8 @@ namespace dropout_dl {
 
 		std::string url;
 		bool verbose = false;
-		bool cookies_forced = false;
+		bool force_cookies = false;
+		bool browser_cookies = false;
 		bool is_series = false;
 		bool is_season = false;
 		bool is_episode = false;
@@ -70,6 +72,9 @@ namespace dropout_dl {
 					}
 					quality = args[++i];
 				}
+				else if (arg == "browser-cookies") {
+					browser_cookies = true;
+				}
 				else if (arg == "force-cookies") {
 					if (i + 2 >= args.size()) {
 						std::cerr << "ARGUMENT PARSE ERROR: --force-cookies used with too few following arguments\n";
@@ -77,7 +82,7 @@ namespace dropout_dl {
 					}
 					cookies.emplace_back(args[++i]);
 					cookies.emplace_back(args[++i]);
-					cookies_forced = true;
+					force_cookies = true;
 				}
 				else if (arg == "output") {
 					if (i + 1 >= args.size()) {
@@ -112,6 +117,7 @@ namespace dropout_dl {
 								 "\t--output                 Set the output filename. Only works for single episode downloads\n"
 								 "\t--output-directory       Set the directory where files are output\n"
 								 "\t--verbose                Display debug information while running\n"
+								 "\t--browser-cookies        Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'\n"
 								 "\t--force-cookies          Interpret the next to arguments as authentication cookie and session cookie\n"
 								 "\t--series                 Interpret the url as a link to a series and download all episodes from all seasons\n"
 								 "\t--season                 Interpret the url as a link to a season and download all episodes from all seasons\n"
@@ -123,6 +129,12 @@ namespace dropout_dl {
 
 			if (output_directory.empty()) {
 				output_directory = ".";
+			}
+
+			if (browser_cookies && force_cookies) {
+				std::cerr << "ARGUMENT PARSE ERROR: Cannot use browser cookies and forced cookies\n";
+				// Default to browser cookies.
+				force_cookies = false;
 			}
 
 			if ((is_season && is_series) || (is_season && is_episode) || (is_series && is_episode)) {
@@ -309,7 +321,7 @@ std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::p
  * Determines whether to get cookies from firefox or chrome. This function should not be run if cookies are forced using the `--force-cookies` option.
  * This function checks firefox first so if both firefox and chrome profiles are provided it will use firefox.
  */
-std::vector<dropout_dl::cookie> get_cookies(bool verbose = false) {
+std::vector<dropout_dl::cookie> get_cookies_from_browser(bool verbose = false) {
 
 	std::filesystem::path firefox_profile("firefox_profile");
 	std::filesystem::path chrome_profile("chrome_profile");
@@ -359,8 +371,14 @@ int main(int argc, char** argv) {
 		std::cout << "Got episode url: " << options.url << " from program arguments\n";
 	}
 
-	if (!options.cookies_forced) {
-		options.cookies = get_cookies(options.verbose);
+	if (options.browser_cookies) {
+		options.cookies = get_cookies_from_browser(options.verbose);
+	}
+	else if (!options.force_cookies) {
+		std::string session, cf_bm;
+		dropout_dl::login::get_cookies(session, cf_bm);
+
+		options.cookies = {{"__cf_bm", cf_bm}, {"_session", session}};
 	}
 
 	if (options.is_series) {
