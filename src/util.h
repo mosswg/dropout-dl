@@ -131,15 +131,25 @@ namespace dropout_dl {
 	std::string get_substring_in(const std::string& string, const std::string& begin, const std::string& end, int staring_index = 0);
 
 
+
 	/**
 	 *
 	 * @param string - the string that contains an integer.
-	 * @param starting_index - the index within the string to start at.
 	 * @return the int within <b>string</b>
 	 *
 	 * Gets the first int in <b>string</b> after <b>starting_index</b>. The first non number character will cause the function to stop parsing the int
 	 */
-	 int get_int_in_string(const std::string& string, uint32_t starting_index = 0);
+	 int get_int_in_string(const std::string& string);
+
+	/**
+	 *
+	 * @param string - the string that contains an integer.
+	 * @param starting_index - the index within the string to start at. this will be set to the end index of the int
+	 * @return the int within <b>string</b>
+	 *
+	 * Gets the first int in <b>string</b> after <b>starting_index</b>. The first non number character will cause the function to stop parsing the int
+	 */
+	 int get_int_in_string(const std::string& string, int& starting_index);
 
 
 	/**
@@ -148,4 +158,11 @@ namespace dropout_dl {
 	 * @return 'value' with values escaped. e.g. "&" -> %26
 	 */
 	std::string url_encode(const std::string &value);
+
+	/**
+	 *
+	 * @param string - the month as a 3 char string. e.g. "Feb"
+	 * @return an integer between 0 and 11 for the month e.g. "Feb" -> 1. Or -1 if invalid.
+	 */
+	int get_month_string_as_int(const std::string& month);
 }

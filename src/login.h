@@ -4,6 +4,7 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
+#include <filesystem>
 
 #include <curl/curl.h>
 
@@ -17,7 +18,7 @@ namespace dropout_dl {
 
 		void get_login_info_from_file(const std::string& filename, std::string& email, std::string& password);
 
-		void get_login_tokens(std::string& session_token, std::string& cf_bm_token, std::string& authentication_token);
+		void get_login_tokens(std::string& session_token, std::string& cf_bm_token, std::string& authentication_token, std::string& session_expiration);
 
 		/**
 		 *

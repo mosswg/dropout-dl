@@ -277,8 +277,12 @@ namespace dropout_dl {
 		return result;
 	}
 
+	int get_int_in_string(const std::string& string) {
+		int tmp = 0;
+		return get_int_in_string(string, tmp);
+	}
 
-	int get_int_in_string(const std::string& string, uint32_t starting_index) {
+	int get_int_in_string(const std::string& string, int& starting_index) {
 		int out = 0;
 		int negative = 1;
 		bool found_number = false;
@@ -293,10 +297,64 @@ namespace dropout_dl {
 				out += string[i] - '0';
 			}
 			else if (found_number) {
+				starting_index = i;
 				return out * negative;
 			}
 		}
+		starting_index = string.length();
 		return out * negative;
+	}
+
+	int get_month_string_as_int(const std::string& month) {
+		if (month == "Jan") {
+			return 0;
+		}
+
+		if (month == "Feb") {
+			return 1;
+		}
+
+		if (month == "Mar") {
+			return 2;
+		}
+
+		if (month == "Apr") {
+			return 3;
+		}
+
+		if (month == "May") {
+			return 4;
+		}
+
+		if (month == "Jun") {
+			return 5;
+		}
+
+		if (month == "Jul") {
+			return 6;
+		}
+
+		if (month == "Aug") {
+			return 7;
+		}
+
+		if (month == "Sep") {
+			return 8;
+		}
+
+		if (month == "Oct") {
+			return 9;
+		}
+
+		if (month == "Nov") {
+			return 10;
+		}
+
+		if (month == "Dec") {
+			return 11;
+		}
+
+		return -1;
 	}
 
 }
