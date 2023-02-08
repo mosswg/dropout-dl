@@ -28,7 +28,7 @@ namespace dropout_dl {
 		return "ERROR";
 	}
 
-	std::vector<season> series::get_seasons(const std::string &html_data, const std::vector<cookie>& cookies) {
+	std::vector<season> series::get_seasons(const std::vector<cookie>& cookies) {
 		std::vector<season> out;
 
 		std::string search_class("js-switch-season");
@@ -43,35 +43,35 @@ namespace dropout_dl {
 		bool seasons_dropdown = false;
 		std::string season_url;
 		std::string season_name;
-		for (int i = 0; i < html_data.size(); i++) {
-			if (substr_is(html_data, i, open_select)) {
-				for (int j = i; j < html_data.size(); j++) {
-					if (substr_is(html_data, j, search_class)) {
+		for (int i = 0; i < this->page_data.size(); i++) {
+			if (substr_is(this->page_data, i, open_select)) {
+				for (int j = i; j < this->page_data.size(); j++) {
+					if (substr_is(this->page_data, j, search_class)) {
 						i = j;
 						seasons_dropdown = true;
 						break;
 					}
-					else if (substr_is(html_data, j, close_tag)) {
+					else if (substr_is(this->page_data, j, close_tag)) {
 						break;
 					}
 				}
 			}
 			if (seasons_dropdown) {
-				if (substr_is(html_data, i, value)) {
+				if (substr_is(this->page_data, i, value)) {
 					i += value.size() + 1;
-					for (int j = 0; j + i < html_data.size(); j++) {
-						if (html_data[i + j] == '"') {
-							season_url = html_data.substr(i, j);
+					for (int j = 0; j + i < this->page_data.size(); j++) {
+						if (this->page_data[i + j] == '"') {
+							season_url = this->page_data.substr(i, j);
 							i += j;
 							break;
 						}
 					}
 				}
-				else if (!season_url.empty() && substr_is(html_data, i, close_tag)) {
+				else if (!season_url.empty() && substr_is(this->page_data, i, close_tag)) {
 					i += close_tag.size() + 1;
-					for (int j = 0; i + j < html_data.size(); j++) {
-						if (html_data[i + j] == '\n') {
-							season_name = html_data.substr(i, j);
+					for (int j = 0; i + j < this->page_data.size(); j++) {
+						if (this->page_data[i + j] == '\n') {
+							season_name = this->page_data.substr(i, j);
 
 							// Remove leading and trailing whitespace
 							bool leading_whitespace = true;
@@ -91,7 +91,7 @@ namespace dropout_dl {
 							}
 							season_name = season_name.substr(name_start, season_name.size() - name_start - name_end);
 
-							out.emplace_back(season_url, season_name, cookies);
+							out.emplace_back(season_url, season_name, cookies, this->name, this->download_captions);
 
 							std::cout << out.back().name << ": " << out.back().url << '\n';
 
@@ -105,7 +105,7 @@ namespace dropout_dl {
 					}
 				}
 
-				if (substr_is(html_data, i, close_select)) {
+				if (substr_is(this->page_data, i, close_select)) {
 					break;
 				}
 			}

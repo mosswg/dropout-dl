@@ -24,6 +24,10 @@ namespace dropout_dl {
 			std::string series_directory;
 			/// A vector containing all the season that this series include
 			std::vector<season> seasons;
+			/// A vector containing the cookies needed to download episodes
+			std::vector<dropout_dl::cookie> cookies;
+			/// Whether or not to download captions
+			bool download_captions;
 
 			/**
 			 *
@@ -36,15 +40,13 @@ namespace dropout_dl {
 
 			/**
 			 *
-			 * @param html_data - The series page data
 			 * @param cookies - The cookies from a browser
-			 * @return A list of all seasons in the series
 			 *
 			 * Scrapes the series page for the names and link of all the season. Creates season objects for each of these.
 			 * These season object contain all the episodes of the season as episode objects.
 			 * The cookies this function takes are passed to the episode objects.
 			 */
-			static std::vector<season> get_seasons(const std::string& html_data, const std::vector<cookie>& cookies);
+			std::vector<season> get_seasons(const std::vector<cookie>& cookies);
 
 			/**
 			 *
@@ -72,10 +74,12 @@ namespace dropout_dl {
 			*
 			* Creates a series object and populates the needed variables
 			*/
-			explicit series(const std::string& url, const std::vector<dropout_dl::cookie>& cookies) {
+			series(const std::string& url, const std::vector<dropout_dl::cookie>& cookies, bool download_captions = false) {
 				this->url = url;
+				this->download_captions = download_captions;
 				this->page_data = get_generic_page(url);
 				this->name = get_series_name(page_data);
+				this->cookies = cookies;
 				if (name == "ERROR") {
 					std::cerr << "SERIES PARSE ERROR: Could not parse series name\n";
 					exit(10);
@@ -83,7 +87,7 @@ namespace dropout_dl {
 
 				this->series_directory = format_filename(name);
 
-				this->seasons = get_seasons(page_data, cookies);
+				this->seasons = this->get_seasons(cookies);
 			}
 	};
 
