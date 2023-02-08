@@ -27,7 +27,7 @@ namespace dropout_dl {
 			/// Whether or not to download captions
 			bool download_captions;
 
-			episode get_episode(const std::string& html_data, int& start_point, const std::vector<cookie>& cookies, int episode_number = 0);
+			episode get_episode(const std::string& html_data, int& start_point, const std::vector<cookie>& cookies);
 
 			/**
 			 *

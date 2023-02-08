@@ -338,7 +338,11 @@ namespace dropout_dl {
 	void episode::download(const std::string& quality, const std::string& series_directory, std::string filename) {
 		if (filename.empty()) {
 			if (this->episode_number != 0) {
-				if (this->season_number != 0) {
+				if (this->episode_number == -1) {
+					/// Episode file without season or episode number in case of special episode
+					filename = this->series + " - " + this->name;
+				}
+				else if (this->season_number != 0) {
 					filename = this->series + " - S" + ((this->season_number < 10) ? "0" : "") + std::to_string(this->season_number) + "E" + ((this->episode_number < 10) ? "0" : "") + std::to_string(this->episode_number) + " - " + this->name;
 				}
 				else {

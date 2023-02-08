@@ -36,7 +36,7 @@ namespace dropout_dl {
 		/// The name of the episode
 		std::string name;
 		/// The number of the episode (only set when downloading a season or series)
-		int episode_number = 0;
+		int episode_number = -1;
 		/// The url for the main episode page
 		std::string episode_url;
 		/// The data of the main episode page

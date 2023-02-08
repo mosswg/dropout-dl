@@ -140,7 +140,18 @@ namespace dropout_dl {
 	 * @param end - the ending string
 	 * @return the substring of 'string' between 'start' and 'end'
 	 */
-	std::string get_substring_in(const std::string& string, const std::string& begin, const std::string& end);
+	std::string get_substring_in(const std::string& string, const std::string& begin, const std::string& end, int staring_index = 0);
+
+
+	/**
+	 *
+	 * @param string - the string that contains an integer.
+	 * @param starting_index - the index within the string to start at.
+	 * @return the int within <b>string</b>
+	 *
+	 * Gets the first int in <b>string</b> after <b>starting_index</b>. The first non number character will cause the function to stop parsing the int
+	 */
+	 int get_int_in_string(const std::string& string, uint32_t starting_index = 0);
 
 
 	/**

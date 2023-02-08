@@ -281,8 +281,8 @@ namespace dropout_dl {
 
 
 
-	std::string get_substring_in(const std::string& string, const std::string& begin, const std::string& end) {
-		size_t substring_start = string.find(begin);
+	std::string get_substring_in(const std::string& string, const std::string& begin, const std::string& end, int starting_index) {
+		size_t substring_start = string.find(begin, starting_index);
 
 		if (substring_start == std::string::npos) {
 			std::cerr << "ERROR: Could not find start of substring\n";
@@ -331,6 +331,28 @@ namespace dropout_dl {
 			}
 
 		return result;
+	}
+
+
+	int get_int_in_string(const std::string& string, uint32_t starting_index) {
+		int out = 0;
+		int negative = 1;
+		bool found_number = false;
+		for (uint32_t i = starting_index; i < string.length(); i++) {
+			if (string[i] == '-' && (string[i] <= '9' && string[i] >= '0')) {
+				negative = -1;
+			}
+
+			if (string[i] <= '9' && string[i] >= '0') {
+				found_number = true;
+				out *= 10;
+				out += string[i] - '0';
+			}
+			else if (found_number) {
+				return out * negative;
+			}
+		}
+		return out * negative;
 	}
 
 }
