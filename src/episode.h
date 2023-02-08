@@ -47,6 +47,8 @@ namespace dropout_dl {
 		std::string embedded_page_data;
 		/// The url for the main config page. This contains page the link to the mp4 video of the episode
 		std::string config_url;
+		/// The url for the captions of the episode.
+		std::string captions_url;
 		/// The data of the main config page. This contains the link to the mp4 video of the episode
 		std::string config_data;
 		/// The list of the qualities available for the episode. This is a parallel array with the quality_urls vector
@@ -134,6 +136,15 @@ namespace dropout_dl {
 		 */
 		std::vector<std::string> get_qualities();
 
+
+		/**
+		 *
+		 * @return the url for the captions of the episode
+		 *
+		 * Gets the url for the captions of the episode if possible. If not returns "".
+		 */
+		std::string get_captions_url();
+
 		/**
 		 *
 		 * @param quality - The quality of the video
@@ -191,7 +202,7 @@ namespace dropout_dl {
 		 * Create an episode object from the link using to cookies to get all the necessary information.
 		 * This constructor initializes all the object data.
 		 */
-		episode(const std::string& episode_url, std::vector<cookie> cookies, const std::string& series, const std::string& season, int episode_number, int season_number, bool verbose = false) {
+		episode(const std::string& episode_url, std::vector<cookie> cookies, const std::string& series, const std::string& season, int episode_number, int season_number, bool verbose = false, bool download_captions = false) {
 			this->episode_url = episode_url;
 			this->verbose = verbose;
 
@@ -254,6 +265,16 @@ namespace dropout_dl {
 
 			this->config_data = get_generic_page(this->config_url);
 
+			if (download_captions) {
+				this->captions_url = get_captions_url();
+				if (verbose) {
+					std::cout << "Got caption url: " << this->captions_url << "\n";
+				}
+			}
+			else {
+				this->captions_url = "";
+			}
+
 			this->get_qualities();
 			}
 
@@ -266,11 +287,10 @@ namespace dropout_dl {
 		 * Create an episode object from the link using to cookies to get all the necessary information.
 		 * This constructor initializes all the object data.
 		 */
-		episode(const std::string& episode_url, std::vector<cookie> cookies, bool verbose = false) {
+		episode(const std::string& episode_url, std::vector<cookie> cookies, bool verbose = false, bool download_captions = false) {
 
 			this->episode_url = episode_url;
 			this->verbose = verbose;
-
 			episode_data = get_episode_page(episode_url, cookies[0].value, cookies[1].value);
 
 			if (verbose) {
@@ -336,6 +356,13 @@ namespace dropout_dl {
 			}
 
 			this->config_data = get_generic_page(this->config_url);
+
+			if (download_captions) {
+				this->captions_url = get_captions_url();
+			}
+			else {
+				this->captions_url = "";
+			}
 
 			this->get_qualities();
 		}

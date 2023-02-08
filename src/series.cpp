@@ -115,7 +115,7 @@ namespace dropout_dl {
 	}
 
 
-	season series::get_season(const std::string &url, const std::vector<cookie>& cookies) {
+	season series::get_season(const std::string &url, const std::vector<cookie>& cookies, bool download_captions) {
 		std::string html_data = get_generic_page(url);
 
 		std::string search_class("js-switch-season");
@@ -184,7 +184,7 @@ namespace dropout_dl {
 								season_name = season_name.substr(name_start,
 																 season_name.size() - name_start - name_end);
 
-								return {season_url, season_name, cookies, get_series_name(html_data)};
+								return {season_url, season_name, cookies, get_series_name(html_data), download_captions};
 							}
 
 							season_url.clear();

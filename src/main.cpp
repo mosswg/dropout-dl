@@ -23,6 +23,7 @@ namespace dropout_dl {
 		bool is_series = false;
 		bool is_season = false;
 		bool is_episode = false;
+		bool download_captions = false;
 		std::string quality;
 		std::string filename;
 		std::string output_directory;
@@ -107,6 +108,9 @@ namespace dropout_dl {
 				else if (arg == "episode") {
 					is_episode = true;
 				}
+				else if (arg == "captions") {
+					download_captions = true;
+				}
 				else if (arg == "help") {
 					std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
 								 "\n"
@@ -121,6 +125,7 @@ namespace dropout_dl {
 								 "\t--force-cookies          Interpret the next to arguments as authentication cookie and session cookie\n"
 								 "\t--series                 Interpret the url as a link to a series and download all episodes from all seasons\n"
 								 "\t--season                 Interpret the url as a link to a season and download all episodes from all seasons\n"
+								 "\t--captions               Download the captions along with the episode\n"
 							  << std::endl;
 
 					exit(0);
@@ -385,7 +390,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting series\n";
 		}
-		dropout_dl::series series(options.url, options.cookies);
+		dropout_dl::series series(options.url, options.cookies, options.download_captions);
 
 		series.download(options.quality, options.output_directory);
 	}
@@ -393,7 +398,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting season\n";
 		}
-		dropout_dl::season season = dropout_dl::series::get_season(options.url, options.cookies);
+		dropout_dl::season season = dropout_dl::series::get_season(options.url, options.cookies, options.download_captions);
 
 		season.download(options.quality, options.output_directory + "/" + season.series_name);
 	}
@@ -401,7 +406,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting episode\n";
 		}
-		dropout_dl::episode ep(options.url, options.cookies, options.verbose);
+		dropout_dl::episode ep(options.url, options.cookies, options.verbose, options.download_captions);
 
 		if (options.verbose) {
 			std::cout << "filename: " << options.filename << '\n';

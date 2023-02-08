@@ -249,6 +249,22 @@ namespace dropout_dl {
 		return qualities;
 	}
 
+	std::string episode::get_captions_url() {
+		std::string start = "\"lang\":\"en\",\"url\":\"";
+		std::string end = "\",\"kind\":\"captions\"";
+
+		if (this->config_data.find(end) == std::string::npos) {
+			return "";
+		}
+
+		std::string captions_url = dropout_dl::get_substring_in(this->config_data, start, end);
+		if (this->verbose) {
+			std::cout << "captions url: " << captions_url << "\n";
+		}
+
+		return captions_url;
+	}
+
 	std::string episode::get_video_url(const std::string& quality) {
 		for (int i = 0; i < qualities.size(); i++) {
 			if (qualities[i] == quality) {
@@ -300,10 +316,18 @@ namespace dropout_dl {
 			std::cout << YELLOW << "File already exists: " << filepath << RESET << '\n';
 			return;
 		}
-		std::fstream out(filepath,
+		std::fstream out(filepath + ".mp4",
 						 std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
 		out << this->get_video_data(quality, filepath) << std::endl;
+
+		if (!this->captions_url.empty()) {
+			std::fstream captions_file(filepath + ".vtt",
+							 std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+
+			captions_file << get_generic_page(this->captions_url);
+
+		}
 
 		std::cout << GREEN << filepath << RESET;
 
@@ -315,14 +339,14 @@ namespace dropout_dl {
 		if (filename.empty()) {
 			if (this->episode_number != 0) {
 				if (this->season_number != 0) {
-					filename = this->series + " - S" + ((this->season_number < 10) ? "0" : "") + std::to_string(this->season_number) + "E" + ((this->episode_number < 10) ? "0" : "") + std::to_string(this->episode_number) + " - " + this->name + ".mp4";
+					filename = this->series + " - S" + ((this->season_number < 10) ? "0" : "") + std::to_string(this->season_number) + "E" + ((this->episode_number < 10) ? "0" : "") + std::to_string(this->episode_number) + " - " + this->name;
 				}
 				else {
-					filename = this->series + " - " + this->season + " Episode " + std::to_string(this->episode_number) + " - " + this->name + ".mp4";
+					filename = this->series + " - " + this->season + " Episode " + std::to_string(this->episode_number) + " - " + this->name;
 				}
 			}
 			else {
-				filename = this->series + " - " + this->season + " - " + this->name + ".mp4";
+				filename = this->series + " - " + this->season + " - " + this->name;
 			}
 			filename = format_filename(filename);
 		}
@@ -335,6 +359,5 @@ namespace dropout_dl {
 		} else {
 			this->download_quality(quality, series_directory, filename);
 		}
-
 	}
 } // dropout_dl

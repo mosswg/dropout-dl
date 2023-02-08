@@ -24,7 +24,7 @@ namespace dropout_dl {
 				for (int j = 0; j + i < html_data.size(); j++) {
 					if (html_data[i + j] == '"') {
 						start_point += 15;
-						return {html_data.substr(i, j), cookies, this->series_name, this->name, episode_number, this->season_number};
+						return episode(html_data.substr(i, j), cookies, this->series_name, this->name, episode_number, this->season_number, false, this->download_captions);
 					}
 				}
 			}

@@ -24,6 +24,8 @@ namespace dropout_dl {
 			std::string page_data;
 			/// The list of all the episodes in the season
 			std::vector<episode> episodes;
+			/// Whether or not to download captions
+			bool download_captions;
 
 			episode get_episode(const std::string& html_data, int& start_point, const std::vector<cookie>& cookies, int episode_number = 0);
 
@@ -64,8 +66,9 @@ namespace dropout_dl {
 			 *
 			 * Creates a season object and populates the needed information.
 			 */
-			season(const std::string& url, const std::string& name, const std::vector<cookie>& cookies, const std::string& series_name = "") {
+			season(const std::string& url, const std::string& name, const std::vector<cookie>& cookies, const std::string& series_name = "", bool download_captions = false) {
 				this->url = url;
+				this->download_captions = download_captions;
 				this->season_number = get_season_number(this->url);
 				this->name = name;
 				this->series_name = series_name;

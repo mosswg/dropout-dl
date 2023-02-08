@@ -56,7 +56,7 @@ namespace dropout_dl {
 			 *
 			 * Gets the season page, which is really just a series page, and creates a season object with all the episodes of the season
 			 */
-			static season get_season(const std::string& url, const std::vector<cookie>& cookies);
+			static season get_season(const std::string& url, const std::vector<cookie>& cookies, bool download_captions);
 
 			/**
 			 *
