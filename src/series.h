@@ -25,7 +25,7 @@ namespace dropout_dl {
 			/// A vector containing all the season that this series include
 			std::vector<season> seasons;
 			/// A vector containing the cookies needed to download episodes
-			std::vector<dropout_dl::cookie> cookies;
+			dropout_dl::cookie session_cookie;
 			/// Whether or not to download captions
 			bool download_captions;
 
@@ -40,13 +40,11 @@ namespace dropout_dl {
 
 			/**
 			 *
-			 * @param cookies - The cookies from a browser
-			 *
 			 * Scrapes the series page for the names and link of all the season. Creates season objects for each of these.
 			 * These season object contain all the episodes of the season as episode objects.
 			 * The cookies this function takes are passed to the episode objects.
 			 */
-			std::vector<season> get_seasons(const std::vector<cookie>& cookies);
+			std::vector<season> get_seasons();
 
 			/**
 			 *
@@ -56,7 +54,7 @@ namespace dropout_dl {
 			 *
 			 * Gets the season page, which is really just a series page, and creates a season object with all the episodes of the season
 			 */
-			static season get_season(const std::string& url, const std::vector<cookie>& cookies, bool download_captions);
+			static season get_season(const std::string& url, const cookie& session_cookie, bool download_captions);
 
 			/**
 			 *
@@ -74,12 +72,12 @@ namespace dropout_dl {
 			*
 			* Creates a series object and populates the needed variables
 			*/
-			series(const std::string& url, const std::vector<dropout_dl::cookie>& cookies, bool download_captions = false) {
+			series(const std::string& url, const dropout_dl::cookie& session_cookie, bool download_captions = false) {
 				this->url = url;
 				this->download_captions = download_captions;
 				this->page_data = get_generic_page(url);
 				this->name = get_series_name(page_data);
-				this->cookies = cookies;
+				this->session_cookie = session_cookie;
 				if (name == "ERROR") {
 					std::cerr << "SERIES PARSE ERROR: Could not parse series name\n";
 					exit(10);
@@ -87,7 +85,7 @@ namespace dropout_dl {
 
 				this->series_directory = format_filename(name);
 
-				this->seasons = this->get_seasons(cookies);
+				this->seasons = this->get_seasons();
 			}
 	};
 

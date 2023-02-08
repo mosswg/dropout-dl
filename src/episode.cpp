@@ -154,7 +154,7 @@ namespace dropout_dl {
 		return "";
 	}
 
-	std::string episode::get_episode_page(const std::string& url, const std::string& auth_cookie, const std::string& session_cookie, bool verbose) {
+	std::string episode::get_episode_page(const std::string& url, const std::string& session_cookie, bool verbose) {
 		CURLcode ret;
 		CURL *hnd;
 		struct curl_slist *slist1;
@@ -167,7 +167,7 @@ namespace dropout_dl {
 		slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
 		slist1 = curl_slist_append(slist1, "DNT: 1");
 		slist1 = curl_slist_append(slist1, "Connection: keep-alive");
-		slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; _session=" + session_cookie + "; __cf_bm=" + auth_cookie).c_str());
+		slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; _session=" + session_cookie + ";").c_str());
 		slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
 		slist1 = curl_slist_append(slist1, "Sec-Fetch-Dest: document");
 		slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");

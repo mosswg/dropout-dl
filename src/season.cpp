@@ -5,7 +5,7 @@
 #include "season.h"
 
 namespace dropout_dl {
-	episode season::get_episode(const std::string& html_data, int& start_point, const std::vector<cookie>& cookies) {
+	episode season::get_episode(const std::string& html_data, int& start_point, const cookie& session_cookie) {
 		int link_start = 0;
 		for (int i = start_point; i > 0; i--) {
 			if (substr_is(html_data, i, "<a")) {
@@ -29,7 +29,7 @@ namespace dropout_dl {
 						if (!episode_text.empty()) {
 							episode_number = get_int_in_string(episode_text);
 						}
-						return episode(html_data.substr(i, j), cookies, this->series_name, this->name, episode_number, this->season_number, false, this->download_captions);
+						return episode(html_data.substr(i, j), session_cookie, this->series_name, this->name, episode_number, this->season_number, false, this->download_captions);
 					}
 				}
 			}
@@ -38,14 +38,14 @@ namespace dropout_dl {
 		exit(8);
 	}
 
-	std::vector<episode> season::get_episodes(const std::vector<cookie>& cookies) {
+	std::vector<episode> season::get_episodes(const cookie& session_cookie) {
 		std::vector<episode> out;
 
 		std::string site_video(R"(class="browse-item-link" data-track-event="site_video")");
 
 		for (int i = 0; i < this->page_data.size(); i++) {
 			if (substr_is(this->page_data, i, site_video)) {
-				episode e = get_episode(this->page_data, i, cookies);
+				episode e = get_episode(this->page_data, i, session_cookie);
 				if (e.episode_url.empty()) {
 					continue;
 				}

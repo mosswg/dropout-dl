@@ -28,7 +28,7 @@ namespace dropout_dl {
 		std::string filename;
 		std::string output_directory;
 		std::string episode;
-		std::vector<cookie> cookies;
+		cookie session_cookie;
 
 		/**
 		 *
@@ -81,8 +81,7 @@ namespace dropout_dl {
 						std::cerr << "ARGUMENT PARSE ERROR: --force-cookies used with too few following arguments\n";
 						exit(8);
 					}
-					cookies.emplace_back(args[++i]);
-					cookies.emplace_back(args[++i]);
+					session_cookie = cookie(args[++i]);
 					force_cookies = true;
 				}
 				else if (arg == "output") {
@@ -122,7 +121,7 @@ namespace dropout_dl {
 								 "\t--output-directory       Set the directory where files are output\n"
 								 "\t--verbose                Display debug information while running\n"
 								 "\t--browser-cookies        Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'\n"
-								 "\t--force-cookies          Interpret the next to arguments as authentication cookie and session cookie\n"
+								 "\t--force-cookies          Interpret the next to argument as the session cookie\n"
 								 "\t--series                 Interpret the url as a link to a series and download all episodes from all seasons\n"
 								 "\t--season                 Interpret the url as a link to a season and download all episodes from all seasons\n"
 								 "\t--captions               Download the captions along with the episode\n"
@@ -178,71 +177,62 @@ namespace dropout_dl {
  *
  * Gets the needed cookies from the firefox sqlite database associated with the path provided.
  */
-std::vector<dropout_dl::cookie> get_cookies_from_firefox(const std::filesystem::path& firefox_profile_path, bool verbose = false) {
+dropout_dl::cookie get_cookies_from_firefox(const std::filesystem::path& firefox_profile_path, bool verbose = false) {
 
 	std::fstream firefox_profile_file(firefox_profile_path);
 	std::string firefox_profile;
 
-	dropout_dl::cookie auth("__cf_bm");
 	dropout_dl::cookie session("_session");
 
 	std::vector<dropout_dl::cookie> out;
 
 	firefox_profile_file >> firefox_profile;
 
-	if (std::filesystem::is_directory(firefox_profile)) {
-
-		sqlite3 *db;
-
-		if (verbose) {
-			std::cout << "Getting firefox cookies from firefox sqlite db\n";
-		}
-
-		if (!std::filesystem::is_directory("tmp"))
-			std::filesystem::create_directories("tmp");
-		std::filesystem::remove("tmp/firefox_cookies.sqlite");
-		std::filesystem::copy_file(firefox_profile + "/cookies.sqlite", "tmp/firefox_cookies.sqlite");
-
-		int rc = sqlite3_open("tmp/firefox_cookies.sqlite", &db);
-		if (rc) {
-			std::cerr << "Can't open database: " << sqlite3_errmsg(db) << '\n';
-			exit(1);
-		} else {
-			if (verbose) {
-				std::cout << "Firefox database opened successfully\n";
-			}
-		}
-
-		std::string len;
-
-		auth.get_value_from_db(db, "FROM moz_cookies WHERE host LIKE '%dropout.tv%'", "value");
-
-		session.get_value_from_db(db, "FROM moz_cookies WHERE host LIKE '%dropout.tv%'", "value");
-
-		sqlite3_close(db);
-
-		std::filesystem::remove("tmp/firefox_cookies.sqlite");
-
-		if (std::filesystem::is_empty("tmp")) {
-			std::filesystem::remove("tmp/");
-		}
-	}
-	else {
+	if (!std::filesystem::is_directory(firefox_profile)) {
 		std::cerr << "FIREFOX COOKIE ERROR: Attempted to get cookies from firefox without profile." << std::endl;
 		exit(4);
 	}
 
-	if (verbose) {
-		std::cout << auth.name << ": " << auth.len << ": " << auth.value << '\n';
 
+	sqlite3 *db;
+
+	if (verbose) {
+		std::cout << "Getting firefox cookies from firefox sqlite db\n";
+	}
+
+	/// Firefox locks the database so we have to make a copy.
+	if (!std::filesystem::is_directory("tmp"))
+		std::filesystem::create_directories("tmp");
+	std::filesystem::remove("tmp/firefox_cookies.sqlite");
+	std::filesystem::copy_file(firefox_profile + "/cookies.sqlite", "tmp/firefox_cookies.sqlite");
+
+	int rc = sqlite3_open("tmp/firefox_cookies.sqlite", &db);
+	if (rc) {
+		std::cerr << "Can't open database: " << sqlite3_errmsg(db) << '\n';
+		exit(1);
+	} else {
+		if (verbose) {
+			std::cout << "Firefox database opened successfully\n";
+		}
+	}
+
+	std::string len;
+
+	session.get_value_from_db(db, "FROM moz_cookies WHERE host LIKE '%dropout.tv%'", "value");
+
+	sqlite3_close(db);
+
+	std::filesystem::remove("tmp/firefox_cookies.sqlite");
+
+	if (std::filesystem::is_empty("tmp")) {
+		std::filesystem::remove("tmp/");
+	}
+
+	if (verbose) {
 		std::cout << session.name << ": " << session.len << ": " << session.value << '\n';
 	}
 
-	out.push_back(auth);
-	out.push_back(session);
-
-
-	return out;
+	return session;
 }
 
 #ifdef DROPOUT_DL_GCRYPT
@@ -256,12 +246,11 @@ std::vector<dropout_dl::cookie> get_cookies_from_firefox(const std::filesystem::
  * This function does not work for windows and must be modified slightly for mac os.
  * For mac os the calls to cookie::chrome_decrypt must be passed the parameters detailed in it's documentation.
  */
-std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::path& chrome_profile_path, bool verbose = false) {
+dropout_dl::cookie get_cookies_from_chrome(const std::filesystem::path& chrome_profile_path, bool verbose = false) {
 
 	std::fstream chrome_profile_file(chrome_profile_path);
 	std::string chrome_profile;
 
-	dropout_dl::cookie auth("__cf_bm");
 	dropout_dl::cookie session("_session");
 
 	std::vector<dropout_dl::cookie> out;
@@ -288,8 +277,6 @@ std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::p
 
 		std::string len;
 
-		auth.get_value_from_db(db, "FROM cookies WHERE host_key LIKE '%dropout.tv%'", "encrypted_value");
-
 		session.get_value_from_db(db, "FROM cookies WHERE host_key LIKE '%dropout.tv%'", "encrypted_value");
 
 		sqlite3_close(db);
@@ -300,20 +287,13 @@ std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::p
 		exit(4);
 	}
 
-	auth.chrome_decrypt();
-
 	session.chrome_decrypt();
 
 	if (verbose) {
-		std::cout << auth.name << ": " << auth.len << ": " << auth.value << '\n';
-
 		std::cout << session.name << ": " << session.len << ": " << session.value << '\n';
 	}
 
-	out.push_back(auth);
-	out.push_back(session);
-
-	return out;
+	return session;
 }
 #endif
 #endif
@@ -326,7 +306,7 @@ std::vector<dropout_dl::cookie> get_cookies_from_chrome(const std::filesystem::p
  * Determines whether to get cookies from firefox or chrome. This function should not be run if cookies are forced using the `--force-cookies` option.
  * This function checks firefox first so if both firefox and chrome profiles are provided it will use firefox.
  */
-std::vector<dropout_dl::cookie> get_cookies_from_browser(bool verbose = false) {
+dropout_dl::cookie get_cookie_from_browser(bool verbose = false) {
 
 	std::filesystem::path firefox_profile("firefox_profile");
 	std::filesystem::path chrome_profile("chrome_profile");
@@ -347,10 +327,8 @@ std::vector<dropout_dl::cookie> get_cookies_from_browser(bool verbose = false) {
 		#endif
 	}
 
-	{
-		std::cerr << "ERROR: dropout.tv cookies could not be found" << std::endl;
-		exit(7);
-	}
+	std::cerr << "ERROR: dropout.tv cookies could not be found" << std::endl;
+	exit(7);
 }
 
 
@@ -377,20 +355,20 @@ int main(int argc, char** argv) {
 	}
 
 	if (options.browser_cookies) {
-		options.cookies = get_cookies_from_browser(options.verbose);
+		options.session_cookie = get_cookie_from_browser(options.verbose);
 	}
 	else if (!options.force_cookies) {
-		std::string session, cf_bm;
-		dropout_dl::login::get_cookies(session, cf_bm);
+		std::string session;
+		dropout_dl::login::get_cookies(session);
 
-		options.cookies = {{"__cf_bm", cf_bm}, {"_session", session}};
+		options.session_cookie = dropout_dl::cookie("_session", session);
 	}
 
 	if (options.is_series) {
 		if (options.verbose) {
 			std::cout << "Getting series\n";
 		}
-		dropout_dl::series series(options.url, options.cookies, options.download_captions);
+		dropout_dl::series series(options.url, options.session_cookie, options.download_captions);
 
 		series.download(options.quality, options.output_directory);
 	}
@@ -398,7 +376,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting season\n";
 		}
-		dropout_dl::season season = dropout_dl::series::get_season(options.url, options.cookies, options.download_captions);
+		dropout_dl::season season = dropout_dl::series::get_season(options.url, options.session_cookie, options.download_captions);
 
 		season.download(options.quality, options.output_directory + "/" + season.series_name);
 	}
@@ -406,7 +384,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting episode\n";
 		}
-		dropout_dl::episode ep(options.url, options.cookies, options.verbose, options.download_captions);
+		dropout_dl::episode ep(options.url, options.session_cookie, options.verbose, options.download_captions);
 
 		if (options.verbose) {
 			std::cout << "filename: " << options.filename << '\n';

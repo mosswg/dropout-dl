@@ -123,18 +123,6 @@ namespace dropout_dl {
 
 	/**
 	 *
-	 * @param url - Url which is being downloaded
-	 * @param session - _session cookie. this is updated if possible
-	 * @param cf_bm - __cf_bm cookie. this is updated if possible
-	 * @return The page data as a string
-	 *
-	 * This function downloads the provided url and returns it as a string. Does not use cookies. This was ripped directly from a firefox network request for an episode page and modified minimally.
-	 */
-	std::string get_generic_page_with_cookies(const std::string& url, std::string& session, std::string& cf_bm);
-
-
-	/**
-	 *
 	 * @param string - the string that is searched
 	 * @param start - the starting string
 	 * @param end - the ending string

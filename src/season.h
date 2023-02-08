@@ -27,17 +27,17 @@ namespace dropout_dl {
 			/// Whether or not to download captions
 			bool download_captions;
 
-			episode get_episode(const std::string& html_data, int& start_point, const std::vector<cookie>& cookies);
+			episode get_episode(const std::string& html_data, int& start_point, const cookie& session_cookie);
 
 			/**
 			 *
 			 * @param html_data - The season page data
-			 * @param cookies - The browser cookies
+			 * @param session_cookie - The cookie used to authenticate
 			 * @return A vector of all episodes in the season
 			 *
 			 * Gets all the episodes of the season and returns in a vector
 			 */
-			std::vector<episode> get_episodes(const std::vector<cookie>& cookies);
+			std::vector<episode> get_episodes(const cookie& session_cookie);
 
 			/**
 			 *
@@ -61,12 +61,12 @@ namespace dropout_dl {
 			 *
 			 * @param url - The url to the webpage of the season
 			 * @param name - The name of the season
-			 * @param cookies - The browser cookies
+			 * @param session_cookie - The cookie used to authenticate
 			 * @param series_name - The name of the series
 			 *
 			 * Creates a season object and populates the needed information.
 			 */
-			season(const std::string& url, const std::string& name, const std::vector<cookie>& cookies, const std::string& series_name = "", bool download_captions = false) {
+			season(const std::string& url, const std::string& name, const cookie& session_cookie, const std::string& series_name = "", bool download_captions = false) {
 				this->url = url;
 				this->download_captions = download_captions;
 				this->season_number = get_season_number(this->url);
@@ -74,7 +74,7 @@ namespace dropout_dl {
 				this->series_name = series_name;
 				std::cout << series_name << ": " << name << ": " << "\n";
 				this->page_data = get_generic_page(url);
-				this->episodes = get_episodes(cookies);
+				this->episodes = get_episodes(session_cookie);
 			}
 	};
 

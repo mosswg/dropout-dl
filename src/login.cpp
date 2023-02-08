@@ -1,7 +1,7 @@
 #include "login.h"
 
 
-void dropout_dl::login::get_cookies(std::string& session, std::string& cf_bm) {
+void dropout_dl::login::get_cookies(std::string& session) {
 	std::string email;
 	std::string password;
 
@@ -11,6 +11,7 @@ void dropout_dl::login::get_cookies(std::string& session, std::string& cf_bm) {
 
 	/// Needed to login properly
 	std::string authentication;
+	std::string cf_bm;
 	get_login_tokens(session, cf_bm, authentication);
 
 	if (!login_with_tokens(email, password, session, cf_bm, authentication)) {

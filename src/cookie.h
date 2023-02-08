@@ -45,6 +45,16 @@ namespace dropout_dl {
 
 		/**
 		 *
+		 * Create a cookie with no name, value, or length.
+		 */
+		cookie() {
+			this->name = "";
+			this->value = "";
+			this->len = 0;
+		}
+
+		/**
+		 *
 		 * @param name - Name of the value from the sqlite database
 		 *
 		 * Create a cookie with no value and length of 0

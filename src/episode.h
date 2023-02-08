@@ -64,12 +64,11 @@ namespace dropout_dl {
 		/**
 		 *
 		 * @param url - The url of the episode page
-		 * @param auth_cookie - The authentication cookie with name "__cf_bm".
 		 * @param session_cookie - The session cookie with name "_session".
 		 * @param verbose - Whether or not to be verbose (not recommended)
 		 * @return The episode page data
 		 */
-		static std::string get_episode_page(const std::string& url, const std::string& auth_cookie, const std::string& session_cookie, bool verbose = false);
+		static std::string get_episode_page(const std::string& url, const std::string& session_cookie, bool verbose = false);
 
 		/**
 		 *
@@ -202,11 +201,11 @@ namespace dropout_dl {
 		 * Create an episode object from the link using to cookies to get all the necessary information.
 		 * This constructor initializes all the object data.
 		 */
-		episode(const std::string& episode_url, std::vector<cookie> cookies, const std::string& series, const std::string& season, int episode_number, int season_number, bool verbose = false, bool download_captions = false) {
+		episode(const std::string& episode_url, cookie session_cookie, const std::string& series, const std::string& season, int episode_number, int season_number, bool verbose = false, bool download_captions = false) {
 			this->episode_url = episode_url;
 			this->verbose = verbose;
 
-			episode_data = get_episode_page(episode_url, cookies[0].value, cookies[1].value);
+			episode_data = get_episode_page(episode_url, session_cookie.value);
 
 			if (verbose) {
 				std::cout << "Got page data\n";
@@ -287,11 +286,11 @@ namespace dropout_dl {
 		 * Create an episode object from the link using to cookies to get all the necessary information.
 		 * This constructor initializes all the object data.
 		 */
-		episode(const std::string& episode_url, std::vector<cookie> cookies, bool verbose = false, bool download_captions = false) {
+		episode(const std::string& episode_url, const cookie& session_cookie, bool verbose = false, bool download_captions = false) {
 
 			this->episode_url = episode_url;
 			this->verbose = verbose;
-			episode_data = get_episode_page(episode_url, cookies[0].value, cookies[1].value);
+			episode_data = get_episode_page(episode_url, session_cookie.value);
 
 			if (verbose) {
 				std::cout << "Got page data\n";

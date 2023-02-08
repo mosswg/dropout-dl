@@ -13,7 +13,7 @@
 
 namespace dropout_dl {
 	namespace login {
-		void get_cookies(std::string& session, std::string& cf_bm);
+		void get_cookies(std::string& session);
 
 		void get_login_info_from_file(const std::string& filename, std::string& email, std::string& password);
 
