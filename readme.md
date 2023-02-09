@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/mosswg/dropout-dl/main/assets/dropout_dl_logo.png" width=50%>
+    <img src="https://raw.githubusercontent.com/mosswg/dropout-dl/main/assets/dropout_dl_logo.png" width="50%" />
 </p>
 dropout-dl is tool to download [dropout.tv](dropout.tv) episodes. It can download single episodes, seasons, or full series.
 
