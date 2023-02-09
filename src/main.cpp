@@ -150,7 +150,7 @@ namespace dropout_dl {
 
 			if (!(is_season || is_series || is_episode)) {
 				std::regex season_regex("season:\\d+\\/?$", std::regex::ECMAScript);
-				std::regex episode_regex("season:\\d+\\/.+$", std::regex::ECMAScript);
+				std::regex episode_regex("/videos/", std::regex::ECMAScript);
 				if (std::regex_search(url, season_regex)) {
 					is_season = true;
 				}
@@ -160,9 +160,6 @@ namespace dropout_dl {
 				else {
 					is_series = true;
 				}
-			}
-			else {
-				std::cout << is_season << is_series << is_episode << '\n';
 			}
 		}
 	};
