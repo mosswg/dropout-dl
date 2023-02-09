@@ -49,17 +49,18 @@ By default, dropout-dl will download episodes in a season with the format `<seri
 
 ### Options
 ```
---help                   Display this message
---quality                Set the quality of the downloaded video. Quality can be set to 'all' which
-                             will download all qualities and place them into separate folders
---output                 Set the output filename
---output-directory       Set the directory where files are output
---verbose                Display debug information while running
---browser-cookies        Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'
---force-cookies          Interpret the next to arguments as authentication cookie and session cookie
---series                 Interpret the url as a link to a series and download all episodes from all seasons
---season                 Interpret the url as a link to a season and download all episodes in the season
---episode                Interpret the url as a link to a single episode
+--help              -h   Display this message
+--quality           -q   Set the quality of the downloaded video. Quality can be set to 'all' which
+                            will download all qualities and place them into separate folders
+--output            -o   Set the output filename. Only works for single episode downloads
+--output-directory  -d   Set the directory where files are output
+--verbose           -v   Display debug information while running
+--browser-cookies   -bc  Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'
+--force-cookies          Interpret the next to argument as the session cookie
+--series            -S   Interpret the url as a link to a series and download all episodes from all seasons
+--season            -s   Interpret the url as a link to a season and download all episodes from all seasons
+--episode           -e   Interpret the url as a link to a single episode
+--captions          -c   Download the captions along with the episode
 ```
 
 If series, season, or episode is not used, the type will be inferred based on the link format.

@@ -59,21 +59,28 @@ namespace dropout_dl {
 			for (int i = 0; i < args.size(); i++) {
 				std::string arg = args[i];
 
-				if (arg.substr(0, 2) != "--") {
+				if (arg[0] != '-') {
 					url = arg;
 					continue;
 				}
-				arg = arg.substr(2);
-				if (arg == "verbose") {
+				if (arg[1] == '-') {
+					// Full names. prefixed by `--`
+					arg = arg.substr(2);
+				}
+				else {
+					// Shorthands. prefixed by `-`
+					arg = arg.substr(1);
+				}
+				if (arg == "verbose" || arg == "v") {
 					verbose = true;
-				} else if (arg == "quality") {
+				} else if (arg == "quality" || arg == "q") {
 					if (i + 1 >= args.size()) {
 						std::cerr << "ARGUMENT PARSE ERROR: --quality used with too few following arguments\n";
 						exit(8);
 					}
 					quality = args[++i];
 				}
-				else if (arg == "browser-cookies") {
+				else if (arg == "browser-cookies" || arg == "bc") {
 					browser_cookies = true;
 				}
 				else if (arg == "force-cookies") {
@@ -84,48 +91,48 @@ namespace dropout_dl {
 					session_cookie = cookie(args[++i]);
 					force_cookies = true;
 				}
-				else if (arg == "output") {
+				else if (arg == "output" || arg == "o") {
 					if (i + 1 >= args.size()) {
 						std::cerr << "ARGUMENT PARSE ERROR: --output used with too few following arguments\n";
 						exit(8);
 					}
 					filename = args[++i];
 				}
-				else if (arg == "output-directory") {
+				else if (arg == "output-directory" || arg == "d") {
 					if (i + 1 >= args.size()) {
 						std::cerr << "ARGUMENT PARSE ERROR: --output-directory used with too few following arguments\n";
 						exit(8);
 					}
 					output_directory = args[++i];
 				}
-				else if (arg == "series") {
+				else if (arg == "series" || arg == "S") {
 					is_series = true;
 				}
-				else if (arg == "season") {
+				else if (arg == "season" || arg == "s") {
 					is_season = true;
 				}
-				else if (arg == "episode") {
+				else if (arg == "episode" || arg == "e") {
 					is_episode = true;
 				}
-				else if (arg == "captions") {
+				else if (arg == "captions" || arg == "c") {
 					download_captions = true;
 				}
-				else if (arg == "help") {
+				else if (arg == "help" || arg == "h") {
 					std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
 								 "\n"
 								 "Options:\n"
-								 "\t--help                   Display this message\n"
-								 "\t--quality                Set the quality of the downloaded video. Quality can be set to 'all' which\n"
+								 "\t--help              -h   Display this message\n"
+								 "\t--quality           -q   Set the quality of the downloaded video. Quality can be set to 'all' which\n"
 								 "\t                             will download all qualities and place them into separate folders\n"
-								 "\t--output                 Set the output filename. Only works for single episode downloads\n"
-								 "\t--output-directory       Set the directory where files are output\n"
-								 "\t--verbose                Display debug information while running\n"
-								 "\t--browser-cookies        Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'\n"
+								 "\t--output            -o   Set the output filename. Only works for single episode downloads\n"
+								 "\t--output-directory  -d   Set the directory where files are output\n"
+								 "\t--verbose           -v   Display debug information while running\n"
+								 "\t--browser-cookies   -bc  Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'\n"
 								 "\t--force-cookies          Interpret the next to argument as the session cookie\n"
-								 "\t--series                 Interpret the url as a link to a series and download all episodes from all seasons\n"
-								 "\t--season                 Interpret the url as a link to a season and download all episodes from all seasons\n"
-								 "\t--captions               Download the captions along with the episode\n"
-							  << std::endl;
+								 "\t--series            -S   Interpret the url as a link to a series and download all episodes from all seasons\n"
+								 "\t--season            -s   Interpret the url as a link to a season and download all episodes from all seasons\n"
+								 "\t--episode           -e   Interpret the url as a link to a single episode\n"
+								 "\t--captions          -c   Download the captions along with the episode\n";
 
 					exit(0);
 				}
