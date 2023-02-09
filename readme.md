@@ -2,12 +2,16 @@
     <img src="https://raw.githubusercontent.com/mosswg/dropout-dl/main/assets/dropout_dl_logo.png" width="50%" />
 </div>
 
-dropout-dl is tool to download [dropout.tv](dropout.tv) episodes. It can download single episodes, seasons, or full series.
+dropout-dl is tool to download [dropout.tv](https://www.dropout.tv) episodes. It can download single episodes, seasons, or full series.
 
 
 * [Installation](#installation)
   * [How to Build](#how-to-build)
   * [Dependencies](#Dependencies)
+* [Usage](#how-to-use)
+  * [Options](#options)
+  * [Login](#login)
+  * [Cookies](#cookies)
 
 
 
