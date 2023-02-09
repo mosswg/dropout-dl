@@ -1,4 +1,5 @@
-# dropout-dl
+
+[![dropout-dl](assets/dropout_dl_logo.png)](#readme)
 dropout-dl is tool to download [dropout.tv](dropout.tv) episodes. It can download single episodes, seasons, or full series.
 
 
