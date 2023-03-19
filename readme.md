@@ -6,9 +6,11 @@ dropout-dl is tool to download [dropout.tv](https://www.dropout.tv) episodes. It
 
 
 * [Installation](#installation)
+  * [Docker](#docker)
   * [How to Build](#how-to-build)
   * [Dependencies](#Dependencies)
 * [Usage](#how-to-use)
+  
   * [Options](#options)
   * [Login](#login)
   * [Cookies](#cookies)
@@ -16,6 +18,18 @@ dropout-dl is tool to download [dropout.tv](https://www.dropout.tv) episodes. It
 
 
 # Installation
+## Docker
+A docker image was created that makes it easier to build and use dropout-dl. You can simply build the docker image without worrying about installing any system dependencies:
+```shell
+docker build -t dropout-dl:latest .
+```
+After its done building, you can use it by adding your arguments to the end of the `docker run` command:
+```shell
+docker run --rm -it -v $PWD/login:/app/login -v $PWD/out:/Downloads dropout-dl:latest --output-directory /Downloads --captions -e https://www.dropout.tv/dimension-20/season:10/videos/the-chosen-ones
+```
+**Note:** The docker image expects the `login` file to be at `/app/login`.\
+You must specify an output directory and mount that directory to the host so that you can retrieve the files from the docker container. In the above command I tell dropout-dl to output everything in `/Downloads` inside the container, which is mounted to a folder named `out` inside the current directory (`$PWD` is current directory).
+
 ## How to Build
 ```
 cmake -S <source-dir> -B <build-dir>
