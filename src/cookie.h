@@ -1,6 +1,9 @@
 #pragma once
 #include <iostream>
+
+#ifdef DROPOUT_DL_SQLITE
 #include <sqlite3.h>
+#endif
 
 #include "util.h"
 
@@ -105,6 +108,8 @@ namespace dropout_dl {
 			this->len = length;
 		}
 
+
+#ifdef DROPOUT_DL_SQLITE
 		/**
 		 *
 		 * @param db - An sqlite3 database
@@ -115,6 +120,7 @@ namespace dropout_dl {
 		 *
 		 */
 		void get_value_from_db(sqlite3* db, const std::string& sql_query_base, const std::string& value, bool verbose = false, int (*callback)(void*,int,char**,char**) = sqlite_write_callback);
+#endif
 
 		/**
 		 *

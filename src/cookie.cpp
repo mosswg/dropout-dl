@@ -3,8 +3,9 @@
 
 // Cookie functions
 namespace dropout_dl {
-	void cookie::get_value_from_db(sqlite3 *db, const std::string &sql_query_base, const std::string& value, bool verbose, int (*callback)(void*,int,char**,char**)) {
+
 #ifdef DROPOUT_DL_SQLITE
+	void cookie::get_value_from_db(sqlite3 *db, const std::string &sql_query_base, const std::string& value, bool verbose, int (*callback)(void*,int,char**,char**)) {
 		std::string sql_mod_base = sql_query_base;
 
 		if (sql_mod_base.find("WHERE") == std::string::npos) {
@@ -55,11 +56,8 @@ namespace dropout_dl {
 		}
 
 		this->value = tmp;
-#else
-		std::cerr << "COOKIE ERROR: Attempted to get cookies from sqlite without having sqlite installed\n";
-		exit(12);
-#endif
 	}
+#endif
 
 	void cookie::format_from_chrome() {
 		this->value = this->value.substr(3);

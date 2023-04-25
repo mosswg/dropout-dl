@@ -14,8 +14,6 @@
 #include "cookie.h"
 #include "util.h"
 
-#include <sqlite3.h>
-
 namespace dropout_dl {
 	/**
 	 * A class for handling all episode information. This class is wildly overkill if downloading an entire series as it gather the series name and season for every episode. This is not an issue here because all the information it gathers it already available while gathering the video url and the majority of the time taken while parsing an episode is from downloading the three required webpages.
