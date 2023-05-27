@@ -389,6 +389,9 @@ namespace dropout_dl {
 				if (fileSizeDisk-1 == fileSize){
 					return true;
 				}
+				else if (fileSizeDisk == fileSize){
+					return true;
+				}
 				else return false;
 		}
 		else return false;
