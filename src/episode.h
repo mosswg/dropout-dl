@@ -133,6 +133,14 @@ namespace dropout_dl {
 		 */
 		std::vector<std::string> get_qualities();
 
+		/**
+		 *
+		 * @return Whether the episode already exists on disk or not.
+		 *
+		 * Compare the <b>filename</b> aswell as the <b>filesize</b> of a to be downloaded episode with files on disk.
+		 */
+		bool checkExisting(const std::string& quality, const std::string& filename = "");
+
 
 		/**
 		 *

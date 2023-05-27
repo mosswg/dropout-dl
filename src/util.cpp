@@ -1,4 +1,5 @@
 #include "util.h"
+#include <stdint.h>
 
 namespace dropout_dl {
 	// dropout-dl helpers
@@ -222,6 +223,11 @@ namespace dropout_dl {
 		slist1 = nullptr;
 
 		return page_data;
+	}
+
+	size_t EmptyWriteCallback(void*, size_t, size_t, void*) {
+    // This callback function is needed for CURLOPT_NOBODY to discard the response body.
+    return 0;
 	}
 
 

@@ -108,7 +108,7 @@ namespace dropout_dl {
 	 * Used by curl. Writes the information gathered by curl into the userp string. This function was not written by me.
 	 */
 	size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
-
+	size_t EmptyWriteCallback(void *contents, size_t size, size_t nmemb, void* userp);
 
 	/**
 	 *
