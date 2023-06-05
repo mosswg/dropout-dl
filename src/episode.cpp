@@ -316,10 +316,12 @@ namespace dropout_dl {
 			std::cout << YELLOW << "File already exists: " << filepath << RESET << '\n';
 			return;
 		}
-		std::fstream out(filepath + ".mp4",
-						 std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+		if (!checkExisting(quality,filepath)){
+			std::fstream out(filepath + ".mp4",
+				std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-		out << this->get_video_data(quality, filepath) << std::endl;
+			out << this->get_video_data(quality, filepath) << std::endl;
+		}
 
 		if (!this->captions_url.empty()) {
 			std::fstream captions_file(filepath + ".vtt",
@@ -363,5 +365,35 @@ namespace dropout_dl {
 		} else {
 			this->download_quality(quality, series_directory, filename);
 		}
+	}
+
+	bool episode::checkExisting(const std::string &quality, const std::string& filename){
+		std::filesystem::path filePath = filename + ".mp4";
+		double fileSize;
+		CURL* curl = curl_easy_init();
+    	CURLcode res;
+		if (curl) {
+			curl_easy_setopt(curl, CURLOPT_URL, get_video_url(quality).c_str());
+			curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);  // Set to HTTP HEAD request
+			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::EmptyWriteCallback);
+
+			res = curl_easy_perform(curl);
+
+			if (res == CURLE_OK) {
+				res = curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &fileSize);
+			}
+			curl_easy_cleanup(curl);
+    	}
+		if (std::filesystem::exists(filePath)) {
+        	std::uintmax_t fileSizeDisk = std::filesystem::file_size(filePath);
+				if (fileSizeDisk-1 == fileSize){
+					return true;
+				}
+				else if (fileSizeDisk == fileSize){
+					return true;
+				}
+				else return false;
+		}
+		else return false;
 	}
 } // dropout_dl
