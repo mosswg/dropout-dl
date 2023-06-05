@@ -139,7 +139,7 @@ namespace dropout_dl {
 		 *
 		 * Compare the <b>filename</b> aswell as the <b>filesize</b> of a to be downloaded episode with files on disk.
 		 */
-		bool checkExisting(const std::string& quality, const std::string& filename = "");
+		bool check_existing(const std::string& quality, const std::string& filename = "");
 
 
 		/**

@@ -316,7 +316,7 @@ namespace dropout_dl {
 			std::cout << YELLOW << "File already exists: " << filepath << RESET << '\n';
 			return;
 		}
-		if (!checkExisting(quality,filepath)){
+		if (!check_existing(quality,filepath)){
 			std::fstream out(filepath + ".mp4",
 				std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
@@ -367,9 +367,9 @@ namespace dropout_dl {
 		}
 	}
 
-	bool episode::checkExisting(const std::string &quality, const std::string& filename){
-		std::filesystem::path filePath = filename + ".mp4";
-		double fileSize;
+	bool episode::check_existing(const std::string &quality, const std::string& filename){
+		std::filesystem::path file_path = filename + ".mp4";
+		curl_off_t file_size;
 		CURL* curl = curl_easy_init();
     	CURLcode res;
 		if (curl) {
@@ -380,16 +380,16 @@ namespace dropout_dl {
 			res = curl_easy_perform(curl);
 
 			if (res == CURLE_OK) {
-				res = curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &fileSize);
+				res = curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &file_size);
 			}
 			curl_easy_cleanup(curl);
     	}
-		if (std::filesystem::exists(filePath)) {
-        	std::uintmax_t fileSizeDisk = std::filesystem::file_size(filePath);
-				if (fileSizeDisk-1 == fileSize){
+		if (std::filesystem::exists(file_path)) {
+        	std::uintmax_t file_size_disk = std::filesystem::file_size(file_path);
+				if (file_size_disk-1 == file_size){
 					return true;
 				}
-				else if (fileSizeDisk == fileSize){
+				else if (file_size_disk == file_size){
 					return true;
 				}
 				else return false;
