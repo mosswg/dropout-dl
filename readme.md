@@ -112,4 +112,6 @@ If you'd like to contribute a good place to start is looking at open issues and 
 **Working on your first Pull Request?** You can learn how from this *free* series [How to Contribute to an Open Source Project on GitHub](https://kcd.im/pull-request)
 
 ## Contributors
-- Moss - [mossx-dev](https://github.com/mossx-dev)
+- [mosswg](https://github.com/mosswg)
+- [SeanOMik](https://github.com/SeanOMik) - Docker support
+- [Hello-User](https://github.com/Hello-User) - Skip downloading if file exists
