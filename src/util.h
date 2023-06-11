@@ -119,7 +119,7 @@ namespace dropout_dl {
 	 *
 	 * This function downloads the provided url and returns it as a string. Does not use cookies. This was ripped directly from a firefox network request for an episode page and modified minimally.
 	 */
-	std::string get_generic_page(const std::string& url, bool verbose = false, std::string* header_string = nullptr);
+	std::string get_generic_page(const std::string& url, long* response_status = nullptr, bool verbose = false, std::string* header_string = nullptr);
 
 	/**
 	 *

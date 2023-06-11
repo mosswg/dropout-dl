@@ -29,6 +29,15 @@ namespace dropout_dl {
 
 			episode get_episode(const std::string& html_data, int& start_point, const cookie& session_cookie);
 
+
+			/**
+			 *
+			 * @param session_cookie - The cookie used to authenticate
+			 * @param page_data - the data of the season page gotten from curl
+			 * @param episodes - the vector of episodes that will be appended to
+			 */
+			void add_episodes_to_vector(const cookie& session_cookie, const std::string& page_data, std::vector<episode>& episodes);
+
 			/**
 			 *
 			 * @param html_data - The season page data

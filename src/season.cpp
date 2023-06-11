@@ -38,20 +38,44 @@ namespace dropout_dl {
 		exit(8);
 	}
 
-	std::vector<episode> season::get_episodes(const cookie& session_cookie) {
-		std::vector<episode> out;
 
-		std::string site_video(R"(class="browse-item-link" data-track-event="site_video")");
-
-		for (int i = 0; i < this->page_data.size(); i++) {
-			if (substr_is(this->page_data, i, site_video)) {
-				episode e = get_episode(this->page_data, i, session_cookie);
+	void season::add_episodes_to_vector(const cookie& session_cookie, const std::string& page_data, std::vector<episode>& episodes) {
+		const std::string site_video(R"(class="browse-item-link" data-track-event="site_video")");
+		for (int i = 0; i < page_data.size(); i++) {
+			if (substr_is(page_data, i, site_video)) {
+				episode e = get_episode(page_data, i, session_cookie);
 				if (e.episode_url.empty()) {
 					continue;
 				}
 				std::cout << '\t' << e.name << '\n';
-				out.push_back(e);
+				episodes.push_back(e);
 			}
+		}
+	}
+
+	std::vector<episode> season::get_episodes(const cookie& session_cookie) {
+		std::vector<episode> out;
+
+		add_episodes_to_vector(session_cookie, this->page_data, out);
+
+
+		// Find episodes hidden behind "Show More". This is sort of a hack but it should be fine.
+		// What we do is get the page data for the next page (this is what the "show more" button does behind the scenes) and check if it exists.
+		// If it does get the episodes and check the next page, otherwise just return from what we got from the first page
+		long status_code = -1;
+		int page_index = 2;
+		while (true) {
+			std::string next_page_url = this->url + "?page=" + std::to_string(page_index);
+
+			std::string next_page_data = get_generic_page(next_page_url, &status_code);
+
+			if (status_code != 200) {
+				break;
+			}
+
+			add_episodes_to_vector(session_cookie, next_page_data, out);
+
+			page_index++;
 		}
 
 		return out;

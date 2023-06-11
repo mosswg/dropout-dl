@@ -177,7 +177,7 @@ namespace dropout_dl {
 	}
 
 
-	std::string get_generic_page(const std::string& url, bool verbose, std::string* header_string) {
+	std::string get_generic_page(const std::string& url, long* response_status, bool verbose, std::string* header_string) {
 		CURL *hnd;
 		struct curl_slist *slist1;
 
@@ -210,12 +210,17 @@ namespace dropout_dl {
 		curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteCallback);
 		curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &page_data);
 
+
 		if (header_string) {
 			curl_easy_setopt(hnd, CURLOPT_HEADERFUNCTION, WriteCallback);
 			curl_easy_setopt(hnd, CURLOPT_HEADERDATA, header_string);
 		}
 
 		curl_easy_perform(hnd);
+
+		if (response_status) {
+			curl_easy_getinfo(hnd, CURLINFO_RESPONSE_CODE, response_status);
+		}
 
 		curl_easy_cleanup(hnd);
 		hnd = nullptr;
@@ -226,8 +231,8 @@ namespace dropout_dl {
 	}
 
 	size_t EmptyWriteCallback(void*, size_t, size_t, void*) {
-    // This callback function is needed for CURLOPT_NOBODY to discard the response body.
-    return 0;
+		// This callback function is needed for CURLOPT_NOBODY to discard the response body.
+		return 0;
 	}
 
 
@@ -362,5 +367,4 @@ namespace dropout_dl {
 
 		return -1;
 	}
-
 }

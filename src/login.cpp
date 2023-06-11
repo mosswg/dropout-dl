@@ -114,7 +114,7 @@ void dropout_dl::login::get_login_tokens(std::string& session_token, std::string
 	std::string login_page_url = "https://www.dropout.tv/login";
 	std::string header_string = "";
 
-	std::string login_page_data = get_generic_page(login_page_url, false, &header_string);
+	std::string login_page_data = get_generic_page(login_page_url, nullptr, false, &header_string);
 
 	size_t set_cookie_index = header_string.find("set-cookie: _session=");
 
