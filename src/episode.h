@@ -97,6 +97,16 @@ namespace dropout_dl {
 		 */
 		static std::string get_season_name(const std::string& meta_data);
 
+
+		/**
+		 *
+		 * @param page_data - Episode page data
+		 * @return The episode number
+		 *
+		 * Get the number of the season from the metadata
+		 */
+		static int get_episode_number(const std::string& page_data, int season_number);
+
 		/**
 		 *
 		 * @param meta_data - Episode metadata in json format
@@ -240,7 +250,18 @@ namespace dropout_dl {
 
 			this->season = season;
 
-			this->episode_number = episode_number;
+			int episode_number_from_page = get_episode_number(episode_data, season_number);
+			if (episode_number_from_page != -1) {
+				this->episode_number = episode_number_from_page;
+			}
+			else {
+				this->episode_number = episode_number;
+			}
+			if (episode_number_from_page != episode_number) {
+				if (verbose) {
+					std::cout << "WARNING: episode number from season page (" << episode_number << ") and episode page (" << episode_number_from_page << ") do not match. Using " << this->episode_number << " if this is correct please ignore this warning\n";
+				}
+			}
 
 			this->season_number = season_number;
 
@@ -281,7 +302,7 @@ namespace dropout_dl {
 			}
 
 			this->get_qualities();
-			}
+		}
 
 		/**
 		 *

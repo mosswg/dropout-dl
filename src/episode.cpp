@@ -65,6 +65,20 @@ namespace dropout_dl {
 		return "ERROR";
 	}
 
+	int episode::get_episode_number(const std::string& page_data, int season_number) {
+		std::string open_string = "Season " + std::to_string(season_number) + ", Episode ";
+		std::string close_string = "\n";
+
+		std::string episode_num_str = get_substring_in(page_data, open_string, close_string, 0);
+
+		int episode_number = -1;
+		if (!episode_num_str.empty()) {
+			episode_number = get_int_in_string(episode_num_str);
+		}
+
+		return episode_number;
+	}
+
 	std::string episode::get_season_name(const std::string& meta_data) {
 		std::string season_title_title("\"COLLECTION_TITLE\"");
 		for (int i = 0; i < meta_data.size(); i++) {
