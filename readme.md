@@ -60,7 +60,7 @@ sudo apt install libcurl4-gnutls-dev
 ```
 To install the optional dependencies, run:
 ```
-sudo apt install libsqlite3-dev libgcrypt11-dev
+sudo apt install libsqlite3-dev libgcrypt-dev
 ```
 
 ## How to Use
