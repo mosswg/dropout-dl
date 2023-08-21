@@ -49,10 +49,18 @@ make
 ```
 sudo xbps-install -S libcurl
 ```
+To install the optional dependencies, run:
+```
+sudo xbps-install -S sqlite-devel libgcrypt-devel
+```
 
-#### Debian
+#### Debian/Ubuntu
 ```
 sudo apt install libcurl4-gnutls-dev
+```
+To install the optional dependencies, run:
+```
+sudo apt install libsqlite3-dev libgcrypt11-dev
 ```
 
 ## How to Use
