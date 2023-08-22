@@ -264,7 +264,7 @@ namespace dropout_dl {
 	}
 
 	std::string episode::get_captions_url() {
-		std::string start = "\"lang\":\"en\",\"url\":\"";
+		std::string start = "\"lang\":\"(en|en-US)\",\"url\":\"";
 		std::string end = "\",\"kind\":\"captions\"";
 
 		if (this->config_data.find(end) == std::string::npos) {
