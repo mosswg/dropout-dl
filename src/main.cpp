@@ -24,6 +24,7 @@ namespace dropout_dl {
 		bool is_season = false;
 		bool is_episode = false;
 		bool download_captions = false;
+        bool download_captions_only = false;
 		std::string quality;
 		std::string filename;
 		std::string output_directory;
@@ -117,6 +118,9 @@ namespace dropout_dl {
 				else if (arg == "captions" || arg == "c") {
 					download_captions = true;
 				}
+                else if (arg == "captions-only" || arg == "co") {
+					download_captions_only = true;
+				}
 				else if (arg == "help" || arg == "h") {
 					std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
 								 "\n"
@@ -132,7 +136,8 @@ namespace dropout_dl {
 								 "\t--series            -S   Interpret the url as a link to a series and download all episodes from all seasons\n"
 								 "\t--season            -s   Interpret the url as a link to a season and download all episodes from all seasons\n"
 								 "\t--episode           -e   Interpret the url as a link to a single episode\n"
-								 "\t--captions          -c   Download the captions along with the episode\n";
+								 "\t--captions          -c   Download the captions along with the episode\n"
+                                 "\t--captions-only     -co  Download the captions only, without the episode\n";
 
 					exit(0);
 				}
@@ -372,7 +377,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting series\n";
 		}
-		dropout_dl::series series(options.url, options.session_cookie, options.download_captions);
+		dropout_dl::series series(options.url, options.session_cookie, options.download_captions, options.download_captions_only);
 
 		series.download(options.quality, options.output_directory);
 	}
@@ -380,7 +385,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting season\n";
 		}
-		dropout_dl::season season = dropout_dl::series::get_season(options.url, options.session_cookie, options.download_captions);
+		dropout_dl::season season = dropout_dl::series::get_season(options.url, options.session_cookie, options.download_captions, options.download_captions_only);
 
 		season.download(options.quality, options.output_directory + "/" + season.series_name);
 	}
@@ -388,7 +393,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting episode\n";
 		}
-		dropout_dl::episode ep(options.url, options.session_cookie, options.verbose, options.download_captions);
+		dropout_dl::episode ep(options.url, options.session_cookie, options.verbose, options.download_captions, options.download_captions_only);
 
 		if (options.verbose) {
 			std::cout << "filename: " << options.filename << '\n';

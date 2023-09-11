@@ -28,6 +28,8 @@ namespace dropout_dl {
 			dropout_dl::cookie session_cookie;
 			/// Whether or not to download captions
 			bool download_captions;
+            /// Whether to skip the video and only download captions
+            bool download_captions_only;
 
 			/**
 			 *
@@ -54,7 +56,7 @@ namespace dropout_dl {
 			 *
 			 * Gets the season page, which is really just a series page, and creates a season object with all the episodes of the season
 			 */
-			static season get_season(const std::string& url, const cookie& session_cookie, bool download_captions);
+			static season get_season(const std::string& url, const cookie& session_cookie, bool download_captions, bool download_captions_only);
 
 			/**
 			 *
@@ -72,9 +74,10 @@ namespace dropout_dl {
 			*
 			* Creates a series object and populates the needed variables
 			*/
-			series(const std::string& url, const dropout_dl::cookie& session_cookie, bool download_captions = false) {
+			series(const std::string& url, const dropout_dl::cookie& session_cookie, bool download_captions = false, bool download_captions_only = false) {
 				this->url = url;
 				this->download_captions = download_captions;
+                this->download_captions_only = download_captions_only;
 				this->page_data = get_generic_page(url);
 				this->name = get_series_name(page_data);
 				this->session_cookie = session_cookie;

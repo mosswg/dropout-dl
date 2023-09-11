@@ -26,6 +26,8 @@ namespace dropout_dl {
 			std::vector<episode> episodes;
 			/// Whether or not to download captions
 			bool download_captions;
+            /// Whether to skip the video and only download captions
+            bool download_captions_only;
 
 			episode get_episode(const std::string& html_data, int& start_point, const cookie& session_cookie);
 
@@ -75,9 +77,10 @@ namespace dropout_dl {
 			 *
 			 * Creates a season object and populates the needed information.
 			 */
-			season(const std::string& url, const std::string& name, const cookie& session_cookie, const std::string& series_name = "", bool download_captions = false) {
+			season(const std::string& url, const std::string& name, const cookie& session_cookie, const std::string& series_name = "", bool download_captions = false, bool download_captions_only = false) {
 				this->url = url;
 				this->download_captions = download_captions;
+                this->download_captions_only = download_captions_only;
 				this->season_number = get_season_number(this->url);
 				this->name = name;
 				this->series_name = series_name;

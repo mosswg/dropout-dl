@@ -2,3 +2,6 @@ cmake-build-debug
 build_old
 .idea
 build
+.vscode
+login
+out

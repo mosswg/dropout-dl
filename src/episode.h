@@ -53,6 +53,8 @@ namespace dropout_dl {
 		std::vector<std::string> qualities;
 		/// The list of the urls correlating with the qualities array.
 		std::vector<std::string> quality_urls;
+        /// Whether to skip the video and only download captions
+        bool download_captions_only;
 
 		/// Whether or not to be verbose
 		bool verbose = false;
@@ -217,7 +219,7 @@ namespace dropout_dl {
 		 * Create an episode object from the link using to cookies to get all the necessary information.
 		 * This constructor initializes all the object data.
 		 */
-		episode(const std::string& episode_url, cookie session_cookie, const std::string& series, const std::string& season, int episode_number, int season_number, bool verbose = false, bool download_captions = false) {
+		episode(const std::string& episode_url, cookie session_cookie, const std::string& series, const std::string& season, int episode_number, int season_number, bool verbose = false, bool download_captions = false, bool download_captions_only = false) {
 			this->episode_url = episode_url;
 			this->verbose = verbose;
 
@@ -291,7 +293,7 @@ namespace dropout_dl {
 
 			this->config_data = get_generic_page(this->config_url);
 
-			if (download_captions) {
+			if (download_captions || download_captions_only) {
 				this->captions_url = get_captions_url();
 				if (verbose) {
 					std::cout << "Got caption url: " << this->captions_url << "\n";
@@ -300,6 +302,8 @@ namespace dropout_dl {
 			else {
 				this->captions_url = "";
 			}
+
+            this->download_captions_only = download_captions_only;
 
 			this->get_qualities();
 		}
@@ -313,7 +317,7 @@ namespace dropout_dl {
 		 * Create an episode object from the link using to cookies to get all the necessary information.
 		 * This constructor initializes all the object data.
 		 */
-		episode(const std::string& episode_url, const cookie& session_cookie, bool verbose = false, bool download_captions = false) {
+		episode(const std::string& episode_url, const cookie& session_cookie, bool verbose = false, bool download_captions = false, bool download_captions_only = false) {
 
 			this->episode_url = episode_url;
 			this->verbose = verbose;
@@ -383,12 +387,14 @@ namespace dropout_dl {
 
 			this->config_data = get_generic_page(this->config_url);
 
-			if (download_captions) {
+			if (download_captions || download_captions_only) {
 				this->captions_url = get_captions_url();
 			}
 			else {
 				this->captions_url = "";
 			}
+
+            this->download_captions_only = download_captions_only;
 
 			this->get_qualities();
 		}

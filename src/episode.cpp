@@ -330,7 +330,7 @@ namespace dropout_dl {
 			std::cout << YELLOW << "File already exists: " << filepath << RESET << '\n';
 			return;
 		}
-		if (!check_existing(quality,filepath)){
+		if (!check_existing(quality,filepath) && !this->download_captions_only){
 			std::fstream out(filepath + ".mp4",
 				std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
