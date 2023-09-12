@@ -91,7 +91,7 @@ namespace dropout_dl {
 							}
 							season_name = season_name.substr(name_start, season_name.size() - name_start - name_end);
 
-							out.emplace_back(season_url, season_name, this->session_cookie, this->name, this->download_captions);
+							out.emplace_back(season_url, season_name, this->session_cookie, this->name, this->download_captions, this->download_captions_only);
 
 							std::cout << out.back().name << ": " << out.back().url << '\n';
 
