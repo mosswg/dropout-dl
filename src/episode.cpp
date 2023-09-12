@@ -264,24 +264,42 @@ namespace dropout_dl {
 	}
 
 	std::string episode::get_captions_url() {
-		std::string start = "\"lang\":\"en\",\"url\":\"";
-		std::string end = "\",\"kind\":\"captions\"";
+        /*
+        Different episodes are going to have different start and end points in this config file.
+        These are the options that contributors have found so far.
+        Add to these vectors when new possibilities are discovered.
 
-		if (this->config_data.find(end) == std::string::npos) {
-            //Try again with "subtitles"
-            end = "\",\"kind\":\"subtitles\"";
-            if (this->config_data.find(end) == std::string::npos) {
-                return "";
+        TODO - if Dropout ever adds multiple languages for their captions/subtitles,
+        we'll likely want to add a parameter to this function for the language, and
+        reference that in end_options below.
+        */
+        std::vector<std::string> start_options = {
+            "\"lang\":\"en\",\"url\":\"",
+            "\"lang\":\"en-US\",\"url\":\""
+        };
+
+        std::vector<std::string> end_options = {
+            "\",\"kind\":\"captions\"",
+            "\",\"kind\":\"subtitles\""
+        };
+
+        std::string captions_url;
+        for (const auto& start : start_options) {
+            for (const auto& end : end_options) {
+                if (this->config_data.find(end) != std::string::npos) {
+                    captions_url = dropout_dl::get_substring_in(this->config_data, start, end);
+                    if (!captions_url.empty()) {
+                        if (this->verbose) {
+                            std::cout << "captions url: " << captions_url << "\n";
+                        }
+                        return captions_url;
+                    }
+                }
             }
-		}
+        }
 
-		std::string captions_url = dropout_dl::get_substring_in(this->config_data, start, end);
-		if (this->verbose) {
-			std::cout << "captions url: " << captions_url << "\n";
-		}
-
-		return captions_url;
-	}
+        return "";
+    }
 
 	std::string episode::get_video_url(const std::string& quality) {
 		for (int i = 0; i < qualities.size(); i++) {
