@@ -269,9 +269,11 @@ namespace dropout_dl {
         These are the options that contributors have found so far.
         Add to these vectors when new possibilities are discovered.
 
-        TODO - if Dropout ever adds multiple languages for their captions/subtitles,
-        we'll likely want to add a parameter to this function for the language, and
-        reference that in end_options below.
+        TODO - A cleaner way to do this really is to use a JSON parsing library
+        to grab the array of request.text_tracks from config_data, and then we'll
+        have access all of the options available. Then we could potentially add a
+        parameter to this function for the desired language(s), find that array element,
+        and just grab the "url" property.
         */
         std::vector<std::string> start_options = {
             "\"lang\":\"en\",\"url\":\"",
