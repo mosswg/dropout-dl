@@ -136,7 +136,7 @@ namespace dropout_dl {
 								 "\t--series            -S   Interpret the url as a link to a series and download all episodes from all seasons\n"
 								 "\t--season            -s   Interpret the url as a link to a season and download all episodes from all seasons\n"
 								 "\t--episode           -e   Interpret the url as a link to a single episode\n"
-								 "\t--captions          -c   Download the captions along with the episode\n"
+								 "\t--captions          -c   Download the captions along with the episode. Overridden by --captions-only if set.\n"
                                  "\t--captions-only     -co  Download the captions only, without the episode\n";
 
 					exit(0);

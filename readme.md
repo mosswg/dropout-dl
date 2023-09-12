@@ -74,7 +74,8 @@ By default, dropout-dl will download episodes in a season with the format `<seri
 --series            -S   Interpret the url as a link to a series and download all episodes from all seasons
 --season            -s   Interpret the url as a link to a season and download all episodes from all seasons
 --episode           -e   Interpret the url as a link to a single episode
---captions          -c   Download the captions along with the episode
+--captions          -c   Download the captions along with the episode. Overridden by --captions-only if set.
+--captions-only     -co  Download the captions only, without the episode.";
 ```
 
 If series, season, or episode is not used, the type will be inferred based on the link format.
