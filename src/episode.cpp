@@ -268,7 +268,11 @@ namespace dropout_dl {
 		std::string end = "\",\"kind\":\"captions\"";
 
 		if (this->config_data.find(end) == std::string::npos) {
-			return "";
+            //Try again with "subtitles"
+            end = "\",\"kind\":\"subtitles\"";
+            if (this->config_data.find(end) == std::string::npos) {
+                return "";
+            }
 		}
 
 		std::string captions_url = dropout_dl::get_substring_in(this->config_data, start, end);
