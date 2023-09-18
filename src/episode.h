@@ -10,6 +10,8 @@
 #include <fstream>
 #include <filesystem>
 
+#include <nlohmann/json.hpp>
+
 #include "color.h"
 #include "cookie.h"
 #include "util.h"
@@ -30,7 +32,7 @@ namespace dropout_dl {
 		/// The number of the season (only set when downloading a season or series)
 		int season_number = 0;
 		/// The json metadata of the episode
-		std::string metadata;
+		nlohmann::json metadata;
 		/// The name of the episode
 		std::string name;
 		/// The number of the episode (only set when downloading a season or series)
@@ -77,7 +79,7 @@ namespace dropout_dl {
 		 *
 		 * Gets the json metadata of the episode
 		*/
-		static std::string get_meta_data_json(const std::string& html_data);
+		static nlohmann::json get_meta_data_json(const std::string& html_data);
 
 		// Parsing
 		/**
@@ -87,7 +89,7 @@ namespace dropout_dl {
 		 *
 		 * Get the name of the series from the metadata
 		 */
-		static std::string get_series_name(const std::string& meta_data);
+		static std::string get_series_name(const nlohmann::json& meta_data);
 
 
 		/**
@@ -97,7 +99,7 @@ namespace dropout_dl {
 		 *
 		 * Get the name of the season from the metadata
 		 */
-		static std::string get_season_name(const std::string& meta_data);
+		static std::string get_season_name(const nlohmann::json& meta_data);
 
 
 		/**
@@ -116,7 +118,7 @@ namespace dropout_dl {
 		 *
 		 * Get the name of the episode from the metadata
 		 */
-		static std::string get_episode_name(const std::string& meta_data);
+		static std::string get_episode_name(const nlohmann::json& meta_data);
 
 		/**
 		 *

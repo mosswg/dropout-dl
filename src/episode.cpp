@@ -5,7 +5,7 @@
 
 
 namespace dropout_dl {
-	std::string episode::get_meta_data_json(const std::string& html_data) {
+	nlohmann::json episode::get_meta_data_json(const std::string& html_data) {
 		std::string data_start("window.Page = {");
 		char data_open = '{';
 		char data_close = '}';
@@ -25,7 +25,8 @@ namespace dropout_dl {
 					}
 
 					if (grouping_depth == 0) {
-						return(html_data.substr(i, j));
+						// -1 and +1 to include opening and closing brackets that are normally excluded.
+						return nlohmann::json::parse(html_data.substr(i-1, j+1));
 					}
 				}
 			}
@@ -34,35 +35,8 @@ namespace dropout_dl {
 	}
 
 	// episode statics
-	std::string episode::get_series_name(const std::string& meta_data) {
-		int title_start = -1;
-		std::string parent_title("\"parent\"");
-		std::string series_title_title("\"name\"");
-		for (int i = 0; i < meta_data.size(); i++) {
-			if (substr_is(meta_data, i, parent_title)) {
-				// Skip "VIDEO_TITLE", the following colon, and the opening quotation mark.
-				i += parent_title.size() + 2;
-
-
-				int j;
-				for (j = 0; meta_data[i + j] != '}' && i + j < meta_data.size(); j++);
-
-				std::string series_data = meta_data.substr(i, j);
-
-				for (j = 0; j < series_data.size(); j++) {
-					if (substr_is(series_data, j, series_title_title)) {
-						// Skip "name", the following colon, and the opening quotation mark.
-						j += series_title_title.size() + 2;
-
-						int k;
-						for (k = 0; j + k < series_data.size() && series_data[j + k] != '"'; k++);
-
-						return format_name_string(series_data.substr(j, k));
-					}
-				}
-			}
-		}
-		return "ERROR";
+	std::string episode::get_series_name(const nlohmann::json& meta_data) {
+		return meta_data["PROPERTIES"]["COLLECTION_TITLE"];
 	}
 
 	int episode::get_episode_number(const std::string& page_data, int season_number) {
@@ -79,42 +53,12 @@ namespace dropout_dl {
 		return episode_number;
 	}
 
-	std::string episode::get_season_name(const std::string& meta_data) {
-		std::string season_title_title("\"COLLECTION_TITLE\"");
-		for (int i = 0; i < meta_data.size(); i++) {
-			if (substr_is(meta_data, i, season_title_title)) {
-				// Skip "VIDEO_TITLE", the following colon, and the opening quotation mark.
-				i += season_title_title.size() + 2;
-
-
-				int j;
-				for (j = 0; meta_data[i + j] != '"' && i + j < meta_data.size(); j++);
-
-				return format_name_string(meta_data.substr(i, j));
-			}
-		}
-		return "ERROR";
+	std::string episode::get_season_name(const nlohmann::json& meta_data) {
+		return meta_data["PROPERTIES"]["COLLECTION_TITLE"];
 	}
 
-	std::string episode::get_episode_name(const std::string& meta_data) {
-		std::string video_title_title("\"VIDEO_TITLE\"");
-		for (int i = 0; i < meta_data.size(); i++) {
-			if (substr_is(meta_data, i, video_title_title)) {
-				// Skip "VIDEO_TITLE", the following colon, and the opening quotation mark.
-				i += video_title_title.size() + 2;
-
-				int j;
-				for (j = 0; meta_data[i + j] != '"' && i + j < meta_data.size(); j++) {
-					// skip checking for quotes if prefaced by a forward slash
-					if (meta_data[i + j] == '\\') {
-						j++;
-					}
-				}
-
-				return format_name_string(meta_data.substr(i, j));
-			}
-		}
-		return "ERROR";
+	std::string episode::get_episode_name(const nlohmann::json& meta_data) {
+		return meta_data["PROPERTIES"]["CANONICAL_COLLECTION"]["parent"]["name"];
 	}
 
 	std::string episode::get_embed_url(const std::string& html_data) {

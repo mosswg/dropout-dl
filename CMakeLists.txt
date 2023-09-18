@@ -58,6 +58,10 @@ add_executable(dropout-dl
 
 target_link_libraries(dropout-dl curl)
 
+add_subdirectory(external/json)
+
+target_link_libraries(dropout-dl nlohmann_json::nlohmann_json)
+
 find_library(SQLITE3_FOUND sqlite3)
 find_library(GCRYPT_FOUND gcrypt)
 IF (SQLITE3_FOUND)
