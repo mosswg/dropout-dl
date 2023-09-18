@@ -29,7 +29,7 @@ namespace dropout_dl {
 						if (!episode_text.empty()) {
 							episode_number = get_int_in_string(episode_text);
 						}
-						return episode(html_data.substr(i, j), session_cookie, this->series_name, this->name, episode_number, this->season_number, false, this->download_captions);
+						return episode(html_data.substr(i, j), session_cookie, this->series_name, this->name, episode_number, this->season_number, false, this->download_captions, this->download_captions_only);
 					}
 				}
 			}

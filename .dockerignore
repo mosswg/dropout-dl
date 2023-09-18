@@ -3,3 +3,6 @@ build_old
 .idea
 build
 assets
+.vscode
+login
+out

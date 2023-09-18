@@ -264,20 +264,44 @@ namespace dropout_dl {
 	}
 
 	std::string episode::get_captions_url() {
-		std::string start = "\"lang\":\"en\",\"url\":\"";
-		std::string end = "\",\"kind\":\"captions\"";
+        /*
+        Different episodes are going to have different start and end points in this config file.
+        These are the options that contributors have found so far.
+        Add to these vectors when new possibilities are discovered.
 
-		if (this->config_data.find(end) == std::string::npos) {
-			return "";
-		}
+        TODO - A cleaner way to do this really is to use a JSON parsing library
+        to grab the array of request.text_tracks from config_data, and then we'll
+        have access all of the options available. Then we could potentially add a
+        parameter to this function for the desired language(s), find that array element,
+        and just grab the "url" property.
+        */
+        std::vector<std::string> start_options = {
+            "\"lang\":\"en\",\"url\":\"",
+            "\"lang\":\"en-US\",\"url\":\""
+        };
 
-		std::string captions_url = dropout_dl::get_substring_in(this->config_data, start, end);
-		if (this->verbose) {
-			std::cout << "captions url: " << captions_url << "\n";
-		}
+        std::vector<std::string> end_options = {
+            "\",\"kind\":\"captions\"",
+            "\",\"kind\":\"subtitles\""
+        };
 
-		return captions_url;
-	}
+        std::string captions_url;
+        for (const auto& start : start_options) {
+            for (const auto& end : end_options) {
+                if (this->config_data.find(end) != std::string::npos) {
+                    captions_url = dropout_dl::get_substring_in(this->config_data, start, end);
+                    if (!captions_url.empty()) {
+                        if (this->verbose) {
+                            std::cout << "captions url: " << captions_url << "\n";
+                        }
+                        return captions_url;
+                    }
+                }
+            }
+        }
+
+        return "";
+    }
 
 	std::string episode::get_video_url(const std::string& quality) {
 		for (int i = 0; i < qualities.size(); i++) {
@@ -330,7 +354,7 @@ namespace dropout_dl {
 			std::cout << YELLOW << "File already exists: " << filepath << RESET << '\n';
 			return;
 		}
-		if (!check_existing(quality,filepath)){
+		if (!check_existing(quality,filepath) && !this->download_captions_only){
 			std::fstream out(filepath + ".mp4",
 				std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
