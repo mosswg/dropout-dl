@@ -25,7 +25,7 @@ namespace dropout_dl {
 					}
 
 					if (grouping_depth == 0) {
-						// -1 and +1 to include opening and closing brackets that are normally excluded.
+						// -1 and +2 to include opening and closing brackets that are normally excluded.
 						auto json_string = html_data.substr(i-1, j+2);
 							// std::cout << json_string << std::endl;
 						return nlohmann::json::parse(json_string);
@@ -36,9 +36,8 @@ namespace dropout_dl {
 		return "ERROR";
 	}
 
-	// episode statics
 	std::string episode::get_series_name(const nlohmann::json& meta_data) {
-		return meta_data["PROPERTIES"]["COLLECTION_TITLE"];
+		return meta_data["PROPERTIES"]["CANONICAL_COLLECTION"]["parent"]["name"];
 	}
 
 	int episode::get_episode_number(const std::string& page_data, int season_number) {
@@ -60,7 +59,7 @@ namespace dropout_dl {
 	}
 
 	std::string episode::get_episode_name(const nlohmann::json& meta_data) {
-		return meta_data["PROPERTIES"]["CANONICAL_COLLECTION"]["parent"]["name"];
+		return meta_data["PROPERTIES"]["VIDEO_TITLE"];
 	}
 
 	std::string episode::get_embed_url(const std::string& html_data) {
