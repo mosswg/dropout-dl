@@ -51,12 +51,14 @@ namespace dropout_dl {
 		std::string captions_url;
 		/// The data of the main config page. This contains the link to the mp4 video of the episode
 		std::string config_data;
+		/// The json parsed data of the main config page.
+		nlohmann::json config_json;
 		/// The list of the qualities available for the episode. This is a parallel array with the quality_urls vector
 		std::vector<std::string> qualities;
 		/// The list of the urls correlating with the qualities array.
 		std::vector<std::string> quality_urls;
-        /// Whether to skip the video and only download captions
-        bool download_captions_only;
+		/// Whether to skip the video and only download captions
+		bool download_captions_only;
 
 		/// Whether or not to be verbose
 		bool verbose = false;
@@ -388,6 +390,8 @@ namespace dropout_dl {
 			}
 
 			this->config_data = get_generic_page(this->config_url);
+
+			this->config_json = nlohmann::json::parse(config_data);
 
 			if (download_captions || download_captions_only) {
 				this->captions_url = get_captions_url();

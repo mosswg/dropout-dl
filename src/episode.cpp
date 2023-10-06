@@ -166,86 +166,45 @@ namespace dropout_dl {
 		if (!qualities.empty()) {
 			return qualities;
 		}
-		int i = 0;
-		bool video_section = false;
+		auto& streams = this->config_json["request"]["files"]["progressive"];
 
-		const std::string quality_marker = R"("quality":")";
-		for (; i < config_data.size(); i++ ) {
-			if (config_data.substr(i, 9) == "video/mp4") {
-				video_section = true;
-			}
-
-			if (video_section && config_data.substr(i, quality_marker.size()) == quality_marker) {
-				i += quality_marker.size();
-				for (int j = 0; j + i < config_data.size(); j++) {
-					if (config_data[i + j] == '"') {
-						this->qualities.push_back(config_data.substr(i, j));
-						if (this->verbose) {
-							std::cout << "Found quality (" << i << " + " << j << "): " << qualities.back() << std::endl;
-						}
-						break;
-					}
-				}
-				for (int j = i; j > 0; j--) {
-					// std::cout << i << ": " << javascript_data[i] << ": " << javascript_data.substr(i-7, 7) << "\n";
-					if (this->config_data.substr(j-7, 7) == R"("url":")") {
-						for (int k = 0; k < i - j; k++) {
-							if (config_data[j + k] == '"') {
-								this->quality_urls.emplace_back(config_data.substr(j, k));
-								if (this->verbose) {
-									std::cout << "Found url (" << j << " + " << k << "): " << quality_urls.back()
-											  << std::endl;
-								}
-								break;
-							}
-						}
-						break;
-					}
-				}
+		for (const auto& stream : streams) {
+			this->qualities.push_back(stream["quality"]);
+			this->quality_urls.push_back(stream["url"]);
+			if (this->verbose) {
+				std::cout << "Found quality: " << qualities.back() << std::endl;
 			}
 		}
+
 		return qualities;
 	}
 
 	std::string episode::get_captions_url() {
-        /*
-        Different episodes are going to have different start and end points in this config file.
-        These are the options that contributors have found so far.
-        Add to these vectors when new possibilities are discovered.
+		/*
+		  Different episodes are going to have different start and end points in this config file.
+		  These are the options that contributors have found so far.
+		  Add to these vectors when new possibilities are discovered.
+		*/
 
-        TODO - A cleaner way to do this really is to use a JSON parsing library
-        to grab the array of request.text_tracks from config_data, and then we'll
-        have access all of the options available. Then we could potentially add a
-        parameter to this function for the desired language(s), find that array element,
-        and just grab the "url" property.
-        */
-        std::vector<std::string> start_options = {
-            "\"lang\":\"en\",\"url\":\"",
-            "\"lang\":\"en-US\",\"url\":\""
-        };
+		/// NOTE: If dropout adds other language subtitles we want to support those but currently english is the only language they have (as far as im aware)
 
-        std::vector<std::string> end_options = {
-            "\",\"kind\":\"captions\"",
-            "\",\"kind\":\"subtitles\""
-        };
+		auto& text_tracks = this->config_json["request"]["text_tracks"];
 
-        std::string captions_url;
-        for (const auto& start : start_options) {
-            for (const auto& end : end_options) {
-                if (this->config_data.find(end) != std::string::npos) {
-                    captions_url = dropout_dl::get_substring_in(this->config_data, start, end);
-                    if (!captions_url.empty()) {
-                        if (this->verbose) {
-                            std::cout << "captions url: " << captions_url << "\n";
-                        }
-                        return captions_url;
-                    }
-                }
-            }
-        }
+		for (const auto& text_track : text_tracks) {
+			if (text_track["kind"] == "captions" || text_track["kind"] == "subtitles") {
+				if (text_track["lang"] == "en" || text_track["lang"] == "en-US") {
+						if (this->verbose) {
+							std::cout << "captions url: " << text_track["url"] << "\n";
+						}
+					return text_track["url"];
+				}
+			}
+		}
 
-        return "";
-    }
+		std::cout << "ERROR: Could not find captions for episode \"" << this->name << "\n";
+
+		return "";
+	}
 
 	std::string episode::get_video_url(const std::string& quality) {
 		for (int i = 0; i < qualities.size(); i++) {
