@@ -26,7 +26,9 @@ namespace dropout_dl {
 
 					if (grouping_depth == 0) {
 						// -1 and +1 to include opening and closing brackets that are normally excluded.
-						return nlohmann::json::parse(html_data.substr(i-1, j+1));
+						auto json_string = html_data.substr(i-1, j+2);
+							// std::cout << json_string << std::endl;
+						return nlohmann::json::parse(json_string);
 					}
 				}
 			}
@@ -170,7 +172,6 @@ namespace dropout_dl {
 
 		const std::string quality_marker = R"("quality":")";
 		for (; i < config_data.size(); i++ ) {
-			// std::cout << i << "/" << javascript_data.size() << ": " << javascript_data[i] << ": " << javascript_data.substr(i, 17) << ": " << video_section << "\n";
 			if (config_data.substr(i, 9) == "video/mp4") {
 				video_section = true;
 			}
