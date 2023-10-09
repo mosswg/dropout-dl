@@ -126,8 +126,10 @@ namespace dropout_dl {
 								 "\n"
 								 "Options:\n"
 								 "\t--help              -h   Display this message\n"
-								 "\t--quality           -q   Set the quality of the downloaded video. Quality can be set to 'all' which\n"
-								 "\t                             will download all qualities and place them into separate folders\n"
+								 "\t--quality           -q   Set the quality of the downloaded video. Special Qualities:"
+								 "\t                             'all' - download all qualities and place them into separate folders\n"
+								 "\t                             'highest' - download the highest possible quality (default)\n"
+								 "\t                             'lowest' - download the lowest possible quality\n"
 								 "\t--output            -o   Set the output filename. Only works for single episode downloads\n"
 								 "\t--output-directory  -d   Set the directory where files are output\n"
 								 "\t--verbose           -v   Display debug information while running\n"
@@ -157,7 +159,7 @@ namespace dropout_dl {
 				std::cerr << "ARGUMENT PARSE ERROR: Mulitple parse type arguments used\n";
 			}
 			if (quality.empty()) {
-				quality = "1080p";
+				quality = "highest";
 			}
 
 			if (!(is_season || is_series || is_episode)) {

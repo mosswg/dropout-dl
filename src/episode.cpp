@@ -303,7 +303,34 @@ namespace dropout_dl {
 			for (const auto &possible_quality: this->qualities) {
 				this->download_quality(possible_quality, series_directory + possible_quality, filename);
 			}
-		} else {
+		}
+		else if (quality == "highest") {
+			std::string highest_quality;
+			int highest_value = 0;
+			int current_value;
+			for (const auto &possible_quality: this->qualities) {
+				current_value = get_int_in_string(possible_quality);
+				if (current_value > highest_value) {
+					highest_value = current_value;
+					highest_quality = possible_quality;
+				}
+			}
+			this->download_quality(highest_quality, series_directory, filename);
+		}
+		else if (quality == "lowest") {
+			std::string lowest_quality;
+			int lowest_value = INT_MAX;
+			int current_value;
+			for (const auto &possible_quality: this->qualities) {
+				current_value = get_int_in_string(possible_quality);
+				if (current_value < lowest_value) {
+					lowest_value = current_value;
+					lowest_quality = possible_quality;
+				}
+			}
+			this->download_quality(lowest_quality, series_directory, filename);
+		}
+		else {
 			this->download_quality(quality, series_directory, filename);
 		}
 	}

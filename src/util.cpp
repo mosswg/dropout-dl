@@ -298,8 +298,13 @@ namespace dropout_dl {
 		int negative = 1;
 		bool found_number = false;
 		for (uint32_t i = starting_index; i < string.length(); i++) {
-			if (string[i] == '-' && (string[i] <= '9' && string[i] >= '0')) {
-				negative = -1;
+			if (!found_number) {
+				if (string[i] == '-') {
+					negative = -1;
+				}
+				else if (negative == -1) {
+					negative = 1;
+				}
 			}
 
 			if (string[i] <= '9' && string[i] >= '0') {
