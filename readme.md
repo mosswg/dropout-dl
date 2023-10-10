@@ -124,3 +124,5 @@ If you'd like to contribute a good place to start is looking at open issues and 
 - [mosswg](https://github.com/mosswg)
 - [SeanOMik](https://github.com/SeanOMik) - Docker support
 - [Hello-User](https://github.com/Hello-User) - Skip downloading if file exists
+- [MisterSheeple](https://github.com/MisterSheeple) - Optional dependency installation instructions
+- [BradMJustice](https://github.com/BradMJustice) - Caption improvements
