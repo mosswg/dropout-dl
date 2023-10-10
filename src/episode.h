@@ -297,6 +297,8 @@ namespace dropout_dl {
 
 			this->config_data = get_generic_page(this->config_url);
 
+			this->config_json = nlohmann::json::parse(config_data);
+
 			if (download_captions || download_captions_only) {
 				this->captions_url = get_captions_url();
 				if (verbose) {
@@ -307,7 +309,7 @@ namespace dropout_dl {
 				this->captions_url = "";
 			}
 
-            this->download_captions_only = download_captions_only;
+			this->download_captions_only = download_captions_only;
 
 			this->get_qualities();
 		}
@@ -400,7 +402,7 @@ namespace dropout_dl {
 				this->captions_url = "";
 			}
 
-            this->download_captions_only = download_captions_only;
+			this->download_captions_only = download_captions_only;
 
 			this->get_qualities();
 		}

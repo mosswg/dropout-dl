@@ -77,7 +77,7 @@ namespace dropout_dl {
 			series(const std::string& url, const dropout_dl::cookie& session_cookie, bool download_captions = false, bool download_captions_only = false) {
 				this->url = url;
 				this->download_captions = download_captions;
-                this->download_captions_only = download_captions_only;
+				this->download_captions_only = download_captions_only;
 				this->page_data = get_generic_page(url);
 				this->name = get_series_name(page_data);
 				this->session_cookie = session_cookie;

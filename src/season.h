@@ -80,7 +80,7 @@ namespace dropout_dl {
 			season(const std::string& url, const std::string& name, const cookie& session_cookie, const std::string& series_name = "", bool download_captions = false, bool download_captions_only = false) {
 				this->url = url;
 				this->download_captions = download_captions;
-                this->download_captions_only = download_captions_only;
+				this->download_captions_only = download_captions_only;
 				this->season_number = get_season_number(this->url);
 				this->name = name;
 				this->series_name = series_name;
