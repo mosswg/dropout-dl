@@ -10,7 +10,15 @@ add_executable(test
 	../src/episode.cpp
 	../src/season.cpp
 	series_tests.cpp
-	../src/series.cpp)
+	../src/series.cpp
+	season_tests.cpp
+	)
+
+target_link_libraries(test stdc++fs)
+
+include_directories(../external/json/include)
+
+target_link_libraries(test nlohmann_json::nlohmann_json)
 
 target_link_libraries(test curl sqlite3 gcrypt)
 

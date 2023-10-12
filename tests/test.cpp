@@ -3,6 +3,7 @@
 //
 #include "test.h"
 #include "series_tests.h"
+#include "season_tests.h"
 #include "episode_tests.h"
 
 template<typename t>
@@ -91,6 +92,31 @@ int main() {
     std::cout << " [" << series_success_count << "/" << series_tests.size() << "]" << RESET << std::endl;
 
     for (auto& test : series_tests) {
+        test.display();
+    }
+
+
+    std::string season_tests_name = "Season Tests";
+    std::vector<dropout_dl::tests> season_tests = test_season();
+
+    bool season_tests_success = true;
+    int season_success_count = 0;
+    for (const auto& test : season_tests) {
+        season_tests_success &= test.success;
+        season_success_count += test.success;
+    }
+
+    if (season_tests_success) {
+        std::cout << TESTNAME << BOLDGREEN << season_tests_name;
+    }
+    else {
+        std::cout << TESTNAME << BOLDRED << season_tests_name;
+    }
+
+
+    std::cout << " [" << season_success_count << "/" << season_tests.size() << "]" << RESET << std::endl;
+
+    for (auto& test : season_tests) {
         test.display();
     }
 }

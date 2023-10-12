@@ -82,15 +82,15 @@ namespace dropout_dl {
 	}
 
 	int season::get_season_number(const std::string& url) {
-		std::string reversed_number;
+		std::string reversed_number = "";
 		for (int i = url.length() - 1; i >= 0 && url[i] != ':'; i--) {
 			if (isdigit(url[i])) {
 				reversed_number += url[i];
 			}
 		}
-		std::string number;
-		for (int i = reversed_number.length() - 1, j = 0; i >= 0; i--, j++) {
-			number[j] += reversed_number[i];
+		std::string number = "";
+		for (int i = reversed_number.length() - 1; i >= 0; i--) {
+			number += reversed_number[i];
 		}
 
 		return std::stoi(number);
