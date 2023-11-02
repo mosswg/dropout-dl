@@ -168,6 +168,34 @@ namespace dropout_dl {
 		}
 		auto& streams = this->config_json["request"]["files"]["progressive"];
 
+		if (streams.empty()) {
+			if (this->verbose) {
+				std::cout << "Getting from cdn\n";
+			}
+
+			std::string default_cdn = this->config_json["request"]["files"]["dash"]["default_cdn"];
+			std::string cdn_url = this->config_json["request"]["files"]["dash"]["cdns"][default_cdn]["url"];
+
+			if (this->verbose) {
+				std::cout << "cdn: " << cdn_url << "\n";
+			}
+
+			auto cdn_json = nlohmann::json::parse(get_generic_page(cdn_url));
+			std::string base_url = cdn_url.substr(0, cdn_url.find_last_of("/")) + "/" + (std::string)cdn_json["base_url"];
+			std::string video_url;
+			for (const auto& video : cdn_json["video"]) {
+				this->qualities.push_back(std::to_string((long)video["height"]) + "p");
+				video_url = base_url + "video/" + (std::string)video["index_segment"];
+				/// Remove the part that segments the video.
+				video_url = video_url.substr(0, video_url.find_last_of("?"));
+				this->quality_urls.push_back(video_url);
+				if (this->verbose) {
+					std::cout << "Found quality: " << qualities.back() << std::endl;
+				}
+			}
+			return this->qualities;
+		}
+
 		for (const auto& stream : streams) {
 			this->qualities.push_back(stream["quality"]);
 			this->quality_urls.push_back(stream["url"]);
