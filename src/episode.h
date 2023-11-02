@@ -57,8 +57,13 @@ namespace dropout_dl {
 		std::vector<std::string> qualities;
 		/// The list of the urls correlating with the qualities array.
 		std::vector<std::string> quality_urls;
+		/// The audio url. This is only needed if the video is from a cdn.
+		std::string audio_url;
 		/// Whether to skip the video and only download captions
 		bool download_captions_only;
+
+		/// If the episode is being downloaded from CDN (this is needed because the audio and video files are seperated)
+		bool is_from_cdn = false;
 
 		/// Whether or not to be verbose
 		bool verbose = false;
@@ -184,6 +189,15 @@ namespace dropout_dl {
 		 * Download the episode with the given quality and return the raw video data as a string. The <b>filename</b> parameter is only used for displaying while downloading the video so that the user knows what is being downloaded. The <b>filename</b> argument is entirely optional and this function will not place the video into a file whether the value is given or not.
 		 */
 		std::string get_video_data(const std::string& quality, const std::string& filename = "");
+
+		/**
+		 *
+		 * @param filename - The filename which will be displayed will downloading the video
+		 * @return The video data
+		 *
+		 * Download the audio of the episode. <b>filename</b> is only used for progress display.
+		 */
+		std::string get_audio_data(const std::string& filename = "");
 
 
 		/**

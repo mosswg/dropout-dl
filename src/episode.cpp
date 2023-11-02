@@ -172,6 +172,7 @@ namespace dropout_dl {
 			if (this->verbose) {
 				std::cout << "Getting from cdn\n";
 			}
+			this->is_from_cdn = true;
 
 			std::string default_cdn = this->config_json["request"]["files"]["dash"]["default_cdn"];
 			std::string cdn_url = this->config_json["request"]["files"]["dash"]["cdns"][default_cdn]["url"];
@@ -193,6 +194,13 @@ namespace dropout_dl {
 					std::cout << "Found quality: " << qualities.back() << std::endl;
 				}
 			}
+
+			this->audio_url = base_url + "audio/" + (std::string)cdn_json["audio"][0]["index_segment"];
+			this->audio_url = audio_url.substr(0, audio_url.find_last_of("?"));
+			if (this->verbose) {
+				std::cout << "Audio url: " << this->audio_url << std::endl;
+			}
+
 			return this->qualities;
 		}
 
@@ -270,6 +278,26 @@ namespace dropout_dl {
 		return "CURL ERROR";
 	}
 
+	std::string episode::get_audio_data(const std::string& filename) {
+		CURL* curl = curl_easy_init();
+		CURLcode res;
+		if(curl) {
+			std::string out;
+
+			curl_easy_setopt(curl, CURLOPT_URL, this->audio_url.c_str());
+			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::WriteCallback);
+			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
+			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
+			curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, dropout_dl::curl_progress_func);
+			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &filename);
+			res = curl_easy_perform(curl);
+			curl_easy_cleanup(curl);
+
+			return out;
+		}
+		return "CURL ERROR";
+	}
+
 
 	void episode::download_quality(const std::string& quality, const std::string& base_directory, const std::string& filename) {
 		if (!std::filesystem::is_directory(base_directory)) {
@@ -289,7 +317,13 @@ namespace dropout_dl {
 			std::fstream out(filepath + ".mp4",
 				std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-			out << this->get_video_data(quality, filepath) << std::endl;
+			out << this->get_video_data(quality, filepath);
+			out.close();
+			out = std::fstream(filepath + "_audio.mp4",
+				std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+
+			out << this->get_audio_data(filepath);
+			out.close();
 		}
 
 		if (!this->captions_url.empty()) {
