@@ -319,7 +319,7 @@ namespace dropout_dl {
 
 			out << this->get_video_data(quality, filepath);
 			out.close();
-			out = std::fstream(filepath + "_audio.mp4",
+			out = std::fstream(filepath + ".m4a",
 				std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
 			out << this->get_audio_data(filepath);
