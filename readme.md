@@ -2,15 +2,11 @@
     <img src="https://raw.githubusercontent.com/mosswg/dropout-dl/main/assets/dropout_dl_logo.png" width="50%" />
 </div>
 
-dropout-dl is tool to download [dropout.tv](https://www.dropout.tv) episodes. It can download single episodes, seasons, or full series.
-
-
 * [Installation](#installation)
   * [Docker](#docker)
   * [How to Build](#how-to-build)
   * [Dependencies](#Dependencies)
 * [Usage](#how-to-use)
-  
   * [Options](#options)
   * [Login](#login)
   * [Cookies](#cookies)
@@ -33,34 +29,33 @@ You must specify an output directory and mount that directory to the host so tha
 ## How to Build
 ```
 cmake -S <source-dir> -B <build-dir>
-cd <build-dir>
-make
+cmake --build <build-dir>
 ```
 
 ### Dependencies
 
-### Required
+#### Required
 * [cURL](https://curl.se/libcurl/) - Required for downloading pages and videos.
-### Optional
+#### Optional
 * [SQLite](https://www.sqlite.org/index.html) - Required for retrieving cookies from browsers.
 * [libgcrypt](https://www.gnupg.org/software/libgcrypt/index.html) - Used for decrypting chrome cookies retrieved from the sqlite database.
 
-#### Void
-```
-sudo xbps-install -S libcurl
-```
-To install the optional dependencies, run:
-```
-sudo xbps-install -S sqlite-devel libgcrypt-devel
-```
-
-#### Debian/Ubuntu
+##### Debian/Ubuntu
 ```
 sudo apt install libcurl4-gnutls-dev
 ```
 To install the optional dependencies, run:
 ```
 sudo apt install libsqlite3-dev libgcrypt-dev
+```
+
+##### Void Linux
+```
+sudo xbps-install -S libcurl
+```
+To install the optional dependencies, run:
+```
+sudo xbps-install -S sqlite-devel libgcrypt-devel
 ```
 
 ## How to Use
@@ -83,7 +78,7 @@ By default, dropout-dl will download episodes in a season with the format `<seri
 --season            -s   Interpret the url as a link to a season and download all episodes from all seasons
 --episode           -e   Interpret the url as a link to a single episode
 --captions          -c   Download the captions along with the episode. Overridden by --captions-only if set.
---captions-only     -co  Download the captions only, without the episode.";
+--captions-only     -co  Download the captions only, without the episode.
 ```
 
 If series, season, or episode is not used, the type will be inferred based on the link format.
@@ -96,20 +91,13 @@ password123
 ```
 
 ### Cookies
-If you would like to avoid putting logging in for any reason cookies can be used. The option `browser-cookies` must be provided.
+If you would like to avoid logging in for any reason, cookies can be used. The option `browser-cookies` must be provided.
 #### Firefox
 Create a file named `firefox_profile` in the build directory and paste in your [firefox profile folder path](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data)
 #### Chrome
 Install libgcrypt and create a file named `chrome_profile` in the build directory and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
 #### Other/No Sqlite
 Use the `--force-cookies` program option to manually input cookies.
-
-## TODO
-- [x] Create tests
-- [x] Handle non-alphanumeric characters
-- [ ] Test build process on other setups with other OSs.
-
-
 
 
 ## Contributing
@@ -118,7 +106,6 @@ Use the `--force-cookies` program option to manually input cookies.
 If you have any issues or would like a feature to be added please don't hesitate to submit an issue after checking to make sure it hasn't already been submitted. Using the templates is a good place to start, but sometimes they're overkill. For example, if the program segfaults for you, you don't need to state that the intended behaviour is to not segfault. \
 \
 If you'd like to contribute a good place to start is looking at open issues and trying to fix one with a pull request. \
-**Working on your first Pull Request?** You can learn how from this *free* series [How to Contribute to an Open Source Project on GitHub](https://kcd.im/pull-request)
 
 ## Contributors
 - [mosswg](https://github.com/mosswg)
