@@ -26,6 +26,12 @@ docker run --rm -it -v $PWD/login:/app/login -v $PWD/out:/Downloads dropout-dl:l
 **Note:** The docker image expects the `login` file to be at `/app/login`.\
 You must specify an output directory and mount that directory to the host so that you can retrieve the files from the docker container. In the above command I tell dropout-dl to output everything in `/Downloads` inside the container, which is mounted to a folder named `out` inside the current directory (`$PWD` is current directory).
 
+## Submodule
+This repository uses [a json library](https://github.com/nlohmann/json/). Either clone the repository with the `--recurse-submodules` flag or after cloning run:
+```
+git submodule update --init --recursive
+```
+
 ## How to Build
 ```
 cmake -S <source-dir> -B <build-dir>
