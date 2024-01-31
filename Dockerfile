@@ -10,6 +10,7 @@ RUN apk update && \
 WORKDIR /app
 COPY ./ /app
 
+RUN git submodule update --init --recursive
 RUN cmake -S /app -B build
 WORKDIR /app/build
 RUN make && \
