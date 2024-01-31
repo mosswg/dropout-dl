@@ -349,6 +349,11 @@ namespace dropout_dl {
 
 			metadata = get_meta_data_json(episode_data);
 
+			if (metadata == "ERROR") {
+				std::cerr << "EPISODE ERROR: Could not find metadata. Plesae ensure the episode URL is valid.\n";
+				exit(6);
+			}
+
 			if (verbose) {
 				std::cout << "Got episode metadata: " << metadata << '\n';
 			}
@@ -360,7 +365,7 @@ namespace dropout_dl {
 			}
 
 			if (name == "ERROR") {
-				std::cerr << "EPISODE ERROR: Invalid Episode URL\n";
+				std::cerr << "EPISODE ERROR: Could not find episode name. Plesae ensure the episode URL is valid.\n";
 				exit(6);
 			}
 

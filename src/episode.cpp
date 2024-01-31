@@ -37,7 +37,13 @@ namespace dropout_dl {
 	}
 
 	std::string episode::get_series_name(const nlohmann::json& meta_data) {
-		return meta_data["PROPERTIES"]["CANONICAL_COLLECTION"]["parent"]["name"];
+		if (meta_data.find("PROPERTIES") != meta_data.end() &&
+			meta_data["PROPERTIES"].find("CANONICAL_COLLECTION") != meta_data["PROPERTIES"].end() &&
+			meta_data["PROPERTIES"]["CANONICAL_COLLECTION"].find("parent") != meta_data["PROPERTIES"]["CANONICAL_COLLECTION"].end() &&
+			meta_data["PROPERTIES"]["CANONICAL_COLLECTION"]["parent"].find("name") != meta_data["PROPERTIES"]["CANONICAL_COLLECTION"]["parent"].end()) {
+			return meta_data["PROPERTIES"]["CANONICAL_COLLECTION"]["parent"]["name"];
+		}
+		return "";
 	}
 
 	int episode::get_episode_number(const std::string& page_data, int season_number) {
@@ -55,11 +61,19 @@ namespace dropout_dl {
 	}
 
 	std::string episode::get_season_name(const nlohmann::json& meta_data) {
-		return meta_data["PROPERTIES"]["COLLECTION_TITLE"];
+		if (meta_data.find("PROPERTIES") != meta_data.end() &&
+			meta_data["PROPERTIES"].find("CANONICAL_TITLE") != meta_data["PROPERTIES"].end()) {
+			return meta_data["PROPERTIES"]["COLLECTION_TITLE"];
+		}
+		return "";
 	}
 
 	std::string episode::get_episode_name(const nlohmann::json& meta_data) {
-		return meta_data["PROPERTIES"]["VIDEO_TITLE"];
+		if (meta_data.find("PROPERTIES") != meta_data.end() &&
+			meta_data["PROPERTIES"].find("VIDEO_TITLE") != meta_data["PROPERTIES"].end()) {
+			return meta_data["PROPERTIES"]["VIDEO_TITLE"];
+		}
+		return "ERROR";
 	}
 
 	std::string episode::get_embed_url(const std::string& html_data) {
@@ -342,20 +356,24 @@ namespace dropout_dl {
 
 	void episode::download(const std::string& quality, const std::string& series_directory, std::string filename) {
 		if (filename.empty()) {
+			std::string prefix;
+			if (this->series != "") {
+				prefix = this->series + " - ";
+			}
 			if (this->episode_number != 0) {
 				if (this->episode_number == -1) {
 					/// Episode file without season or episode number in case of special episode
-					filename = this->series + " - " + this->name;
+					filename = prefix + this->name;
 				}
 				else if (this->season_number != 0) {
-					filename = this->series + " - S" + ((this->season_number < 10) ? "0" : "") + std::to_string(this->season_number) + "E" + ((this->episode_number < 10) ? "0" : "") + std::to_string(this->episode_number) + " - " + this->name;
+					filename = prefix + "S" + ((this->season_number < 10) ? "0" : "") + std::to_string(this->season_number) + "E" + ((this->episode_number < 10) ? "0" : "") + std::to_string(this->episode_number) + " - " + this->name;
 				}
 				else {
-					filename = this->series + " - " + this->season + " Episode " + std::to_string(this->episode_number) + " - " + this->name;
+					filename = prefix + this->season + " Episode " + std::to_string(this->episode_number) + " - " + this->name;
 				}
 			}
 			else {
-				filename = this->series + " - " + this->season + " - " + this->name;
+				filename = prefix + this->season + " - " + this->name;
 			}
 			filename = format_filename(filename);
 		}

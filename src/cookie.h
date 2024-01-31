@@ -6,6 +6,7 @@
 #endif
 
 #include "util.h"
+#include <cstdint>
 
 namespace dropout_dl {
 	class cookie {
