@@ -6,6 +6,9 @@
 #include <iostream>
 #include <vector>
 
+#include <chrono> // for to go sleepy
+#include <thread> // for to go sleepy
+
 #include "episode.h"
 
 namespace dropout_dl {
@@ -26,8 +29,10 @@ namespace dropout_dl {
 			std::vector<episode> episodes;
 			/// Whether or not to download captions
 			bool download_captions;
-            /// Whether to skip the video and only download captions
-            bool download_captions_only;
+			/// Whether to skip the video and only download captions
+			bool download_captions_only;
+			/// Ammount of time between downloading episodes
+			uint32_t rate_limit;
 
 			episode get_episode(const std::string& html_data, int& start_point, const cookie& session_cookie);
 
@@ -77,11 +82,12 @@ namespace dropout_dl {
 			 *
 			 * Creates a season object and populates the needed information.
 			 */
-			season(const std::string& url, const std::string& name, const cookie& session_cookie, const std::string& series_name = "", bool download_captions = false, bool download_captions_only = false) {
+			season(const std::string& url, const std::string& name, const cookie& session_cookie, const std::string& series_name = "", bool download_captions = false, bool download_captions_only = false, const uint32_t rate_limit = 2000) {
 				this->url = url;
 				this->download_captions = download_captions;
 				this->download_captions_only = download_captions_only;
 				this->season_number = get_season_number(this->url);
+				this->rate_limit = rate_limit;
 				this->name = name;
 				this->series_name = series_name;
 				std::cout << series_name << ": " << name << ": " << "\n";

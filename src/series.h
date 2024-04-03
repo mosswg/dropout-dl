@@ -28,8 +28,10 @@ namespace dropout_dl {
 			dropout_dl::cookie session_cookie;
 			/// Whether or not to download captions
 			bool download_captions;
-            /// Whether to skip the video and only download captions
-            bool download_captions_only;
+			/// Whether to skip the video and only download captions
+			bool download_captions_only;
+			/// Ammount of time between downloading episodes
+			uint32_t rate_limit;
 
 			/**
 			 *
@@ -51,12 +53,14 @@ namespace dropout_dl {
 			/**
 			 *
 			 * @param url - The url to the season
-			 * @param cookies - The browser cookies
+			 * @param session_cookie - The browser cookie
+			 * @param download_captions_only - Whether or not to only download captions
+			 * @param rate_limit - The delay between downloading episodes
 			 * @return A season object
 			 *
 			 * Gets the season page, which is really just a series page, and creates a season object with all the episodes of the season
 			 */
-			static season get_season(const std::string& url, const cookie& session_cookie, bool download_captions, bool download_captions_only);
+			static season get_season(const std::string& url, const cookie& session_cookie, bool download_captions, bool download_captions_only, uint32_t rate_limit);
 
 			/**
 			 *
@@ -74,12 +78,13 @@ namespace dropout_dl {
 			*
 			* Creates a series object and populates the needed variables
 			*/
-			series(const std::string& url, const dropout_dl::cookie& session_cookie, bool download_captions = false, bool download_captions_only = false) {
+			series(const std::string& url, const dropout_dl::cookie& session_cookie, bool download_captions = false, bool download_captions_only = false, const uint32_t rate_limit = 2000) {
 				this->url = url;
 				this->download_captions = download_captions;
 				this->download_captions_only = download_captions_only;
 				this->page_data = get_generic_page(url);
 				this->name = get_series_name(page_data);
+				this->rate_limit = rate_limit;
 				this->session_cookie = session_cookie;
 				if (name == "ERROR") {
 					std::cerr << "SERIES PARSE ERROR: Could not parse series name\n";

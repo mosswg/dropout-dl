@@ -311,7 +311,19 @@ namespace dropout_dl {
 
 			this->config_data = get_generic_page(this->config_url);
 
-			this->config_json = nlohmann::json::parse(config_data);
+			try {
+				this->config_json = nlohmann::json::parse(config_data);
+			}
+			catch (nlohmann::detail::parse_error e) {
+				if (this->config_data == "error code: 1015") {
+					std::cout << "EPISODE ERROR: You are rate limited. Wait a few minutes, increase the -r flag, and try again\n";
+					std::cout << "\tIf you are using the default rate please report this on github\n";
+					exit(10);
+				}
+				else {
+					std::cout << "EPISODE ERROR: could not parse json: " << config_data << "\n";
+				}
+			}
 
 			if (download_captions || download_captions_only) {
 				this->captions_url = get_captions_url();
@@ -412,7 +424,19 @@ namespace dropout_dl {
 
 			this->config_data = get_generic_page(this->config_url);
 
-			this->config_json = nlohmann::json::parse(config_data);
+			try {
+				this->config_json = nlohmann::json::parse(config_data);
+			}
+			catch (nlohmann::detail::parse_error e) {
+				if (this->config_data == "error code: 1015") {
+					std::cout << "EPISODE ERROR: You are rate limited. Wait a few minutes, increase the -r flag, and try again\n";
+					std::cout << "\tIf you are using the default rate please report this on github\n";
+					exit(10);
+				}
+				else {
+					std::cout << "EPISODE ERROR: could not parse json: " << config_data << "\n";
+				}
+			}
 
 			if (download_captions || download_captions_only) {
 				this->captions_url = get_captions_url();

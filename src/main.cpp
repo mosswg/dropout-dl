@@ -25,6 +25,7 @@ namespace dropout_dl {
 		bool is_episode = false;
 		bool download_captions = false;
         bool download_captions_only = false;
+		uint32_t rate_limit = 2000; // rate limit in ms
 		std::string quality;
 		std::string filename;
 		std::string output_directory;
@@ -106,6 +107,13 @@ namespace dropout_dl {
 					}
 					output_directory = args[++i];
 				}
+				else if (arg == "rate" || arg == "r") {
+					if (i + 1 >= args.size()) {
+						std::cerr << "ARGUMENT PARSE ERROR: --rate used with too few following arguments\n";
+						exit(8);
+					}
+					rate_limit = std::stoi(args[++i]);
+				}
 				else if (arg == "series" || arg == "S") {
 					is_series = true;
 				}
@@ -134,6 +142,8 @@ namespace dropout_dl {
 								 "\t--output-directory  -d   Set the directory where files are output\n"
 								 "\t--verbose           -v   Display debug information while running\n"
 								 "\t--browser-cookies   -bc  Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'\n"
+								 "\t--rate              -r   Set the ammount of time in milliseconds between getting episodes\n"
+								 "\t                             Only affects series and season downloads. Defaults to 2000\n"
 								 "\t--force-cookies          Interpret the next to argument as the session cookie\n"
 								 "\t--series            -S   Interpret the url as a link to a series and download all episodes from all seasons\n"
 								 "\t--season            -s   Interpret the url as a link to a season and download all episodes from all seasons\n"
@@ -350,6 +360,8 @@ int main(int argc, char** argv) {
 		std::cout << "quality: " << options.quality << std::endl;
 		std::cout << "verbose: " << options.verbose << std::endl;
 		std::cout << "url: \"" << options.url << '"' << std::endl;
+		std::cout << "rate: " << options.rate_limit << std::endl;
+		std::cout << "captions: " << options.download_captions << std::endl;
 	}
 
 	std::string firefox_profile;
@@ -379,7 +391,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting series\n";
 		}
-		dropout_dl::series series(options.url, options.session_cookie, options.download_captions, options.download_captions_only);
+		dropout_dl::series series(options.url, options.session_cookie, options.download_captions, options.download_captions_only, options.rate_limit);
 
 		series.download(options.quality, options.output_directory);
 	}
@@ -387,7 +399,7 @@ int main(int argc, char** argv) {
 		if (options.verbose) {
 			std::cout << "Getting season\n";
 		}
-		dropout_dl::season season = dropout_dl::series::get_season(options.url, options.session_cookie, options.download_captions, options.download_captions_only);
+		dropout_dl::season season = dropout_dl::series::get_season(options.url, options.session_cookie, options.download_captions, options.download_captions_only, options.rate_limit);
 
 		season.download(options.quality, options.output_directory + "/" + season.series_name);
 	}

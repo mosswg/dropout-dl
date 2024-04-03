@@ -195,7 +195,14 @@ namespace dropout_dl {
 				std::cout << "cdn: " << cdn_url << "\n";
 			}
 
-			auto cdn_json = nlohmann::json::parse(get_generic_page(cdn_url));
+			auto cdn_json_str = get_generic_page(cdn_url);
+			nlohmann::json cdn_json;
+			try {
+				cdn_json = nlohmann::json::parse(cdn_json_str);
+			}
+			catch (nlohmann::detail::parse_error e) {
+				std::cout << "EPISODE ERROR: could not parse json: " << cdn_json_str << "\n";
+			}
 			std::string base_url = cdn_url.substr(0, cdn_url.find_last_of("/")) + "/" + (std::string)cdn_json["base_url"];
 			std::string video_url;
 			for (const auto& video : cdn_json["video"]) {

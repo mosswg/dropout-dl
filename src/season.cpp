@@ -33,6 +33,7 @@ namespace dropout_dl {
 					}
 				}
 			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(rate_limit));
 		}
 		std::cerr << "SEASON PARSE ERROR: Error finding episode" << std::endl;
 		exit(8);

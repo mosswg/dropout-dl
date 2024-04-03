@@ -91,7 +91,7 @@ namespace dropout_dl {
 							}
 							season_name = season_name.substr(name_start, season_name.size() - name_start - name_end);
 
-							out.emplace_back(season_url, season_name, this->session_cookie, this->name, this->download_captions, this->download_captions_only);
+							out.emplace_back(season_url, season_name, this->session_cookie, this->name, this->download_captions, this->download_captions_only, this->rate_limit);
 
 							std::cout << out.back().name << ": " << out.back().url << '\n';
 
@@ -115,7 +115,7 @@ namespace dropout_dl {
 	}
 
 
-	season series::get_season(const std::string &url, const cookie& session_cookie, bool download_captions, bool download_captions_only = false) {
+	season series::get_season(const std::string &url, const cookie& session_cookie, bool download_captions, bool download_captions_only = false, uint32_t rate_limit = 2000) {
 		std::string html_data = get_generic_page(url);
 
 		std::string search_class("js-switch-season");
@@ -184,7 +184,7 @@ namespace dropout_dl {
 								season_name = season_name.substr(name_start,
 																 season_name.size() - name_start - name_end);
 
-								return {season_url, season_name, session_cookie, get_series_name(html_data), download_captions, download_captions_only};
+								return {season_url, season_name, session_cookie, get_series_name(html_data), download_captions, download_captions_only, rate_limit};
 							}
 
 							season_url.clear();
