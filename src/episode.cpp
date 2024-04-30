@@ -177,8 +177,8 @@ namespace dropout_dl {
 	}
 
 	std::vector<std::string> episode::get_qualities() {
-		if (!qualities.empty()) {
-			return qualities;
+		if (!video_qualities.empty() && !audio_qualities.empty()) {
+			return video_qualities;
 		}
 		auto& streams = this->config_json["request"]["files"]["progressive"];
 
@@ -203,37 +203,47 @@ namespace dropout_dl {
 			catch (nlohmann::detail::parse_error e) {
 				std::cout << "EPISODE ERROR: could not parse json: " << cdn_json_str << "\n";
 			}
-			std::string base_url = cdn_url.substr(0, cdn_url.find_last_of("/")) + "/" + (std::string)cdn_json["base_url"];
-			std::string video_url;
+			std::string base_url = cdn_url.substr(0, cdn_url.find_last_of("/")) + "/../";
 			for (const auto& video : cdn_json["video"]) {
-				this->qualities.push_back(std::to_string((long)video["height"]) + "p");
-				video_url = base_url + "video/" + (std::string)video["index_segment"];
-				/// Remove the part that segments the video.
-				video_url = video_url.substr(0, video_url.find_last_of("?"));
-				this->quality_urls.push_back(video_url);
+				this->video_qualities.push_back(std::to_string((long)video["height"]) + "p");
+				std::string video_base_url = base_url + (std::string)video["base_url"];
+				std::vector<std::string> video_segment_urls = {};
+				for (const auto& seg : video["segments"]) {
+					video_segment_urls.push_back(video_base_url + (std::string)seg["url"]);
+				}
+				// std::cout << base_url << "\n";
+				this->video_initial_segment_quality.push_back((std::string)video["init_segment"]);
+				this->video_quality_segments.push_back(video_segment_urls);
 				if (this->verbose) {
-					std::cout << "Found quality: " << qualities.back() << std::endl;
+					std::cout << "Found video quality: " << video_qualities.back() << std::endl;
+				}
+			}
+			for (const auto& audio : cdn_json["audio"]) {
+				std::string audio_base_url = base_url + (std::string)audio["base_url"];
+				this->audio_qualities.push_back(std::to_string((long)audio["bitrate"]));
+				std::vector<std::string> audio_segment_urls = {};
+				for (const auto& seg : audio["segments"]) {
+					audio_segment_urls.push_back(audio_base_url + (std::string)seg["url"]);
+				}
+				this->audio_initial_segment_quality.push_back((std::string)audio["init_segment"]);
+				this->audio_quality_segments.push_back(audio_segment_urls);
+				if (this->verbose) {
+					std::cout << "Found Audio quality: " << audio_qualities.back() << std::endl;
 				}
 			}
 
-			this->audio_url = base_url + "audio/" + (std::string)cdn_json["audio"][0]["index_segment"];
-			this->audio_url = audio_url.substr(0, audio_url.find_last_of("?"));
-			if (this->verbose) {
-				std::cout << "Audio url: " << this->audio_url << std::endl;
-			}
-
-			return this->qualities;
+			return this->video_qualities;
 		}
 
 		for (const auto& stream : streams) {
-			this->qualities.push_back(stream["quality"]);
-			this->quality_urls.push_back(stream["url"]);
+			this->video_qualities.push_back(stream["quality"]);
+			this->video_quality_segments.push_back({(std::string)stream["url"]});
 			if (this->verbose) {
-				std::cout << "Found quality: " << qualities.back() << std::endl;
+				std::cout << "Found quality: " << video_qualities.back() << std::endl;
 			}
 		}
 
-		return qualities;
+		return video_qualities;
 	}
 
 	std::string episode::get_captions_url() {
@@ -263,34 +273,40 @@ namespace dropout_dl {
 		return "";
 	}
 
-	std::string episode::get_video_url(const std::string& quality) {
-		for (int i = 0; i < qualities.size(); i++) {
-			if (qualities[i] == quality) {
-				return quality_urls[i];
+
+	int episode::get_video_quality_index(const std::string& quality) {
+		for (int i = 0; i < video_qualities.size(); i++) {
+			if (video_qualities[i] == quality) {
+				return i;
 			}
 		}
 		std::cerr << "ERROR: quality of " << quality << " not found\nPossible qualities: ";
-		for (int i = 0; i < qualities.size(); i++) {
-			std::cerr << qualities[i];
-			if (i != qualities.size() - 1) {
+		for (int i = 0; i < video_qualities.size(); i++) {
+			std::cerr << video_qualities[i];
+			if (i != video_qualities.size() - 1) {
 				std::cerr << ", ";
 			}
 		}
 		exit(6);
 	}
 
-	std::string episode::get_video_data(const std::string &quality, const std::string& filename) {
+	std::string episode::get_video_segment_url(int quality, int segment) {
+		return video_quality_segments[quality][segment];
+	}
+
+	std::string episode::get_video_segment_data(int quality, int segment_index, const std::string& filename) {
 		CURL* curl = curl_easy_init();
+		std::string progress_name = filename + " - video segment: " + std::to_string(segment_index);
 		CURLcode res;
 		if(curl) {
 			std::string out;
 
-			curl_easy_setopt(curl, CURLOPT_URL, get_video_url(quality).c_str());
+			curl_easy_setopt(curl, CURLOPT_URL, get_video_segment_url(quality, segment_index).c_str());
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::WriteCallback);
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
-			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
-			curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, dropout_dl::curl_progress_func);
-			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &filename);
+			// curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
+			// curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, dropout_dl::curl_progress_func);
+			// curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &progress_name);
 			res = curl_easy_perform(curl);
 			curl_easy_cleanup(curl);
 
@@ -299,18 +315,23 @@ namespace dropout_dl {
 		return "CURL ERROR";
 	}
 
-	std::string episode::get_audio_data(const std::string& filename) {
+	std::string episode::get_audio_segment_url(int quality, int segment) {
+		return audio_quality_segments[quality][segment];
+	}
+
+	std::string episode::get_audio_segment_data(int quality, int segment_index, const std::string& filename) {
 		CURL* curl = curl_easy_init();
+		std::string progress_name = filename + " - audio segment: " + std::to_string(segment_index);
 		CURLcode res;
 		if(curl) {
 			std::string out;
 
-			curl_easy_setopt(curl, CURLOPT_URL, this->audio_url.c_str());
+			curl_easy_setopt(curl, CURLOPT_URL, this->get_audio_segment_url(quality, segment_index).c_str());
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::WriteCallback);
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
-			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
-			curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, dropout_dl::curl_progress_func);
-			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &filename);
+			// curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
+			// curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, dropout_dl::curl_progress_func);
+			// curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &progress_name);
 			res = curl_easy_perform(curl);
 			curl_easy_cleanup(curl);
 
@@ -320,12 +341,18 @@ namespace dropout_dl {
 	}
 
 
-	void episode::download_quality(const std::string& quality, const std::string& base_directory, const std::string& filename) {
+	void episode::download_quality(const std::string& quality, const std::string& base_directory, const std::string& filename, bool lowest_audio_quality) {
 		if (!std::filesystem::is_directory(base_directory)) {
 			std::filesystem::create_directories(base_directory);
 			if (this->verbose) {
 				std::cout << "Creating quality directory" << '\n';
 			}
+		}
+
+		/// TODO: make this verify lowest quality and possibly add options for any specific quality
+		int audio_quality_index = 0;
+		if (lowest_audio_quality) {
+			audio_quality_index = this->audio_qualities.size() - 1;
 		}
 
 		std::string filepath = base_directory + "/" + filename;
@@ -334,17 +361,46 @@ namespace dropout_dl {
 			std::cout << YELLOW << "File already exists: " << filepath << RESET << '\n';
 			return;
 		}
-		if (!check_existing(quality,filepath) && !this->download_captions_only){
-			std::fstream out(filepath + ".mp4",
+		if (!check_existing(quality,filepath + ".mp4") && !this->download_captions_only) {
+			int video_quality_index = get_video_quality_index(quality);
+			std::string tmp;
+			if (this->verbose) {
+				std::cout << "Number of Video Segments: " << this->video_quality_segments[video_quality_index].size() << "\n";
+			}
+			std::fstream out(filepath + ".m4s",
 				std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-			out << this->get_video_data(quality, filepath);
+			out << dropout_dl::base64_decode(video_initial_segment_quality[video_quality_index]);
+
+			int number_of_video_segs = this->video_quality_segments[video_quality_index].size();
+			for (int i = 0; i < number_of_video_segs; i++) {
+				dropout_dl::segment_progress_func(filepath + ".m4s", i, number_of_video_segs);
+				out << this->get_video_segment_data(video_quality_index, i, filepath);
+			}
 			out.close();
+			std::cout << std::endl;
+
+			if (this->verbose) {
+				std::cout << "Number of Audio Segments: " << this->audio_quality_segments.front().size() << "\n";
+			}
 			out = std::fstream(filepath + ".m4a",
 				std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
 
-			out << this->get_audio_data(filepath);
+			out << dropout_dl::base64_decode(audio_initial_segment_quality[audio_quality_index]);
+
+			for (int i = 0; i < this->audio_quality_segments[audio_quality_index].size(); i++) {
+				dropout_dl::segment_progress_func(filepath + ".m4a", i, number_of_video_segs);
+				tmp = this->get_audio_segment_data(audio_quality_index, i, filepath);
+				if (tmp == "Not Found") {
+					std::cout << YELLOW << "Could not get audio segment " << i << "\n";
+					break;
+				}
+				out << tmp;
+			}
 			out.close();
+
+			std::cout << std::endl;
+
 		}
 
 		if (!this->captions_url.empty()) {
@@ -354,6 +410,26 @@ namespace dropout_dl {
 			captions_file << get_generic_page(this->captions_url);
 
 		}
+
+		#ifdef DROPOUT_DL_FFMPEG
+		std::string ffmpeg_cmd = "ffmpeg -i '" + filepath + ".m4a' -i '" + filepath + ".m4s'";
+		if (!this->captions_url.empty()) {
+			ffmpeg_cmd += " -i '" + filepath + ".vtt' -metadata:s:s:0 language=eng";
+		}
+		ffmpeg_cmd += " -c copy '" + filepath + ".mp4'";
+		if (!this->verbose) {
+			ffmpeg_cmd += " > /dev/null";
+		}
+		else {
+			std::cout << ffmpeg_cmd << "\n";
+		}
+		int ffmpeg_ret = std::system(std::string(ffmpeg_cmd).c_str());
+
+		if (ffmpeg_ret == 0) {
+			std::filesystem::remove(filepath + ".m4a");
+			std::filesystem::remove(filepath + ".m4s");
+		}
+		#endif
 
 		std::cout << GREEN << filepath << RESET;
 
@@ -387,15 +463,15 @@ namespace dropout_dl {
 
 
 		if (quality == "all") {
-			for (const auto &possible_quality: this->qualities) {
-				this->download_quality(possible_quality, series_directory + possible_quality, filename);
+			for (const auto &possible_video_quality: this->video_qualities) {
+				this->download_quality(possible_video_quality, series_directory + possible_video_quality, filename);
 			}
 		}
 		else if (quality == "highest") {
 			std::string highest_quality;
 			int highest_value = 0;
 			int current_value;
-			for (const auto &possible_quality: this->qualities) {
+			for (const auto &possible_quality: this->video_qualities) {
 				current_value = get_int_in_string(possible_quality);
 				if (current_value > highest_value) {
 					highest_value = current_value;
@@ -408,46 +484,25 @@ namespace dropout_dl {
 			std::string lowest_quality;
 			int lowest_value = INT_MAX;
 			int current_value;
-			for (const auto &possible_quality: this->qualities) {
+			for (const auto &possible_quality: this->video_qualities) {
 				current_value = get_int_in_string(possible_quality);
 				if (current_value < lowest_value) {
 					lowest_value = current_value;
 					lowest_quality = possible_quality;
 				}
 			}
-			this->download_quality(lowest_quality, series_directory, filename);
+			this->download_quality(lowest_quality, series_directory, filename, true);
 		}
 		else {
 			this->download_quality(quality, series_directory, filename);
 		}
 	}
 
+	/// TODO: Reimplement size checking. I.E. replace an existing file if the size is not the same
 	bool episode::check_existing(const std::string &quality, const std::string& filename){
 		std::filesystem::path file_path = filename + ".mp4";
-		curl_off_t file_size;
-		CURL* curl = curl_easy_init();
-    	CURLcode res;
-		if (curl) {
-			curl_easy_setopt(curl, CURLOPT_URL, get_video_url(quality).c_str());
-			curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);  // Set to HTTP HEAD request
-			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::EmptyWriteCallback);
-
-			res = curl_easy_perform(curl);
-
-			if (res == CURLE_OK) {
-				res = curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &file_size);
-			}
-			curl_easy_cleanup(curl);
-    	}
 		if (std::filesystem::exists(file_path)) {
-        	std::uintmax_t file_size_disk = std::filesystem::file_size(file_path);
-				if (file_size_disk-1 == file_size){
-					return true;
-				}
-				else if (file_size_disk == file_size){
-					return true;
-				}
-				else return false;
+			return true;
 		}
 		else return false;
 	}

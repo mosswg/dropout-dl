@@ -170,6 +170,30 @@ namespace dropout_dl {
 		return 0;
 	}
 
+	void segment_progress_func(std::string filename, int num_done, int total) {
+		const double number_chars = 50;
+		const char* full_character = "▓";
+		const char* empty_character = "░";
+
+		current_time = time_ms();
+		if (current_time - 50 > last_progress_timestamp) {
+			// Percent of the file downloaded. Adding one to round up so that when its done it shows as a full bar rather than missing one.
+			double percent_done = (((double)num_done / (double)total) * number_chars) + 1;
+			double percent_done_clone = percent_done;
+			std::cout << filename << " [";
+			while (percent_done_clone-- > 0) {
+				std::cout << full_character;
+			}
+			while (percent_done++ < number_chars) {
+				std::cout << empty_character;
+			}
+			std::cout << "] " << num_done << " / " << total << " Segments                                 ";
+			putchar('\r');
+			last_progress_timestamp = time_ms();
+			std::cout.flush();
+		}
+	}
+
 	size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	{
 		((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -372,4 +396,90 @@ namespace dropout_dl {
 
 		return -1;
 	}
+
+
+// base64 code is take from http://renenyffenegger.ch/notes/development/Base64/Encoding-and-decoding-base-64-with-cpp/
+	unsigned int base64_pos_of_char(const unsigned char chr) {
+		//
+		// Return the position of chr within base64_encode()
+		//
+
+		if      (chr >= 'A' && chr <= 'Z') return chr - 'A';
+		else if (chr >= 'a' && chr <= 'z') return chr - 'a' + ('Z' - 'A')               + 1;
+		else if (chr >= '0' && chr <= '9') return chr - '0' + ('Z' - 'A') + ('z' - 'a') + 2;
+		else if (chr == '+' || chr == '-') return 62; // Be liberal with input and accept both url ('-') and non-url ('+') base 64 characters (
+		else if (chr == '/' || chr == '_') return 63; // Ditto for '/' and '_'
+		else
+			//
+			// 2020-10-23: Throw std::exception rather than const char*
+			//(Pablo Martin-Gomez, https://github.com/Bouska)
+			//
+			throw std::runtime_error("Input is not valid base64-encoded data.");
+	}
+
+	std::string base64_decode(const std::string& encoded_string) {
+		//
+		// decode(…) is templated so that it can be used with String = const std::string&
+		// or std::string_view (requires at least C++17)
+		//
+
+		if (encoded_string.empty()) return std::string();
+
+		size_t length_of_string = encoded_string.length();
+		size_t pos = 0;
+
+		//
+		// The approximate length (bytes) of the decoded string might be one or
+		// two bytes smaller, depending on the amount of trailing equal signs
+		// in the encoded string. This approximation is needed to reserve
+		// enough space in the string to be returned.
+		//
+		size_t approx_length_of_decoded_string = length_of_string / 4 * 3;
+		std::string ret;
+		ret.reserve(approx_length_of_decoded_string);
+
+		while (pos < length_of_string) {
+			// Iterate over encoded input string in chunks. The size of all
+			// chunks except the last one is 4 bytes.
+			//
+			// The last chunk might be padded with equal signs or dots
+			// in order to make it 4 bytes in size as well, but this
+			// is not required as per RFC 2045.
+			//
+			// All chunks except the last one produce three output bytes.
+			//
+			// The last chunk produces at least one and up to three bytes.
+			size_t pos_of_char_1 = base64_pos_of_char(encoded_string.at(pos+1) );
+
+			//
+			// Emit the first output byte that is produced in each chunk:
+			//
+			ret.push_back(static_cast<std::string::value_type>(((base64_pos_of_char(encoded_string.at(pos+0))) << 2) + ((pos_of_char_1 & 0x30 ) >> 4)));
+
+			if ((pos + 2 < length_of_string) &&  // Check for data that is not padded with equal signs (which is allowed by RFC 2045)
+				encoded_string.at(pos+2) != '=' &&
+				encoded_string.at(pos+2) != '.' // accept URL-safe base 64 strings, too, so check for '.' also.
+				) {
+				//
+				// Emit a chunk's second byte (which might not be produced in the last chunk).
+				//
+				unsigned int pos_of_char_2 = base64_pos_of_char(encoded_string.at(pos+2));
+				ret.push_back(static_cast<std::string::value_type>( (( pos_of_char_1 & 0x0f) << 4) + (( pos_of_char_2 & 0x3c) >> 2)));
+
+				if ((pos + 3 < length_of_string) &&
+					encoded_string.at(pos+3) != '=' &&
+					encoded_string.at(pos+3) != '.') {
+					//
+					// Emit a chunk's third byte (which might not be produced in the last chunk).
+					//
+					ret.push_back(static_cast<std::string::value_type>(((pos_of_char_2 & 0x03) << 6) + base64_pos_of_char(encoded_string.at(pos+3))));
+				}
+			}
+
+			pos += 4;
+		}
+
+		return ret;
+	}
+
 }

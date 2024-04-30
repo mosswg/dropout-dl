@@ -1,10 +1,11 @@
 FROM alpine
 
-RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
+RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories && \
+	echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
 	echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
 
 RUN apk update && \
-	apk add curl curl-dev alpine-sdk cmake make
+	apk --no-cache add make gcc g++ musl-dev curl curl-dev git cmake make ffmpeg
 
 # Copy application now
 WORKDIR /app

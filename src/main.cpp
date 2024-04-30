@@ -25,6 +25,7 @@ namespace dropout_dl {
 		bool is_episode = false;
 		bool download_captions = false;
         bool download_captions_only = false;
+		bool keep_segment_files = false;
 		uint32_t rate_limit = 2000; // rate limit in ms
 		std::string quality;
 		std::string filename;
@@ -129,6 +130,7 @@ namespace dropout_dl {
                 else if (arg == "captions-only" || arg == "co") {
 					download_captions_only = true;
 				}
+				//// TODO: Add support for keeping m4a and m4s files
 				else if (arg == "help" || arg == "h") {
 					std::cout << "Usage: dropout-dl [OPTIONS] <url> [OPTIONS]\n"
 								 "\n"

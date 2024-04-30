@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <vector>
 
 #include <curl/curl.h>
 
@@ -99,6 +100,15 @@ namespace dropout_dl {
 
 	/**
 	 *
+	 * @param filename - Name of the file that is being downloaded
+	 * @param downloaded - The current amount of bytes that have been downloaded
+	 *
+	 * Displays the filename followed by a bar which show the percent of segments downloaded followed by the number of segments downloaded out of the total.
+	 */
+	void segment_progress_func(std::string filename, int num_done, int total);
+
+	/**
+	 *
 	 * @param contents - What we're writing
 	 * @param size - The amount that is being written
 	 * @param nmemb - The number of bytes per unit of size
@@ -165,4 +175,8 @@ namespace dropout_dl {
 	 * @return an integer between 0 and 11 for the month e.g. "Feb" -> 1. Or -1 if invalid.
 	 */
 	int get_month_string_as_int(const std::string& month);
+
+
+	unsigned int base64_pos_of_char(const unsigned char chr);
+	std::string base64_decode(const std::string& encoded_string);
 }

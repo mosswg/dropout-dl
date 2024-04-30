@@ -53,12 +53,20 @@ namespace dropout_dl {
 		std::string config_data;
 		/// The json parsed data of the main config page.
 		nlohmann::json config_json;
+		/// The list of the video qualities available for the episode. This is a parallel array with the quality_urls vector
+		std::vector<std::string> video_qualities;
 		/// The list of the qualities available for the episode. This is a parallel array with the quality_urls vector
-		std::vector<std::string> qualities;
-		/// The list of the urls correlating with the qualities array.
-		std::vector<std::string> quality_urls;
-		/// The audio url. This is only needed if the video is from a cdn.
-		std::string audio_url;
+		std::vector<std::string> audio_qualities;
+		/// The names of the files created. Should go: initial segment, video, audio, captions. The only strict part is the initial segment must come first
+		std::vector<std::string> filenames;
+		/// Base64 video initial segments
+		std::vector<std::string> video_initial_segment_quality;
+		/// Base64 audio initial segments
+		std::vector<std::string> audio_initial_segment_quality;
+		/// The list of the audio segment urls correlating with the qualities array.
+		std::vector<std::vector<std::string>> audio_quality_segments;
+		/// The list of the video segment urls correlating with the qualities array.
+		std::vector<std::vector<std::string>> video_quality_segments;
 		/// Whether to skip the video and only download captions
 		bool download_captions_only;
 
@@ -171,33 +179,58 @@ namespace dropout_dl {
 		 */
 		std::string get_captions_url();
 
-		/**
-		 *
-		 * @param quality - The quality of the video
-		 * @return The url to the video
-		 *
-		 * Get a link to the video of the episode with the given <b>quality</b>. <b>Quality</b> must be contained in the <b>qualities</b> vector otherwise this function will give an error and exit the program after listing the available qualities.
-		 */
-		std::string get_video_url(const std::string& quality);
 
 		/**
 		 *
 		 * @param quality - The quality of the video
-		 * @param filename - The filename which will be displayed will downloading the video
-		 * @return The video data
+		 * @return The index of that quality in the quality array
 		 *
-		 * Download the episode with the given quality and return the raw video data as a string. The <b>filename</b> parameter is only used for displaying while downloading the video so that the user knows what is being downloaded. The <b>filename</b> argument is entirely optional and this function will not place the video into a file whether the value is given or not.
+		 * <b>Quality</b> must be contained in the <b>qualities</b> vector otherwise this function will give an error and exit the program after listing the available qualities.
 		 */
-		std::string get_video_data(const std::string& quality, const std::string& filename = "");
+		int get_video_quality_index(const std::string& quality);
 
 		/**
 		 *
+		 * @param quality - The quality of the video
+		 * @param segment - Segment index
+		 * @return The url to the video segment
+		 *
+		 * Get a link to the segment of the video at index <b>segment</b> of the episode with the given <b>quality</b>. <b>Quality</b> must be a valid index in the <b>qualities</b>.
+		 */
+		std::string get_video_segment_url(int quality, int segment);
+
+
+		/**
+		 *
+		 * @param quality - The quality of the video
+		 * @param segment - Segment index
+		 * @return The url to the audio segment
+		 *
+		 * Get a link to the segment of the audio at index <b>segment</b> of the episode with the given <b>quality</b>. <b>Quality</b> must be a valid index into <b>qualities</b>.
+		 */
+		std::string get_audio_segment_url(int quality, int segment);
+
+		/**
+		 *
+		 * @param quality - The quality of the video
+		 * @param segment_index - The index of the segment
 		 * @param filename - The filename which will be displayed will downloading the video
 		 * @return The video data
 		 *
-		 * Download the audio of the episode. <b>filename</b> is only used for progress display.
+		 * Download the segment of the episode with the given quality and segment_index and return the raw video data as a string. The <b>filename</b> parameter is only used for displaying while downloading the video so that the user knows what is being downloaded. The <b>filename</b> argument is entirely optional and this function will not place the video into a file whether the value is given or not.
 		 */
-		std::string get_audio_data(const std::string& filename = "");
+		std::string get_video_segment_data(int quality, int segment_index, const std::string& filename = "");
+
+		/**
+		 *
+		 * @param quality - The quality of the video
+		 * @param segment_index - The index of the segment
+		 * @param filename - The filename which will be displayed will downloading the video
+		 * @return The video data
+		 *
+		 * Download the segment of the audio of the episode. <b>filename</b> is only used for progress display.
+		 */
+		std::string get_audio_segment_data(int quality, int segment_index, const std::string& filename = "");
 
 
 		/**
@@ -209,7 +242,7 @@ namespace dropout_dl {
 		 * Downloads the episode using the get_video_data function and places it into the <b>filename</b> file in the <b>base_directory</b> directory.
 		 * If the file already exists it will output the name in yellow and will not redownload.
 		 */
-		void download_quality(const std::string& quality, const std::string& base_directory, const std::string& filename);
+		void download_quality(const std::string& quality, const std::string& base_directory, const std::string& filename, bool lowest_audio_quality = false);
 
 		/**
 		 *
