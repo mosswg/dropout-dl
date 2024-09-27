@@ -214,12 +214,13 @@ namespace dropout_dl {
 		 *
 		 * @param quality - The quality of the video
 		 * @param segment_index - The index of the segment
+		 * @param curl_buffer - The buffer that the video segment will be written to via Curl
 		 * @param filename - The filename which will be displayed will downloading the video
-		 * @return The video data
+		 * @return True if it succeeded, false if it did not
 		 *
 		 * Download the segment of the episode with the given quality and segment_index and return the raw video data as a string. The <b>filename</b> parameter is only used for displaying while downloading the video so that the user knows what is being downloaded. The <b>filename</b> argument is entirely optional and this function will not place the video into a file whether the value is given or not.
 		 */
-		std::string get_video_segment_data(int quality, int segment_index, const std::string& filename = "");
+		bool get_video_segment_data(int quality, int segment_index, std::string& curl_buffer, const std::string& filename = "");
 
 		/**
 		 *
