@@ -1,0 +1,17 @@
+name: Build
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build-project:
+    name: Build Project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v4.1.7
+
+      - name: Build Project
+        uses: threeal/cmake-action@v2.0.0
+        with:
+          source-dir: \.
+          build-dir: build
