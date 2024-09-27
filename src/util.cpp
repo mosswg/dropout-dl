@@ -1,5 +1,7 @@
 #include "util.h"
+#include "color.h"
 #include <stdint.h>
+#include <regex>
 
 namespace dropout_dl {
 	// dropout-dl helpers
@@ -109,16 +111,21 @@ namespace dropout_dl {
 		for (int i = 0; i < str.size(); i++) {
 			char c = str[i];
 
-			// Skip these
-			if (c == '?' || c == ':' || c == '\\') {
-				continue;
-			}
-			// Replace these with dashes
-			else if (c == '/') {
-				out += '-';
-			}
-			else {
-				out += c;
+			switch(c) {
+				//Ignored characters
+				case '?':
+				case ':':
+				case '\\':
+				case '\'':
+				case '(':
+				case ')':
+					continue;
+				//Characters converted into dashes
+				case '/':
+					out += '-';
+					break;
+				default:
+					out += c;
 			}
 		}
 
@@ -196,7 +203,12 @@ namespace dropout_dl {
 
 	size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	{
-		((std::string*)userp)->append((char*)contents, size * nmemb);
+		if(userp == nullptr)
+			std::cerr << RED << "ERROR: WriteCallBack failed to write to output buffer :(\n";
+		else
+			((std::string*)userp)->append((char*)contents, size * nmemb);
+		if(!size)
+			std::cout << YELLOW << "WARN: Packet had no data :(\n";
 		return size * nmemb;
 	}
 
@@ -311,89 +323,25 @@ namespace dropout_dl {
 
 		return result;
 	}
-
-	int get_int_in_string(const std::string& string) {
-		int tmp = 0;
-		return get_int_in_string(string, tmp);
-	}
-
-	int get_int_in_string(const std::string& string, int& starting_index) {
-		int out = 0;
-		int negative = 1;
-		bool found_number = false;
-		for (uint32_t i = starting_index; i < string.length(); i++) {
-			if (!found_number) {
-				if (string[i] == '-') {
-					negative = -1;
-				}
-				else if (negative == -1) {
-					negative = 1;
-				}
-			}
-
-			if (string[i] <= '9' && string[i] >= '0') {
-				found_number = true;
-				out *= 10;
-				out += string[i] - '0';
-			}
-			else if (found_number) {
-				starting_index = i;
-				return out * negative;
-			}
+	int get_int_in_string(const std::string& str, int& starting_index)  {
+		std::smatch string_number;
+		if(!std::regex_search(str,string_number,std::regex("-?\\d+"))) {
+			std::cerr << YELLOW << "WARN: Unable to find number in string '" << str << "'!\n" << RESET;
+			return 0;
 		}
-		starting_index = string.length();
-		return out * negative;
+        starting_index = string_number.position();
+		return std::stoi(string_number[0]);
+    }
+	int get_int_in_string(const std::string& string) {
+		int temp;
+		return get_int_in_string(string,temp); // lol
 	}
 
 	int get_month_string_as_int(const std::string& month) {
-		if (month == "Jan") {
-			return 0;
-		}
-
-		if (month == "Feb") {
-			return 1;
-		}
-
-		if (month == "Mar") {
-			return 2;
-		}
-
-		if (month == "Apr") {
-			return 3;
-		}
-
-		if (month == "May") {
-			return 4;
-		}
-
-		if (month == "Jun") {
-			return 5;
-		}
-
-		if (month == "Jul") {
-			return 6;
-		}
-
-		if (month == "Aug") {
-			return 7;
-		}
-
-		if (month == "Sep") {
-			return 8;
-		}
-
-		if (month == "Oct") {
-			return 9;
-		}
-
-		if (month == "Nov") {
-			return 10;
-		}
-
-		if (month == "Dec") {
-			return 11;
-		}
-
+		// NOTE: We probably could've used <chrono> here but~ that header's pretty big so this is probably faster to compile :^)
+		static std::vector<std::string> month_strings {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
+		for(int i = 0; i < 12; ++i)
+			if(month_strings[i] == month) return i;
 		return -1;
 	}
 
