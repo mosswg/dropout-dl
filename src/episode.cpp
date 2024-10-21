@@ -2,7 +2,7 @@
 // Created by moss on 9/28/22.
 //
 #include "episode.h"
-
+#include <regex>
 
 namespace dropout_dl {
 	nlohmann::json episode::get_meta_data_json(const std::string& html_data) {
@@ -177,69 +177,88 @@ namespace dropout_dl {
 	}
 
 	std::vector<std::string> episode::get_qualities() {
+		// If we already have them, use those
 		if (!video_qualities.empty() && !audio_qualities.empty()) {
 			return video_qualities;
 		}
 		auto& streams = this->config_json["request"]["files"]["progressive"];
-
-		if (streams.empty()) {
-			if (this->verbose) {
-				std::cout << "Getting from cdn\n";
-			}
-			this->is_from_cdn = true;
-
-			std::string default_cdn = this->config_json["request"]["files"]["dash"]["default_cdn"];
-			std::string cdn_url = this->config_json["request"]["files"]["dash"]["cdns"][default_cdn]["url"];
-
-			if (this->verbose) {
-				std::cout << "cdn: " << cdn_url << "\n";
-			}
-
-			auto cdn_json_str = get_generic_page(cdn_url);
-			nlohmann::json cdn_json;
-			try {
-				cdn_json = nlohmann::json::parse(cdn_json_str);
-			}
-			catch (nlohmann::detail::parse_error e) {
-				std::cout << "EPISODE ERROR: could not parse json: " << cdn_json_str << "\n";
-			}
-			std::string base_url = cdn_url.substr(0, cdn_url.find_last_of("/")) + "/../";
-			for (const auto& video : cdn_json["video"]) {
-				this->video_qualities.push_back(std::to_string((long)video["height"]) + "p");
-				std::string video_base_url = base_url + (std::string)video["base_url"];
-				std::vector<std::string> video_segment_urls = {};
-				for (const auto& seg : video["segments"]) {
-					video_segment_urls.push_back(video_base_url + (std::string)seg["url"]);
-				}
-				// std::cout << base_url << "\n";
-				this->video_initial_segment_quality.push_back((std::string)video["init_segment"]);
-				this->video_quality_segments.push_back(video_segment_urls);
+		if(!streams.empty()) { // Older format, not from a CDN I guess
+			for (const auto& stream : streams) {
+				this->video_qualities.push_back(stream["quality"]);
+				this->video_quality_segments.push_back({(std::string)stream["url"]});
 				if (this->verbose) {
-					std::cout << "Found video quality: " << video_qualities.back() << std::endl;
+					std::cout << "Found quality: " << video_qualities.back() << std::endl;
 				}
 			}
-			for (const auto& audio : cdn_json["audio"]) {
-				std::string audio_base_url = base_url + (std::string)audio["base_url"];
-				this->audio_qualities.push_back(std::to_string((long)audio["bitrate"]));
-				std::vector<std::string> audio_segment_urls = {};
-				for (const auto& seg : audio["segments"]) {
-					audio_segment_urls.push_back(audio_base_url + (std::string)seg["url"]);
-				}
-				this->audio_initial_segment_quality.push_back((std::string)audio["init_segment"]);
-				this->audio_quality_segments.push_back(audio_segment_urls);
-				if (this->verbose) {
-					std::cout << "Found Audio quality: " << audio_qualities.back() << std::endl;
-				}
-			}
+			return video_qualities;
+		}
+		
+		// Newer format, with a CDN
+		if (this->verbose) {
+			std::cout << "Getting from cdn\n";
+		}
+		this->is_from_cdn = true;
 
-			return this->video_qualities;
+		std::string default_cdn = this->config_json["request"]["files"]["dash"]["default_cdn"];
+		std::string cdn_url = this->config_json["request"]["files"]["dash"]["cdns"][default_cdn]["url"];
+
+		if (this->verbose) {
+			std::cout << "cdn: " << cdn_url << "\n";
 		}
 
-		for (const auto& stream : streams) {
-			this->video_qualities.push_back(stream["quality"]);
-			this->video_quality_segments.push_back({(std::string)stream["url"]});
+		// Process the JSON data at this CDN's url and deduce the base_url
+		auto cdn_json_str = get_generic_page(cdn_url);
+		nlohmann::json cdn_json;
+		try {
+			cdn_json = nlohmann::json::parse(cdn_json_str);
+		}
+		catch (nlohmann::detail::parse_error e) {
+			std::cerr << "EPISODE ERROR: Couldn't parse CDN json: " << cdn_json_str << "\n";
+			return video_qualities;
+		}
+		
+		//TODO: These regexes might be hyperspecific to how the akfire_interconnect_quic CDN works.
+		//      Make sure that the other ones also follow this base URL format.
+		std::string base_url, url_suffix;
+		if(std::smatch base_url_match; std::regex_search(cdn_url,base_url_match,std::regex("^https.+v2/"))) {
+			base_url = base_url_match[0].str();
+			std::string cdn_json_base_url = cdn_json["base_url"];
+			// cdn_json_base_url is normally in the format "../../foo/bar/". The following extracts the "/foo/bar/"
+			if(std::regex_search(cdn_json_base_url,base_url_match,std::regex("(?:/\\w+)+/?$")))
+				url_suffix = base_url_match[0].str();
+		}
+		if(base_url.empty() || url_suffix.empty()) {
+			std::cerr << RED << "ERROR: Unable to build base URL for CDN access\n" << RESET;
+			return video_qualities;
+		}
+		base_url += url_suffix;
+
+		// Extract the video & audio info and record the segment URLs for later download
+		for (const auto& video : cdn_json["video"]) {
+			this->video_qualities.push_back(std::to_string((long)video["height"]) + "p");
+			std::string video_base_url = base_url + (std::string)video["base_url"];
+			std::vector<std::string> video_segment_urls = {};
+			for (const auto& seg : video["segments"]) {
+				video_segment_urls.push_back(video_base_url + (std::string)seg["url"]);
+			}
+
+			this->video_initial_segment_quality.push_back((std::string)video["init_segment"]);
+			this->video_quality_segments.push_back(video_segment_urls);
 			if (this->verbose) {
-				std::cout << "Found quality: " << video_qualities.back() << std::endl;
+				std::cout << "Found video quality: " << video_qualities.back() << std::endl;
+			}
+		}
+		for (const auto& audio : cdn_json["audio"]) {
+			std::string audio_base_url = base_url + (std::string)audio["base_url"];
+			this->audio_qualities.push_back(std::to_string((long)audio["bitrate"]));
+			std::vector<std::string> audio_segment_urls = {};
+			for (const auto& seg : audio["segments"]) {
+				audio_segment_urls.push_back(audio_base_url + (std::string)seg["url"]);
+			}
+			this->audio_initial_segment_quality.push_back((std::string)audio["init_segment"]);
+			this->audio_quality_segments.push_back(audio_segment_urls);
+			if (this->verbose) {
+				std::cout << "Found Audio quality: " << audio_qualities.back() << std::endl;
 			}
 		}
 
@@ -268,7 +287,7 @@ namespace dropout_dl {
 			}
 		}
 
-		std::cout << "ERROR: Could not find captions for episode \"" << this->name << "\n";
+		std::cerr << RED << "ERROR: Could not find captions for episode \"" << this->name << RESET << '\n';
 
 		return "";
 	}
@@ -294,25 +313,27 @@ namespace dropout_dl {
 		return video_quality_segments[quality][segment];
 	}
 
-	std::string episode::get_video_segment_data(int quality, int segment_index, const std::string& filename) {
+	bool episode::get_video_segment_data(int quality, int segment_index, std::string& curl_buffer, const std::string& filename) {
 		CURL* curl = curl_easy_init();
+		if(!curl)
+			return false;
 		std::string progress_name = filename + " - video segment: " + std::to_string(segment_index);
 		CURLcode res;
-		if(curl) {
-			std::string out;
+		curl_buffer.clear(); // C++ standard claims this is O(n) but all implementations are constant-time so we're chill
+		curl_easy_setopt(curl, CURLOPT_URL, get_video_segment_url(quality, segment_index).c_str());
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::WriteCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curl_buffer);
+		// curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
+		// curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, dropout_dl::curl_progress_func);
+		// curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &progress_name6);
+		res = curl_easy_perform(curl);
+		curl_easy_cleanup(curl);
 
-			curl_easy_setopt(curl, CURLOPT_URL, get_video_segment_url(quality, segment_index).c_str());
-			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::WriteCallback);
-			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
-			// curl_easy_setopt(curl, CURLOPT_NOPROGRESS, false);
-			// curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, dropout_dl::curl_progress_func);
-			// curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &progress_name);
-			res = curl_easy_perform(curl);
-			curl_easy_cleanup(curl);
-
-			return out;
-		}
-		return "CURL ERROR";
+		if(curl_buffer.empty())
+			std::cerr << YELLOW << "WARN: Video segment was an empty packet!\n" << RESET;
+		if(this->verbose)
+			std::cout << "Packet size: " << curl_buffer.size() << '\n';
+		return true;
 	}
 
 	std::string episode::get_audio_segment_url(int quality, int segment) {
@@ -325,7 +346,7 @@ namespace dropout_dl {
 		CURLcode res;
 		if(curl) {
 			std::string out;
-
+			out.reserve(2048);
 			curl_easy_setopt(curl, CURLOPT_URL, this->get_audio_segment_url(quality, segment_index).c_str());
 			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropout_dl::WriteCallback);
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &out);
@@ -334,7 +355,8 @@ namespace dropout_dl {
 			// curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &progress_name);
 			res = curl_easy_perform(curl);
 			curl_easy_cleanup(curl);
-
+			if(out.empty())
+				std::cerr << YELLOW << "WARN: Audio segment was an empty packet!\n" << RESET;
 			return out;
 		}
 		return "CURL ERROR";
@@ -373,9 +395,24 @@ namespace dropout_dl {
 			out << dropout_dl::base64_decode(video_initial_segment_quality[video_quality_index]);
 
 			int number_of_video_segs = this->video_quality_segments[video_quality_index].size();
+
+			std::string curl_buffer; // Using a buffer string at the top here to minimize memory reallocation
+			curl_buffer.reserve(1 << 20); // A megabyte
 			for (int i = 0; i < number_of_video_segs; i++) {
 				dropout_dl::segment_progress_func(filepath + ".m4s", i, number_of_video_segs);
-				out << this->get_video_segment_data(video_quality_index, i, filepath);
+				if(!this->get_video_segment_data(video_quality_index, i, curl_buffer, filepath)) {
+					std::cerr << RED << "ERROR: Unknown error occurred in Curl during video segment download.\n" << RESET;
+					return; 
+				}
+				// Writing the segment directly to the out fstream would've been the simplest thing to do,
+				// but we do actually want to use a buffer so that we can double-check that the output is valid here.
+				if(curl_buffer == "{\"status\":403,\"title\":\"Forbidden\",\"detail\":\"403 Forbidden\"}\n" ||
+				   (curl_buffer.size() < 1024 && curl_buffer.find("403")) // Trying to avoid searching for a 403 when it's a megabyte packet
+				) {
+					std::cerr << RED << "ERROR: Unable to get video segment #" << i << " due to 403 response from CDN\n" << RESET;
+					return;
+				}
+				out << curl_buffer;
 			}
 			out.close();
 			std::cout << std::endl;
