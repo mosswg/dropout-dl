@@ -279,9 +279,9 @@ namespace dropout_dl {
 		for (const auto& text_track : text_tracks) {
 			if (text_track["kind"] == "captions" || text_track["kind"] == "subtitles") {
 				if (text_track["lang"] == "en" || text_track["lang"] == "en-US") {
-						if (this->verbose) {
-							std::cout << "captions url: " << text_track["url"] << "\n";
-						}
+					if (this->verbose) {
+						std::cout << "captions url: " << text_track["url"] << '\n';
+					}
 					return text_track["url"];
 				}
 			}
@@ -429,7 +429,7 @@ namespace dropout_dl {
 				dropout_dl::segment_progress_func(filepath + ".m4a", i, number_of_video_segs);
 				tmp = this->get_audio_segment_data(audio_quality_index, i, filepath);
 				if (tmp == "Not Found") {
-					std::cout << YELLOW << "Could not get audio segment " << i << "\n";
+					std::cerr << YELLOW << "Could not get audio segment " << i << RESET << "\n";
 					break;
 				}
 				out << tmp;
