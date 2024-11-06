@@ -100,9 +100,22 @@ namespace dropout_dl {
 		return out;
 	}
 
+	std::string remove_quote_characters(const std::string& str) {
+		std::string out;
+
+		for (int i = 0; i < str.size(); i++) {
+			if (str[i] == '\'') {
+				i++;
+			}
+			out += str[i];
+		}
+
+		return out;
+	}
+
 
 	std::string format_name_string(const std::string& str) {
-		return remove_escaped_characters(replace_html_character_codes(remove_leading_and_following_whitespace(str)));
+		return remove_quote_characters(remove_escaped_characters(replace_html_character_codes(remove_leading_and_following_whitespace(str))));
 	}
 
 	std::string format_filename(const std::string& str) {
