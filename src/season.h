@@ -88,7 +88,7 @@ namespace dropout_dl {
 				this->download_captions_only = download_captions_only;
 				this->season_number = get_season_number(this->url);
 				this->rate_limit = rate_limit;
-				this->name = name;
+				this->name = "Season " + std::to_string(this->season_number);
 				this->series_name = series_name;
 				std::cout << series_name << ": " << name << ": " << "\n";
 				this->page_data = get_generic_page(url);
