@@ -181,8 +181,9 @@ namespace dropout_dl {
 		if (!video_qualities.empty() && !audio_qualities.empty()) {
 			return video_qualities;
 		}
-		auto& streams = this->config_json["request"]["files"]["progressive"];
-		if(!streams.empty()) { // Older format, not from a CDN I guess
+		std::string default_cdn = this->config_json["request"]["files"]["dash"]["default_cdn"];
+		if(default_cdn.empty()) { // Older format, not from a CDN I guess
+			auto& streams = this->config_json["request"]["files"]["progressive"];
 			for (const auto& stream : streams) {
 				this->video_qualities.push_back(stream["quality"]);
 				this->video_quality_segments.push_back({(std::string)stream["url"]});
@@ -192,14 +193,13 @@ namespace dropout_dl {
 			}
 			return video_qualities;
 		}
-		
+
 		// Newer format, with a CDN
 		if (this->verbose) {
 			std::cout << "Getting from cdn\n";
 		}
 		this->is_from_cdn = true;
 
-		std::string default_cdn = this->config_json["request"]["files"]["dash"]["default_cdn"];
 		std::string cdn_url = this->config_json["request"]["files"]["dash"]["cdns"][default_cdn]["url"];
 
 		if (this->verbose) {
@@ -216,7 +216,7 @@ namespace dropout_dl {
 			std::cerr << "EPISODE ERROR: Couldn't parse CDN json: " << cdn_json_str << "\n";
 			return video_qualities;
 		}
-		
+
 		//TODO: These regexes might be hyperspecific to how the akfire_interconnect_quic CDN works.
 		//      Make sure that the other ones also follow this base URL format.
 		std::string base_url, url_suffix;
@@ -364,6 +364,11 @@ namespace dropout_dl {
 
 
 	void episode::download_quality(const std::string& quality, const std::string& base_directory, const std::string& filename, bool lowest_audio_quality) {
+		if (!this->is_from_cdn) {
+			std::cerr << "EPISODE ERROR: Episode does not use CDN. Please report this issue on GitHub with the download url used.\n";
+			return;
+		}
+
 		if (!std::filesystem::is_directory(base_directory)) {
 			std::filesystem::create_directories(base_directory);
 			if (this->verbose) {
@@ -497,7 +502,6 @@ namespace dropout_dl {
 			}
 			filename = format_filename(filename);
 		}
-
 
 		if (quality == "all") {
 			for (const auto &possible_video_quality: this->video_qualities) {
