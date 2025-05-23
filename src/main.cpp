@@ -29,6 +29,7 @@ namespace dropout_dl {
 		uint32_t rate_limit = 2000; // rate limit in ms
 		std::string quality;
 		std::string filename;
+		std::string login_file = "login"; /// Default incase the option is not used
 		std::string output_directory;
 		std::string episode;
 		cookie session_cookie;
@@ -115,6 +116,13 @@ namespace dropout_dl {
 					}
 					rate_limit = std::stoi(args[++i]);
 				}
+				else if (arg == "login-file" || arg == "lf") {
+					if (i + 1 >= args.size()) {
+						std::cerr << "ARGUMENT PARSE ERROR: --login-file used with too few following arguments\n";
+						exit(8);
+					}
+					login_file = args[++i];
+				}
 				else if (arg == "series" || arg == "S") {
 					is_series = true;
 				}
@@ -146,7 +154,8 @@ namespace dropout_dl {
 								 "\t--browser-cookies   -bc  Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'\n"
 								 "\t--rate              -r   Set the ammount of time in milliseconds between getting episodes\n"
 								 "\t                             Only affects series and season downloads. Defaults to 2000\n"
-								 "\t--force-cookies          Interpret the next to argument as the session cookie\n"
+								 "\t--force-cookies          Interpret the next argument as the session cookie\n"
+								 "\t--login-file        -lf  Use the next argument as the path to the login file\n"
 								 "\t--series            -S   Interpret the url as a link to a series and download all episodes from all seasons\n"
 								 "\t--season            -s   Interpret the url as a link to a season and download all episodes from all seasons\n"
 								 "\t--episode           -e   Interpret the url as a link to a single episode\n"
@@ -384,7 +393,7 @@ int main(int argc, char** argv) {
 	}
 	else if (!options.force_cookies) {
 		std::string session;
-		dropout_dl::login::get_cookies(session);
+		dropout_dl::login::get_cookies(session, options.login_file);
 
 		options.session_cookie = dropout_dl::cookie("_session", session);
 	}

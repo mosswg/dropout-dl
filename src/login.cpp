@@ -1,7 +1,7 @@
 #include "login.h"
 
 
-void dropout_dl::login::get_cookies(std::string& session) {
+void dropout_dl::login::get_cookies(std::string& session, const std::string& login_file) {
 	std::string email;
 	std::string password;
 
@@ -57,7 +57,7 @@ void dropout_dl::login::get_cookies(std::string& session) {
 
 	std::cout << "Logging in...\n";
 
-	get_login_info_from_file("login", email, password);
+	get_login_info_from_file(login_file, email, password);
 
 	/// Needed to login properly
 	std::string authentication;
