@@ -3,12 +3,83 @@
 #include "series.h"
 #include "login.h"
 #include <regex>
+#include <filesystem>
 
 #ifdef DROPOUT_DL_SQLITE
 #include <sqlite3.h>
 #endif
 
 namespace dropout_dl {
+
+	/**
+	 * Get the default configuration directory based on the platform
+	 * @return Default config directory path
+	 */
+	std::string get_default_config_directory() {
+		// Check if we're running in Docker (common pattern is to use /config)
+		if (std::filesystem::exists("/config")) {
+			return "/config";
+		}
+
+		// Windows: Use %APPDATA%\dropout-dl
+		const char* appdata = getenv("APPDATA");
+		if (appdata) {
+			std::string config_dir = std::string(appdata) + "\\dropout-dl";
+			return config_dir;
+		}
+
+		// Unix-like systems: Use ~/.config/dropout-dl
+		const char* home = getenv("HOME");
+		if (home) {
+			std::string config_dir = std::string(home) + "/.config/dropout-dl";
+			return config_dir;
+		}
+
+		// Fallback to current directory for backward compatibility
+		return ".";
+	}
+
+	/**
+	 * Resolve the actual configuration directory path based on user input and defaults
+	 * @param user_config_dir User-specified config directory (empty if not specified)
+	 * @return The resolved config directory path
+	 */
+	std::string resolve_config_directory(const std::string& user_config_dir) {
+		if (!user_config_dir.empty()) {
+			return user_config_dir;
+		}
+		return get_default_config_directory();
+	}
+
+	/**
+	 * Get the full path for a config file, checking multiple locations in priority order
+	 * @param config_dir The base config directory
+	 * @param filename The config file name
+	 * @return The full path to the config file that exists, or the path in config_dir if none exist
+	 */
+	std::string get_config_file_path(const std::string& config_dir, const std::string& filename) {
+		// Priority 1: Current directory (backward compatibility)
+		if (std::filesystem::exists(filename)) {
+			return filename;
+		}
+
+		// Priority 2: Specified config directory
+		std::string config_path = config_dir + "/" + filename;
+		if (std::filesystem::exists(config_path)) {
+			return config_path;
+		}
+
+		// Priority 3: Default config directory (if different from specified)
+		if (config_dir != get_default_config_directory()) {
+			std::string default_path = get_default_config_directory() + "/" + filename;
+			if (std::filesystem::exists(default_path)) {
+				return default_path;
+			}
+		}
+
+		// Return the config directory path even if file doesn't exist (for creation)
+		return config_path;
+	}
 
 	/**
 	 * A class for handling and storing the program arguments.
@@ -30,6 +101,7 @@ namespace dropout_dl {
 		std::string quality;
 		std::string filename;
 		std::string login_file = "login"; /// Default incase the option is not used
+		std::string config_directory; /// Configuration directory path
 		std::string output_directory;
 		std::string episode;
 		cookie session_cookie;
@@ -123,6 +195,13 @@ namespace dropout_dl {
 					}
 					login_file = args[++i];
 				}
+				else if (arg == "config" || arg == "C") {
+					if (i + 1 >= args.size()) {
+						std::cerr << "ARGUMENT PARSE ERROR: --config used with too few following arguments\n";
+						exit(8);
+					}
+					config_directory = args[++i];
+				}
 				else if (arg == "series" || arg == "S") {
 					is_series = true;
 				}
@@ -156,6 +235,8 @@ namespace dropout_dl {
 								 "\t                             Only affects series and season downloads. Defaults to 2000\n"
 								 "\t--force-cookies          Interpret the next argument as the session cookie\n"
 								 "\t--login-file        -lf  Use the next argument as the path to the login file\n"
+								 "\t--config            -C   Set the configuration directory path\n"
+								 "\t                             Default: ~/.config/dropout-dl (Unix), %APPDATA%\\dropout-dl (Windows), /config (Docker)\n"
 								 "\t--series            -S   Interpret the url as a link to a series and download all episodes from all seasons\n"
 								 "\t--season            -s   Interpret the url as a link to a season and download all episodes from all seasons\n"
 								 "\t--episode           -e   Interpret the url as a link to a single episode\n"
@@ -168,6 +249,14 @@ namespace dropout_dl {
 
 			if (output_directory.empty()) {
 				output_directory = ".";
+			}
+
+			// Resolve the configuration directory
+			config_directory = dropout_dl::resolve_config_directory(config_directory);
+
+			// If login file was not explicitly set, resolve it using config directory
+			if (login_file == "login") {
+				login_file = dropout_dl::get_config_file_path(config_directory, "login");
 			}
 
 			if (browser_cookies && force_cookies) {
@@ -333,27 +422,28 @@ dropout_dl::cookie get_cookies_from_chrome(const std::filesystem::path& chrome_p
 /**
  *
  * @param verbose - Whether or not to be verbose
+ * @param config_dir - Configuration directory path
  * @return A vector of cookies
  *
  * Determines whether to get cookies from firefox or chrome. This function should not be run if cookies are forced using the `--force-cookies` option.
  * This function checks firefox first so if both firefox and chrome profiles are provided it will use firefox.
  */
-dropout_dl::cookie get_cookie_from_browser(bool verbose = false) {
+dropout_dl::cookie get_cookie_from_browser(const std::string& config_dir, bool verbose = false) {
 
-	std::filesystem::path firefox_profile("firefox_profile");
-	std::filesystem::path chrome_profile("chrome_profile");
+	std::string firefox_profile_path = dropout_dl::get_config_file_path(config_dir, "firefox_profile");
+	std::string chrome_profile_path = dropout_dl::get_config_file_path(config_dir, "chrome_profile");
 
-	if (std::filesystem::exists(firefox_profile)) {
+	if (std::filesystem::exists(firefox_profile_path)) {
 
 		#ifdef DROPOUT_DL_SQLITE
-		return get_cookies_from_firefox(firefox_profile, verbose);
+		return get_cookies_from_firefox(firefox_profile_path, verbose);
 		#else
 				std::cout << "WARNING: Firefox profile file exists but sqlite is not installed" << std::endl;
 		#endif
 	}
-	if (std::filesystem::exists(chrome_profile)) {
+	if (std::filesystem::exists(chrome_profile_path)) {
 		#if defined(DROPOUT_DL_GCRYPT) & defined(DROPOUT_DL_SQLITE)
-		return get_cookies_from_chrome(chrome_profile, verbose);
+		return get_cookies_from_chrome(chrome_profile_path, verbose);
 		#else
 		std::cout << "WARNING: Chrome profile file exists but libgcrypt or sqlite is not installed" << std::endl;
 		#endif
@@ -389,7 +479,7 @@ int main(int argc, char** argv) {
 	}
 
 	if (options.browser_cookies) {
-		options.session_cookie = get_cookie_from_browser(options.verbose);
+		options.session_cookie = get_cookie_from_browser(options.config_directory, options.verbose);
 	}
 	else if (!options.force_cookies) {
 		std::string session;

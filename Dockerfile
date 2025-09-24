@@ -20,4 +20,7 @@ RUN make && \
 
 WORKDIR /app
 
+# Create config directory for easy mounting
+RUN mkdir -p /config
+
 ENTRYPOINT [ "/app/dropout-dl" ]
