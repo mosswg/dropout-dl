@@ -24,14 +24,14 @@ namespace dropout_dl {
 		// Windows: Use %APPDATA%\dropout-dl
 		const char* appdata = getenv("APPDATA");
 		if (appdata) {
-			std::string config_dir = std::string(appdata) + "\\dropout-dl";
+			std::string config_dir = (std::filesystem::path(appdata) / "dropout-dl").string();
 			return config_dir;
 		}
 
 		// Unix-like systems: Use ~/.config/dropout-dl
 		const char* home = getenv("HOME");
 		if (home) {
-			std::string config_dir = std::string(home) + "/.config/dropout-dl";
+			std::string config_dir = (std::filesystem::path(home) / ".config" / "dropout-dl").string();
 			return config_dir;
 		}
 
@@ -64,21 +64,21 @@ namespace dropout_dl {
 		}
 
 		// Priority 2: Specified config directory
-		std::string config_path = config_dir + "/" + filename;
+		std::filesystem::path config_path = std::filesystem::path(config_dir) / filename;
 		if (std::filesystem::exists(config_path)) {
-			return config_path;
+			return config_path.string();
 		}
 
 		// Priority 3: Default config directory (if different from specified)
 		if (config_dir != get_default_config_directory()) {
-			std::string default_path = get_default_config_directory() + "/" + filename;
+			std::filesystem::path default_path = std::filesystem::path(get_default_config_directory()) / filename;
 			if (std::filesystem::exists(default_path)) {
-				return default_path;
+				return default_path.string();
 			}
 		}
 
 		// Return the config directory path even if file doesn't exist (for creation)
-		return config_path;
+		return config_path.string();
 	}
 
 	/**
