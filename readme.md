@@ -21,9 +21,13 @@ docker build -t dropout-dl:latest .
 ```
 After its done building, you can use it by adding your arguments to the end of the `docker run` command:
 ```shell
+# Using config directory (recommended)
+docker run --rm -it -v $PWD/config:/config -v $PWD/out:/Downloads dropout-dl:latest --output-directory /Downloads --captions -e https://www.dropout.tv/dimension-20/season:10/videos/the-chosen-ones
+
+# Legacy method (still supported)
 docker run --rm -it -v $PWD/login:/app/login -v $PWD/out:/Downloads dropout-dl:latest --output-directory /Downloads --captions -e https://www.dropout.tv/dimension-20/season:10/videos/the-chosen-ones
 ```
-**Note:** The docker image expects the `login` file to be at `/app/login`.\
+**Note:** The docker image uses `/config` as the default configuration directory. Mount your local config directory to `/config` to persist login credentials and browser profile settings. The legacy method of mounting the login file directly to `/app/login` is still supported.\
 You must specify an output directory and mount that directory to the host so that you can retrieve the files from the docker container. In the above command I tell dropout-dl to output everything in `/Downloads` inside the container, which is mounted to a folder named `out` inside the current directory (`$PWD` is current directory).
 
 ## Submodule
@@ -80,6 +84,9 @@ By default, dropout-dl will download episodes in a season with the format `<seri
 --verbose           -v   Display debug information while running
 --browser-cookies   -bc  Use cookies from the browser placed in 'firefox_profile' or 'chrome_profile'
 --force-cookies          Interpret the next to argument as the session cookie
+--login-file        -lf  Use the next argument as the path to the login file
+--config            -C   Set the configuration directory path
+                            Default: ~/.config/dropout-dl (Unix), %APPDATA%\dropout-dl (Windows), /config (Docker)
 --series            -S   Interpret the url as a link to a series and download all episodes from all seasons
 --season            -s   Interpret the url as a link to a season and download all episodes from all seasons
 --episode           -e   Interpret the url as a link to a single episode
@@ -90,18 +97,36 @@ By default, dropout-dl will download episodes in a season with the format `<seri
 If series, season, or episode is not used, the type will be inferred based on the link format.
 
 ### Login
-Login in information must be placed in a file called `login` in the same directory as the executable. The file must be email then on a new line password. For example if your email is `email@example.com` and password `password123` the file would be:
+Login information can be provided in a file. The application will look for the login file in the following order:
+
+1. **Custom path**: If `--login-file/-lf` flag is specified, uses that exact path
+2. **Current working directory**: `./login` (for backward compatibility)
+3. **Config directory**: `login` file in the directory specified by `--config` flag
+4. **Default config directory**: `login` file in the platform-specific default directory:
+   - **Unix/Linux/macOS**: `~/.config/dropout-dl/login`
+   - **Windows**: `%APPDATA%\dropout-dl\login`
+   - **Docker**: `/config/login`
+
+The file must contain email on the first line and password on the second line. For example if your email is `email@example.com` and password `password123` the file would be:
 ```
 email@example.com
 password123
 ```
 
 ### Cookies
-If you would like to avoid logging in for any reason, cookies can be used. The option `browser-cookies` must be provided.
+If you would like to avoid logging in for any reason, cookies can be used. The option `--browser-cookies` must be provided.
+
+Browser profile files follow the same priority system as login files:
+1. **Current working directory**: `./firefox_profile` or `./chrome_profile` (for backward compatibility)
+2. **Config directory**: Files in the directory specified by `--config` flag
+3. **Default config directory**: Files in the platform-specific default directory
+
 #### Firefox
-Create a file named `firefox_profile` in the build directory and paste in your [firefox profile folder path](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data)
+Create a file named `firefox_profile` and paste in your [firefox profile folder path](https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data)
+
 #### Chrome
-Install libgcrypt and create a file named `chrome_profile` in the build directory and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
+Install libgcrypt and create a file named `chrome_profile` and paste in your chrome profile folder path (found on [chrome://version](chrome://version))
+
 #### Other/No Sqlite
 Use the `--force-cookies` program option to manually input cookies.
 
