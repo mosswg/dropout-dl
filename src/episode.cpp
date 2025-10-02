@@ -140,7 +140,7 @@ namespace dropout_dl {
 		slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
 		slist1 = curl_slist_append(slist1, "DNT: 1");
 		slist1 = curl_slist_append(slist1, "Connection: keep-alive");
-		slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; referrer_url=https%3A%2F%2Fwatch.dropout.tv%2F; _session=" + session_cookie).c_str());
+		slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; referrer_url=https%3A%2F%2Fwatch.dropout.tv%2F; _session=" + session_cookie + ";").c_str());
 		slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
 		slist1 = curl_slist_append(slist1, "Sec-Fetch-Dest: document");
 		slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");
