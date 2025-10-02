@@ -111,7 +111,7 @@ void dropout_dl::login::get_login_info_from_file(const std::string& filename, st
 }
 
 void dropout_dl::login::get_login_tokens(std::string& session_token, std::string& cf_bm_token, std::string& authentication_token, std::string& session_expiration) {
-	std::string login_page_url = "https://www.dropout.tv/login";
+	std::string login_page_url = "https://watch.dropout.tv/login/";
 	std::string header_string = "";
 
 	std::string login_page_data = get_generic_page(login_page_url, nullptr, false, &header_string);
@@ -120,7 +120,7 @@ void dropout_dl::login::get_login_tokens(std::string& session_token, std::string
 
 	if (set_cookie_index != std::string::npos) {
 		session_token = get_substring_in(header_string, "set-cookie: _session=", ";");
-		session_expiration = get_substring_in(header_string, "expires=", ";", set_cookie_index);
+		session_expiration = get_substring_in(header_string, " expires=", ";", set_cookie_index);
 	}
 
 	cf_bm_token = get_substring_in(header_string, "set-cookie: __cf_bm=", ";");
@@ -140,16 +140,16 @@ bool dropout_dl::login::login_with_tokens(const std::string& email, const std::s
 	std::string cookies = "Cookie: locale_det=en; referrer_url=https%3A%2F%2Fwww.dropout.tv%2F; _session=" + session + "; __cf_bm=" + cf_bm;
 
 	slist1 = curl_slist_append(slist1, "Content-Type: application/x-www-form-urlencoded");
-	slist1 = curl_slist_append(slist1, "Origin: https://www.dropout.tv");
+	slist1 = curl_slist_append(slist1, "Origin: https://watch.dropout.tv");
 	slist1 = curl_slist_append(slist1, "Connection: keep-alive");
-	slist1 = curl_slist_append(slist1, "Referer: https://www.dropout.tv/login");
+	slist1 = curl_slist_append(slist1, "Referer: https://watch.dropout.tv/login/");
 	slist1 = curl_slist_append(slist1, cookies.c_str());
 
 	hnd = curl_easy_init();
 	std::string postfields = "email=" + email_encoded + "&authenticity_token=" + authentication_token_encoded + "&password=" + password_encoded;
 	long http_response_code = 0;
 	curl_easy_setopt(hnd, CURLOPT_BUFFERSIZE, 102400L);
-	curl_easy_setopt(hnd, CURLOPT_URL, "https://www.dropout.tv/login");
+	curl_easy_setopt(hnd, CURLOPT_URL, "https://watch.dropout.tv/login/");
 	curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
 	curl_easy_setopt(hnd, CURLOPT_POSTFIELDS, postfields.c_str());
 	curl_easy_setopt(hnd, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)postfields.size());

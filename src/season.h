@@ -91,7 +91,7 @@ namespace dropout_dl {
 				this->name = "Season " + std::to_string(this->season_number);
 				this->series_name = series_name;
 				std::cout << series_name << ": " << name << ": " << "\n";
-				this->page_data = get_generic_page(url);
+				this->page_data = episode::get_episode_page(url, session_cookie.value);
 				this->episodes = get_episodes(session_cookie);
 			}
 	};

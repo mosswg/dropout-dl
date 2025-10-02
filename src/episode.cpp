@@ -140,7 +140,7 @@ namespace dropout_dl {
 		slist1 = curl_slist_append(slist1, "Accept-Encoding: utf-8");
 		slist1 = curl_slist_append(slist1, "DNT: 1");
 		slist1 = curl_slist_append(slist1, "Connection: keep-alive");
-		slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; _session=" + session_cookie + ";").c_str());
+		slist1 = curl_slist_append(slist1, ("Cookie: locale_det=en; referrer_url=https%3A%2F%2Fwatch.dropout.tv%2F; _session=" + session_cookie).c_str());
 		slist1 = curl_slist_append(slist1, "Upgrade-Insecure-Requests: 1");
 		slist1 = curl_slist_append(slist1, "Sec-Fetch-Dest: document");
 		slist1 = curl_slist_append(slist1, "Sec-Fetch-Mode: navigate");
@@ -152,6 +152,7 @@ namespace dropout_dl {
 		curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(hnd, CURLOPT_NOPROGRESS, 1L);
 		curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, slist1);
+		curl_easy_setopt(hnd, CURLOPT_FOLLOWLOCATION, 1L);
 		curl_easy_setopt(hnd, CURLOPT_MAXREDIRS, 50L);
 		curl_easy_setopt(hnd, CURLOPT_HTTP_VERSION, (long)CURL_HTTP_VERSION_2TLS);
 		curl_easy_setopt(hnd, CURLOPT_FTP_SKIP_PASV_IP, 1L);
