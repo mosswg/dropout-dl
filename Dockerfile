@@ -12,7 +12,7 @@ WORKDIR /app
 COPY ./ /app
 
 RUN git submodule update --init --recursive
-RUN cmake -S /app -B build
+RUN cmake -S /app -B build -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 WORKDIR /app/build
 RUN make && \
 	chmod +x dropout-dl && \
