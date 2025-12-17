@@ -336,7 +336,8 @@ namespace dropout_dl {
 
 		return result;
 	}
-	int get_int_in_string(const std::string& str, int& starting_index)  {
+	
+	int get_int_in_string(const std::string& str, int& starting_index) {
 		std::smatch string_number;
 		if(!std::regex_search(str.begin() + starting_index, str.end(),string_number,std::regex("-?\\d+"))) {
 			std::cerr << YELLOW << "WARN: Unable to find number in string '" << str << "'!\n" << RESET;
@@ -345,9 +346,10 @@ namespace dropout_dl {
         starting_index = string_number.position();
 		return std::stoi(string_number[0]);
     }
+	
 	int get_int_in_string(const std::string& string) {
-		int temp;
-		return get_int_in_string(string,temp); // lol
+		int start = 0;
+		return get_int_in_string(string, start);
 	}
 
 	int get_month_string_as_int(const std::string& month) {
