@@ -328,7 +328,7 @@ namespace dropout_dl {
 				std::cout << "Got embedded url: " << this->embedded_url << '\n';
 			}
 
-			this->embedded_page_data = get_generic_page(this->embedded_url);
+			this->embedded_page_data = get_generic_page(this->embedded_url, this->episode_url);
 
 			if (this->embedded_page_data.find("you are not authorized") != std::string::npos) {
 				std::cerr << "ERROR: Could not access video. Try refreshing cookies.\n";
@@ -441,7 +441,7 @@ namespace dropout_dl {
 				std::cout << "Got embedded url: " << this->embedded_url << '\n';
 			}
 
-			this->embedded_page_data = get_generic_page(this->embedded_url);
+			this->embedded_page_data = get_generic_page(this->embedded_url, this->episode_url);
 
 			if (this->embedded_page_data.find("you are not authorized") != std::string::npos) {
 				std::cerr << "ERROR: Could not access video. Try refreshing cookies.\n";

@@ -12,7 +12,7 @@ void dropout_dl::login::get_cookies(std::string& session, const std::string& log
 
 	/// check if file exist
 	if(!cache_file.fail()) {
-		std::cout << GREEN << "Using cached tokens from " << cache_file_path << RESET << "\n";
+		std::cerr << GREEN << "Using cached tokens from " << cache_file_path << RESET << "\n";
 		std::string cached_session_token;
 		std::string expiration_date;
 		std::getline(cache_file, cached_session_token);
@@ -52,10 +52,10 @@ void dropout_dl::login::get_cookies(std::string& session, const std::string& log
 			}
 		}
 
-		std::cout << YELLOW << "Cached tokens expired" << RESET << "\n";
+		std::cerr << YELLOW << "Cached tokens expired" << RESET << "\n";
 	}
 
-	std::cout << "Logging in...\n";
+	std::cerr << "Logging in...\n";
 
 	get_login_info_from_file(login_file, email, password);
 
@@ -71,9 +71,9 @@ void dropout_dl::login::get_cookies(std::string& session, const std::string& log
 		exit(1);
 	}
 
-	std::cout << GREEN << "Successfully logged in.\n" << RESET;
+	std::cerr << GREEN << "Successfully logged in.\n" << RESET;
 
-	std::cout << "Caching tokens...\r";
+	std::cerr << "Caching tokens...\r";
 
 
 	if (!std::filesystem::is_directory(cache_directory)) {
@@ -84,7 +84,7 @@ void dropout_dl::login::get_cookies(std::string& session, const std::string& log
 
 	cache_file << session << "\n" << session_expiration << "\n";
 
-	std::cout << GREEN "Cached tokens to " << cache_file_path << "\n" << RESET;
+	std::cerr << GREEN "Cached tokens to " << cache_file_path << "\n" << RESET;
 }
 
 void dropout_dl::login::get_login_info_from_file(const std::string& filename, std::string& email, std::string& password) {

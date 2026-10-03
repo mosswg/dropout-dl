@@ -26,6 +26,7 @@ namespace dropout_dl {
 		bool download_captions = false;
         bool download_captions_only = false;
 		bool keep_segment_files = false;
+		bool list_only = false;
 		uint32_t rate_limit = 2000; // rate limit in ms
 		std::string quality;
 		std::string filename;
@@ -132,6 +133,9 @@ namespace dropout_dl {
 				else if (arg == "episode" || arg == "e") {
 					is_episode = true;
 				}
+				else if (arg == "list" || arg == "l") {
+					list_only = true;
+				}
 				else if (arg == "captions" || arg == "c") {
 					download_captions = true;
 				}
@@ -160,7 +164,8 @@ namespace dropout_dl {
 								 "\t--season            -s   Interpret the url as a link to a season and download all episodes from all seasons\n"
 								 "\t--episode           -e   Interpret the url as a link to a single episode\n"
 								 "\t--captions          -c   Download the captions along with the episode. Overridden by --captions-only if set.\n"
-                                 "\t--captions-only     -co  Download the captions only, without the episode\n";
+                                 "\t--captions-only     -co  Download the captions only, without the episode\n"
+								 "\t--list              -l   List seasons or episodes instead of downloading (use with -S or -s)\n";
 
 					exit(0);
 				}
@@ -396,6 +401,20 @@ int main(int argc, char** argv) {
 		dropout_dl::login::get_cookies(session, options.login_file);
 
 		options.session_cookie = dropout_dl::cookie("_session", session);
+	}
+
+	if (options.list_only) {
+		if (options.is_series) {
+			dropout_dl::series::list_seasons(options.url, options.session_cookie);
+		}
+		else if (options.is_season) {
+			dropout_dl::season::list_episodes(options.url, options.session_cookie);
+		}
+		else {
+			std::cerr << "ERROR: --list requires -s (season) or -S (series)\n";
+			exit(1);
+		}
+		return 0;
 	}
 
 	if (options.is_series) {

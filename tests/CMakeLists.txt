@@ -8,6 +8,7 @@ add_executable(test
 	test.cpp
 	episode_tests.cpp
 	../src/episode.cpp
+	season_tests.cpp
 	../src/season.cpp
 	series_tests.cpp
 	../src/series.cpp

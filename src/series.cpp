@@ -218,4 +218,61 @@ namespace dropout_dl {
 		}
 	}
 
+	void series::list_seasons(const std::string& url, const cookie& session_cookie) {
+		std::string page_data = get_generic_page(url, url);
+
+		const std::string search_class("js-switch-season");
+		const std::string open_select("<select");
+		const std::string close_tag(">");
+		const std::string close_select("</select>");
+		const std::string value("value=");
+
+		bool in_dropdown = false;
+		std::string season_url;
+
+		for (int i = 0; i < (int)page_data.size(); i++) {
+			if (substr_is(page_data, i, open_select)) {
+				for (int j = i; j < (int)page_data.size(); j++) {
+					if (substr_is(page_data, j, search_class)) {
+						i = j;
+						in_dropdown = true;
+						break;
+					}
+					else if (substr_is(page_data, j, close_tag)) {
+						break;
+					}
+				}
+			}
+			if (in_dropdown) {
+				if (substr_is(page_data, i, value)) {
+					i += (int)value.size() + 1;
+					for (int j = 0; j + i < (int)page_data.size(); j++) {
+						if (page_data[i + j] == '"') {
+							season_url = page_data.substr(i, j);
+							i += j;
+							break;
+						}
+					}
+				}
+				else if (!season_url.empty() && substr_is(page_data, i, close_tag)) {
+					i += (int)close_tag.size() + 1;
+					for (int j = 0; i + j < (int)page_data.size(); j++) {
+						if (page_data[i + j] == '\n') {
+							std::string season_name = page_data.substr(i, j);
+							int name_start = 0, name_end = (int)season_name.size() - 1;
+							while (name_start < (int)season_name.size() && (season_name[name_start] == ' ' || season_name[name_start] == '\t')) name_start++;
+							while (name_end > name_start && (season_name[name_end] == ' ' || season_name[name_end] == '\t' || season_name[name_end] == '\r')) name_end--;
+							season_name = season_name.substr(name_start, name_end - name_start + 1);
+
+							std::cout << season_name << "\t" << season_url << "\n";
+							season_url.clear();
+							i += j;
+							break;
+						}
+					}
+				}
+				if (substr_is(page_data, i, close_select)) break;
+			}
+		}
+	}
 } // dropout_dl
